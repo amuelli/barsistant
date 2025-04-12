@@ -372,3 +372,189 @@ This approach enables us to:
 - Component testing for Preact components
 - Integration testing for API endpoints
 - E2E testing for critical user flows
+
+## 10. Example Data Structures
+
+### 10.1 Recipe Data Structure
+
+Below is an example of how cocktail recipes could be structured in the database,
+using two classic cocktails as examples:
+
+```typescript
+// Recipe type definition
+interface Recipe {
+  id: string;
+  name: string;
+  description: string;
+  strength: number; // Scale of 1-10
+  sweetness: number; // Scale of 1-10 (1 = very sour, 10 = very sweet)
+  ingredients: Ingredient[];
+  garnish: string[];
+  glassware: string;
+  preparation: string[];
+  source: {
+    name: string;
+    url?: string;
+  };
+  tags: string[];
+  image?: string;
+  rating?: number; // Average user rating
+  calories?: number;
+  alcoholContent?: {
+    percentage: number;
+    standardDrinks: number;
+  };
+  allergens?: string[];
+}
+
+interface Ingredient {
+  name: string;
+  quantity: string;
+  unit: string;
+  optional: boolean;
+  substitutes?: string[];
+}
+
+// Example recipes
+const exampleRecipes = [
+  {
+    id: "old-fashioned-diffords",
+    name: "Old Fashioned Cocktail (Difford's recipe)",
+    description:
+      "Achieving balance, ideal dilution and a good chill are essential to the enjoyment of this spirituous sublime classic.",
+    strength: 9,
+    sweetness: 6,
+    ingredients: [
+      {
+        name: "Bourbon whiskey",
+        quantity: "45",
+        unit: "ml",
+        optional: false,
+      },
+      {
+        name: "Straight rye whiskey",
+        quantity: "30",
+        unit: "ml",
+        optional: false,
+        substitutes: ["Additional bourbon"],
+      },
+      {
+        name: "Demerara/Muscovado/brown sugar syrup",
+        quantity: "10",
+        unit: "ml",
+        optional: false,
+        substitutes: ["Simple syrup"],
+      },
+      {
+        name: "Bob's Abbotts bitters",
+        quantity: "8",
+        unit: "drop",
+        optional: false,
+        substitutes: ["Angostura bitters"],
+      },
+      {
+        name: "Saline solution",
+        quantity: "3",
+        unit: "drop",
+        optional: true,
+      },
+    ],
+    garnish: ["Orange zest twist"],
+    glassware: "Old-fashioned glass",
+    preparation: [
+      "Select and pre-chill an Old-fashioned glass.",
+      "Prepare garnish of orange zest twist.",
+      "STIR all ingredients with ice.",
+      "STRAIN into ice-filled glass (preferably over a large cube or chunk of block ice).",
+      "EXPRESS orange zest twist over the cocktail and use as garnish.",
+    ],
+    source: {
+      name: "Difford's Guide",
+      url:
+        "https://www.diffordsguide.com/cocktails/recipe/1427/old-fashioned-cocktail-diffords-recipe",
+    },
+    tags: ["classic", "whiskey", "spirit-forward", "nightcap", "hall-of-fame"],
+    image: "/images/recipes/old-fashioned.jpg",
+    calories: 213,
+    alcoholContent: {
+      percentage: 32.65,
+      standardDrinks: 2.3,
+    },
+  },
+  {
+    id: "amaretto-sour",
+    name: "Amaretto Sour",
+    description:
+      "Sweet 'n' sour - frothy with an almond buzz. An extra couple of dashes of bitters help balance the drink and add an extra burst of flavour.",
+    strength: 3,
+    sweetness: 5,
+    ingredients: [
+      {
+        name: "Disaronno amaretto",
+        quantity: "60",
+        unit: "ml",
+        optional: false,
+      },
+      {
+        name: "Lemon juice (freshly squeezed)",
+        quantity: "30",
+        unit: "ml",
+        optional: false,
+      },
+      {
+        name: "Angostura Aromatic Bitters",
+        quantity: "1",
+        unit: "dash",
+        optional: false,
+      },
+      {
+        name: "Egg white (pasteurised)",
+        quantity: "15",
+        unit: "ml",
+        optional: false,
+        substitutes: [
+          "Aquafaba (chickpea water)",
+          "Fee Brothers Fee Foam cocktail foamer",
+        ],
+      },
+    ],
+    garnish: ["Lemon slice", "Luxardo Maraschino Cherry"],
+    glassware: "Old-fashioned glass",
+    preparation: [
+      "Pre-chill an Old-fashioned glass.",
+      "SHAKE all ingredients with ice.",
+      "STRAIN back into shaker.",
+      "DRY SHAKE (without ice).",
+      "FINE STRAIN into ice-filled glass.",
+      "Spray aromatic bitters over foaming cocktail from atomiser and then garnish with lemon slice & Luxardo Maraschino Cherry on stick.",
+    ],
+    source: {
+      name: "Difford's Guide",
+      url: "https://www.diffordsguide.com/cocktails/recipe/53/amaretto-sour",
+    },
+    tags: ["sour", "citrusy", "frothy", "amaretto", "egg-white"],
+    image: "/images/recipes/amaretto-sour.jpg",
+    calories: 233,
+    alcoholContent: {
+      percentage: 11.83,
+      standardDrinks: 1,
+    },
+    allergens: ["Eggs"],
+  },
+];
+```
+
+### 10.2 Data Access Patterns
+
+The data structure above supports the following key access patterns:
+
+1. Recipe lookup by ID: `KV.get(["recipe", "old-fashioned-diffords"])`
+2. Recipe search by ingredient:
+   `KV.list({ prefix: ["ingredient_recipes", "Bourbon whiskey"] })`
+3. Recipe search by tags: `KV.list({ prefix: ["tag_recipes", "sour"] })`
+4. Recipe search by strength/sweetness:
+   `KV.list({ prefix: ["strength_recipes", 3] })`
+
+The AI extraction component would generate structured data in this format from
+unstructured sources, making it easy to integrate new recipes from various
+online sources into the application's database.
