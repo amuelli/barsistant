@@ -107,7 +107,7 @@ When implementing a new feature, follow this general pattern:
 ```typescript
 // 1. Import dependencies
 import { type FreshContext } from "$fresh/server.ts";
-import { ulid } from "$std/ulid/mod.ts";
+import { ulid } from "@std/ulid";
 import { kv } from "../utils/db.ts";
 import type { Recipe } from "../types/recipe.ts";
 
