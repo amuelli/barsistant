@@ -1,8 +1,4 @@
-import {
-  assertEquals,
-  assertExists,
-  assertRejects,
-} from "https://deno.land/std@0.215.0/testing/asserts.ts";
+import { assertEquals, assertExists, assertRejects } from "@std/assert";
 import {
   DatabaseError,
   executeDbOperation,

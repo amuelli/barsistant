@@ -18,6 +18,8 @@
   "exclude": ["**/_fresh/*"],
   "imports": {
     "$fresh/": "https://deno.land/x/fresh@1.7.3/",
+    "@std/assert": "jsr:@std/assert@^1.0.12",
+    "@std/dotenv": "jsr:@std/dotenv@^0.225.3",
     "preact": "https://esm.sh/preact@10.22.0",
     "preact/": "https://esm.sh/preact@10.22.0/",
     "@preact/signals": "https://esm.sh/*@preact/signals@1.2.2",
@@ -25,8 +27,7 @@
     "tailwindcss": "npm:tailwindcss@3.4.1",
     "tailwindcss/": "npm:/tailwindcss@3.4.1/",
     "tailwindcss/plugin": "npm:/tailwindcss@3.4.1/plugin.js",
-    "daisyui": "npm:daisyui@4.7.3",
-    "$std/": "https://deno.land/std@0.216.0/"
+    "daisyui": "npm:daisyui@4.7.3"
   },
   "compilerOptions": {
     "jsx": "react-jsx",
