@@ -353,6 +353,64 @@ This approach enables us to:
   - Automatic HTTPS
   - Integrated monitoring
 
+### 8.7 Authentication System
+
+**Magic Links Authentication**: Simple, passwordless authentication system
+
+- Email-based authentication without passwords
+- User-friendly login experience with minimal friction
+- Enhanced security by removing password management challenges
+- Built on top of the existing Deno KV database
+- Time-limited tokens for security
+
+The magic links authentication system will work as follows:
+
+1. User enters their email address in the login form
+2. System generates a secure, unique token associated with the email
+3. Token is stored in Deno KV with an expiration time (typically 15 minutes)
+4. System sends an email containing a special authentication link with the token
+5. User clicks the link in their email which validates the token
+6. If valid and not expired, the system creates a session for the user
+7. User is redirected to the application in an authenticated state
+
+This approach provides several benefits:
+
+- Eliminates password-related security risks and user frustration
+- Reduces development time by avoiding password management complexity
+- Prevents credential stuffing and brute force attacks
+- Utilizes existing infrastructure (Deno KV) for token storage
+- Provides good user experience with minimal steps
+
+Example data structure for token storage:
+
+```typescript
+interface MagicLinkToken {
+  email: string;
+  userId?: string; // For returning users
+  expires: number; // Timestamp when token expires
+  used: boolean; // To prevent token reuse
+}
+
+// Key structure in Deno KV
+// ["auth_tokens", token] → MagicLinkToken
+```
+
+Example session data structure:
+
+```typescript
+interface UserSession {
+  userId: string;
+  email: string;
+  created: number; // Timestamp when session was created
+  expires: number; // Timestamp when session expires
+  lastActive: number; // Timestamp of last activity
+}
+
+// Key structure in Deno KV
+// ["user_sessions", sessionId] → UserSession
+// ["user_session_lookup", userId, sessionId] → true
+```
+
 ## 9. Development Approach
 
 ### 9.1 Development Methodology

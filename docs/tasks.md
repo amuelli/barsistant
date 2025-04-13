@@ -7,10 +7,10 @@ solution for the Barsistant application.
 
 | Status | Task ID | Description                                                      | Complexity | Dependencies     |
 | ------ | ------- | ---------------------------------------------------------------- | ---------- | ---------------- |
-|        | DB-1    | Create database utility module for Deno KV connection            | Low        | None             |
-|        | DB-2    | Define core data types and interfaces (Recipe, Ingredient, User) | Medium     | None             |
-|        | DB-3    | Implement recipe model with CRUD operations                      | Medium     | DB-1, DB-2       |
-|        | DB-4    | Implement ingredient model with CRUD operations                  | Medium     | DB-1, DB-2       |
+| ✅     | DB-1    | Create database utility module for Deno KV connection            | Low        | None             |
+| ✅     | DB-2    | Define core data types and interfaces (Recipe, Ingredient, User) | Medium     | None             |
+| ✅     | DB-3    | Implement recipe model with CRUD operations                      | Medium     | DB-1, DB-2       |
+| ✅     | DB-4    | Implement ingredient model with CRUD operations                  | Medium     | DB-1, DB-2       |
 |        | DB-5    | Implement relationship models between recipes and ingredients    | High       | DB-3, DB-4       |
 |        | DB-6    | Create secondary indexes for efficient queries                   | Medium     | DB-3, DB-4       |
 |        | DB-7    | Implement search functionality for recipes                       | High       | DB-3, DB-6       |
@@ -61,18 +61,20 @@ solution for the Barsistant application.
 
 ## User Management Tasks
 
-| Status | Task ID | Description                                  | Complexity | Dependencies   |
-| ------ | ------- | -------------------------------------------- | ---------- | -------------- |
-|        | USER-1  | Implement user authentication system         | High       | DB-1           |
-|        | USER-2  | Create user profile model and storage        | Medium     | DB-1, USER-1   |
-|        | USER-3  | Implement user preferences storage           | Medium     | USER-2         |
-|        | USER-4  | Add user session management                  | Medium     | USER-1         |
-|        | USER-5  | Create user authorization for admin features | Medium     | USER-1         |
-|        | USER-6  | Implement secure password management         | High       | USER-1         |
-|        | USER-7  | Add account recovery mechanisms              | Medium     | USER-1, USER-2 |
-|        | USER-8  | Implement user recipe collection management  | Medium     | USER-2, DB-3   |
-|        | USER-9  | Create user notes functionality for recipes  | Medium     | USER-2, DB-3   |
-|        | USER-10 | Implement profile settings interface         | Medium     | UI-7, USER-2   |
+| Status | Task ID | Description                                   | Complexity | Dependencies   |
+| ------ | ------- | --------------------------------------------- | ---------- | -------------- |
+|        | USER-1  | Implement magic link authentication system    | Medium     | DB-1           |
+|        | USER-2  | Create user profile model and storage         | Medium     | DB-1, USER-1   |
+|        | USER-3  | Implement user preferences storage            | Medium     | USER-2         |
+|        | USER-4  | Create session management with Deno KV        | Medium     | USER-1         |
+|        | USER-5  | Implement authentication middleware           | Medium     | USER-1, USER-4 |
+|        | USER-6  | Create login and email verification UI        | Medium     | UI-1, USER-1   |
+|        | USER-7  | Set up email sending service integration      | Medium     | None           |
+|        | USER-8  | Implement session expiration and renewal      | Low        | USER-4         |
+|        | USER-9  | Add rate limiting for authentication requests | Low        | USER-1         |
+|        | USER-10 | Create user profile settings interface        | Medium     | UI-7, USER-2   |
+|        | USER-11 | Implement user recipe collection management   | Medium     | USER-2, DB-3   |
+|        | USER-12 | Create user notes functionality for recipes   | Medium     | USER-2, DB-3   |
 
 ## Inventory Management Tasks
 
@@ -157,3 +159,11 @@ solution for the Barsistant application.
 - UserInventory: Tracks ingredients a user has on hand
 - UserFavorites: Stores user's favorite recipes
 - UserNotes: Stores user-specific notes on recipes
+
+## Authentication Key Structure
+
+- Magic link tokens: `["auth_tokens", token]` → token data with email and
+  expiration
+- User sessions: `["user_sessions", sessionId]` → session data
+- User session lookup: `["user_session_lookup", userId, sessionId]` → true
+- User email lookup: `["user_emails", email]` → userId
