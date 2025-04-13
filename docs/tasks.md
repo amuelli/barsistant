@@ -99,7 +99,7 @@ solution for the Barsistant application.
 | ------ | --------- | ------------------------------------------------- | ---------- | ------------------ |
 | ✅     | DEPLOY-1  | Set up Deno Deploy configuration                  | Low        | None               |
 |        | DEPLOY-2  | Configure Deno Deploy for production environment  | Low        | DEPLOY-1           |
-|        | DEPLOY-3  | Set up GitHub Actions for automated deployments   | Medium     | DEPLOY-1           |
+| ✅     | DEPLOY-3  | Set up GitHub Actions for automated deployments   | Medium     | DEPLOY-1           |
 |        | DEPLOY-4  | Create staging and production environments        | Medium     | DEPLOY-2           |
 |        | DEPLOY-5  | Implement feature flag system for phased rollouts | Medium     | None               |
 |        | DEPLOY-6  | Configure application monitoring with Deno Deploy | Low        | DEPLOY-2           |
