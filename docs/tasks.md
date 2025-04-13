@@ -5,23 +5,18 @@
 This document outlines the tasks required to implement Deno KV as the database
 solution for the Barsistant application.
 
-| Status | Task ID | Description                                                      | Complexity | Dependencies     |
-| ------ | ------- | ---------------------------------------------------------------- | ---------- | ---------------- |
-| ✅     | DB-1    | Create database utility module for Deno KV connection            | Low        | None             |
-| ✅     | DB-2    | Define core data types and interfaces (Recipe, Ingredient, User) | Medium     | None             |
-| ✅     | DB-3    | Implement recipe model with CRUD operations                      | Medium     | DB-1, DB-2       |
-| ✅     | DB-4    | Implement ingredient model with CRUD operations                  | Medium     | DB-1, DB-2       |
-|        | DB-5    | Implement relationship models between recipes and ingredients    | High       | DB-3, DB-4       |
-|        | DB-6    | Create secondary indexes for efficient queries                   | Medium     | DB-3, DB-4       |
-|        | DB-7    | Implement search functionality for recipes                       | High       | DB-3, DB-6       |
-|        | DB-8    | Create data initialization script for starter recipes            | Low        | DB-3, DB-4       |
-|        | DB-9    | Implement API endpoints for recipe management                    | Medium     | DB-3, DB-5       |
-|        | DB-10   | Implement API endpoints for ingredient management                | Medium     | DB-4             |
-|        | DB-11   | Implement filtering functionality based on available ingredients | High       | DB-5, DB-6       |
-|        | DB-12   | Set up user favorites and personal recipe collections            | Medium     | DB-3, USER-1     |
-|        | DB-13   | Implement pagination and sorting for recipe listings             | Medium     | DB-3, DB-6       |
-|        | DB-14   | Create transaction support for complex operations                | High       | DB-1, DB-3, DB-4 |
-|        | DB-15   | Implement error handling and retry mechanisms                    | Medium     | DB-1             |
+| Status | Task ID | Description                                                      | Complexity | Dependencies |
+| ------ | ------- | ---------------------------------------------------------------- | ---------- | ------------ |
+| ✅     | DB-1    | Create database utility module for Deno KV connection            | Low        | None         |
+| ✅     | DB-2    | Define core data types and interfaces (Recipe, Ingredient, User) | Medium     | None         |
+| ✅     | DB-3    | Implement recipe model with CRUD operations                      | Medium     | DB-1, DB-2   |
+| ✅     | DB-4    | Implement ingredient model with CRUD operations                  | Medium     | DB-1, DB-2   |
+|        | DB-8    | Create data initialization script for starter recipes            | Low        | DB-3, DB-4   |
+|        | DB-9    | Implement API endpoints for recipe management                    | Medium     | DB-3         |
+|        | DB-10   | Implement API endpoints for ingredient management                | Medium     | DB-4         |
+|        | DB-11   | Implement filtering functionality based on available ingredients | High       | DB-3         |
+|        | DB-12   | Set up user favorites and personal recipe collections            | Medium     | DB-3, USER-1 |
+|        | DB-13   | Implement recipe sorting functionality                           | Low        | DB-3         |
 
 ## AI Recipe Extraction Tasks
 
