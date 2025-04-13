@@ -8,8 +8,8 @@ solution for the Barsistant application.
 | Status | Task ID | Description                                                      | Complexity | Dependencies     |
 | ------ | ------- | ---------------------------------------------------------------- | ---------- | ---------------- |
 | ✅     | DB-1    | Create database utility module for Deno KV connection            | Low        | None             |
-|        | DB-2    | Define core data types and interfaces (Recipe, Ingredient, User) | Medium     | None             |
-|        | DB-3    | Implement recipe model with CRUD operations                      | Medium     | DB-1, DB-2       |
+| ✅     | DB-2    | Define core data types and interfaces (Recipe, Ingredient, User) | Medium     | None             |
+| ✅     | DB-3    | Implement recipe model with CRUD operations                      | Medium     | DB-1, DB-2       |
 |        | DB-4    | Implement ingredient model with CRUD operations                  | Medium     | DB-1, DB-2       |
 |        | DB-5    | Implement relationship models between recipes and ingredients    | High       | DB-3, DB-4       |
 |        | DB-6    | Create secondary indexes for efficient queries                   | Medium     | DB-3, DB-4       |
