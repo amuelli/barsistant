@@ -11,12 +11,10 @@ solution for the Barsistant application.
 | ✅     | DB-2    | Define core data types and interfaces (Recipe, Ingredient, User) | Medium     | None         |
 | ✅     | DB-3    | Implement recipe model with CRUD operations                      | Medium     | DB-1, DB-2   |
 | ✅     | DB-4    | Implement ingredient model with CRUD operations                  | Medium     | DB-1, DB-2   |
-|        | DB-8    | Create data initialization script for starter recipes            | Low        | DB-3, DB-4   |
-|        | DB-9    | Implement API endpoints for recipe management                    | Medium     | DB-3         |
-|        | DB-10   | Implement API endpoints for ingredient management                | Medium     | DB-4         |
-|        | DB-11   | Implement filtering functionality based on available ingredients | High       | DB-3         |
-|        | DB-12   | Set up user favorites and personal recipe collections            | Medium     | DB-3, USER-1 |
-|        | DB-13   | Implement recipe sorting functionality                           | Low        | DB-3         |
+|        | DB-5    | Create data initialization script for starter recipes            | Low        | DB-3, DB-4   |
+|        | DB-6    | Implement filtering functionality based on available ingredients | High       | DB-3         |
+|        | DB-7    | Set up user favorites and personal recipe collections            | Medium     | DB-3, USER-1 |
+|        | DB-8    | Implement recipe sorting functionality                           | Low        | DB-3         |
 
 ## AI Recipe Extraction Tasks
 
@@ -86,14 +84,14 @@ solution for the Barsistant application.
 
 ## Performance Tasks
 
-| Status | Task ID | Description                                  | Complexity | Dependencies      |
-| ------ | ------- | -------------------------------------------- | ---------- | ----------------- |
-|        | PERF-1  | Implement asset optimization for images      | Medium     | None              |
-|        | PERF-2  | Add caching strategies for frequent queries  | Medium     | DB-1              |
-|        | PERF-3  | Optimize query performance for recipe search | High       | DB-7, DB-13       |
-|        | PERF-4  | Implement rate limiting for API endpoints    | Medium     | DB-9, DB-10, AI-7 |
-|        | PERF-5  | Add health check endpoints                   | Low        | None              |
-|        | PERF-6  | Create load testing suite                    | Medium     | DB-9, DB-10, AI-7 |
+| Status | Task ID | Description                                  | Complexity | Dependencies |
+| ------ | ------- | -------------------------------------------- | ---------- | ------------ |
+|        | PERF-1  | Implement asset optimization for images      | Medium     | None         |
+|        | PERF-2  | Add caching strategies for frequent queries  | Medium     | DB-1         |
+|        | PERF-3  | Optimize query performance for recipe search | High       | DB-6         |
+|        | PERF-4  | Implement rate limiting for API requests     | Medium     | AI-7         |
+|        | PERF-5  | Add health check endpoints                   | Low        | None         |
+|        | PERF-6  | Create load testing suite                    | Medium     | AI-7         |
 
 ## Deployment Tasks
 
@@ -118,17 +116,17 @@ solution for the Barsistant application.
 
 ## Testing Tasks
 
-| Status | Task ID | Description                                   | Complexity | Dependencies                      |
-| ------ | ------- | --------------------------------------------- | ---------- | --------------------------------- |
-|        | TEST-1  | Set up testing framework with Deno            | Low        | None                              |
-|        | TEST-2  | Create unit tests for database models         | Medium     | DB-3, DB-4, TEST-1                |
-|        | TEST-3  | Implement component tests for UI elements     | Medium     | UI-3, UI-4, UI-5, TEST-1          |
-|        | TEST-4  | Create API endpoint tests                     | Medium     | DB-9, DB-10, AI-7, TEST-1         |
-|        | TEST-5  | Implement AI extraction tests                 | Medium     | AI-5, TEST-1                      |
-|        | TEST-6  | Add integration tests for critical user flows | High       | TEST-1, TEST-2, TEST-3, TEST-4    |
-|        | TEST-7  | Create accessibility testing suite            | Medium     | UI-12, TEST-1                     |
-|        | TEST-8  | Implement performance benchmarks              | Medium     | PERF-3, TEST-1                    |
-|        | TEST-9  | Create security testing suite                 | High       | USER-1, DB-9, DB-10, AI-7, TEST-1 |
+| Status | Task ID | Description                                   | Complexity | Dependencies                   |
+| ------ | ------- | --------------------------------------------- | ---------- | ------------------------------ |
+|        | TEST-1  | Set up testing framework with Deno            | Low        | None                           |
+|        | TEST-2  | Create unit tests for database models         | Medium     | DB-3, DB-4, TEST-1             |
+|        | TEST-3  | Implement component tests for UI elements     | Medium     | UI-3, UI-4, UI-5, TEST-1       |
+|        | TEST-4  | Create handler function tests                 | Medium     | AI-7, TEST-1                   |
+|        | TEST-5  | Implement AI extraction tests                 | Medium     | AI-5, TEST-1                   |
+|        | TEST-6  | Add integration tests for critical user flows | High       | TEST-1, TEST-2, TEST-3, TEST-4 |
+|        | TEST-7  | Create accessibility testing suite            | Medium     | UI-12, TEST-1                  |
+|        | TEST-8  | Implement performance benchmarks              | Medium     | PERF-3, TEST-1                 |
+|        | TEST-9  | Create security testing suite                 | High       | USER-1, AI-7, TEST-1           |
 
 ## Data Structure Specifications
 
