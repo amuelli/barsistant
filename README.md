@@ -89,13 +89,40 @@ The application uses Deno KV as its database solution. A utility module at
 Example usage:
 
 ```typescript
-import { kv, recipes } from "../utils/db.ts";
+import { ingredients, kv, recipes } from "../utils/db.ts";
 
-// Get a recipe by ID
+// Recipe operations
 const recipe = await recipes.get("old-fashioned");
-
-// List recipes by ingredient
 const bourbonRecipes = recipes.listByIngredient("bourbon");
+
+// Ingredient operations
+import { ingredientModel } from "../utils/ingredient-model.ts";
+
+// Create a new ingredient
+const newIngredient = await ingredientModel.create({
+  name: "Angostura Bitters",
+  description: "Aromatic bitters used in many classic cocktails",
+  type: "bitters",
+  commonMeasurements: ["dash", "drop"],
+  allergens: ["gentian"],
+});
+
+// Get ingredient by ID
+const ingredient = await ingredientModel.getById("some-ingredient-id");
+
+// Search for ingredients
+const bittersList = await ingredientModel.search({
+  types: ["bitters"],
+  limit: 10,
+});
+
+// Update an ingredient
+await ingredientModel.update("some-ingredient-id", {
+  description: "Updated description",
+});
+
+// Delete an ingredient
+await ingredientModel.delete("some-ingredient-id");
 ```
 
 ## Documentation
