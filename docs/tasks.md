@@ -26,7 +26,7 @@ solution for the Barsistant application.
 |        | AI-4    | Develop AI prompt engineering for recipe extraction        | High       | AI-1         |
 |        | AI-5    | Create structured data parser for AI outputs               | Medium     | AI-4         |
 |        | AI-6    | Implement recipe verification and correction interface     | Medium     | AI-5, UI-3   |
-|        | AI-7    | Create extraction API endpoint                             | Medium     | AI-5, DB-3   |
+|        | AI-7    | Implement recipe extraction handler function               | Medium     | AI-5, DB-3   |
 |        | AI-8    | Implement feedback mechanism to improve extraction quality | Medium     | AI-5, AI-6   |
 |        | AI-9    | Add support for YouTube content extraction                 | High       | AI-2, AI-4   |
 |        | AI-10   | Add support for recipe website content extraction          | High       | AI-2, AI-4   |
@@ -89,7 +89,6 @@ solution for the Barsistant application.
 |        | PERF-1  | Implement asset optimization for images      | Medium     | None         |
 |        | PERF-2  | Add caching strategies for frequent queries  | Medium     | DB-1         |
 |        | PERF-3  | Optimize query performance for recipe search | High       | DB-6         |
-|        | PERF-4  | Implement rate limiting for API requests     | Medium     | AI-7         |
 |        | PERF-5  | Add health check endpoints                   | Low        | None         |
 |        | PERF-6  | Create load testing suite                    | Medium     | AI-7         |
 
