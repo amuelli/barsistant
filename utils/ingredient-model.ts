@@ -7,7 +7,7 @@
  * primary records and related indexes.
  */
 
-import { ulid } from "https://deno.land/x/ulid@v0.3.0/mod.ts";
+import { ulid } from "@std/ulid";
 import type {
   Ingredient,
   IngredientType,
