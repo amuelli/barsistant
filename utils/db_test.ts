@@ -13,7 +13,7 @@ Deno.test("Database connection initializes successfully", async () => {
   assertExists(kvInstance, "KV instance should be created");
 });
 
-Deno.test("Singleton KV instance works", async () => {
+Deno.test("Singleton KV instance works", () => {
   assertExists(kv, "Exported KV instance should be available");
 });
 
@@ -36,7 +36,7 @@ Deno.test("Execute DB operation handles successful operations", async () => {
 Deno.test("Execute DB operation handles errors", async () => {
   await assertRejects(
     async () => {
-      await executeDbOperation(async () => {
+      await executeDbOperation(() => {
         throw new Error("Simulated error");
       }, "Custom error message");
     },
