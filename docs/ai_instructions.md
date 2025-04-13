@@ -14,7 +14,8 @@ best practices.
 - Use explicit type annotations for function parameters and return types
 - Prefer async/await over callbacks or raw promises
 - Prioritize readability over clever/complex code
-- Use ESM imports with explicit file extensions (`.ts`, `.tsx`, etc.)
+- Use JSR package imports (e.g., `import { assertEquals } from "@std/assert"`)
+  instead of direct URL imports
 
 ### Project Architecture
 
@@ -27,11 +28,17 @@ best practices.
 
 ### Deno KV Implementation
 
+- Use the database utility module at `utils/db.ts` for all database operations
 - Follow the key structure patterns outlined in the requirements document
 - Use atomic operations and transactions to maintain data consistency
-- Implement proper error handling for database operations
+- Use the provided error handling for database operations via
+  `executeDbOperation`
+- Use the recipe helpers (`recipes.get`, `recipes.set`, etc.) for recipe
+  operations
 - Use secondary indexes effectively for query optimization
 - Document key structures and query patterns in code comments
+- Remember to include the `/// <reference lib="deno.unstable" />` directive in
+  files that use Deno KV
 
 ### UI Development
 
@@ -105,10 +112,10 @@ When implementing a task from the task list, follow these steps:
 When implementing a new feature, follow this general pattern:
 
 ```typescript
-// 1. Import dependencies
+// 1. Import dependencies using JSR style
 import { type FreshContext } from "$fresh/server.ts";
 import { ulid } from "@std/ulid";
-import { kv } from "../utils/db.ts";
+import { executeDbOperation, kv, recipes } from "../utils/db.ts";
 import type { Recipe } from "../types/recipe.ts";
 
 // 2. Define types specific to this implementation
@@ -123,7 +130,7 @@ interface CreateRecipeParams {
 export async function createRecipe(
   params: CreateRecipeParams,
 ): Promise<Recipe> {
-  try {
+  return executeDbOperation(async () => {
     // Validate inputs
     if (!params.name || params.name.trim() === "") {
       throw new Error("Recipe name is required");
@@ -143,20 +150,11 @@ export async function createRecipe(
       updatedAt: now.toISOString(),
     };
 
-    // Store in database with transaction
-    const res = await kv.atomic()
-      .set(["recipe", id], recipe)
-      .commit();
-
-    if (!res.ok) {
-      throw new Error("Failed to create recipe");
-    }
+    // Store recipe using the recipes helper
+    await recipes.set(id, recipe);
 
     return recipe;
-  } catch (error) {
-    console.error("Error creating recipe:", error);
-    throw error;
-  }
+  }, "Failed to create recipe");
 }
 
 // 4. For API handlers, use this structure:
@@ -170,6 +168,10 @@ export async function handler(req: Request, ctx: FreshContext) {
     const recipe = await createRecipe(params);
     return Response.json(recipe);
   } catch (error) {
+    if (error.name === "DatabaseError") {
+      console.error("Database error:", error);
+      return Response.json({ error: "Internal server error" }, { status: 500 });
+    }
     return Response.json({ error: error.message }, { status: 400 });
   }
 }
@@ -181,6 +183,8 @@ Before considering a task complete, ensure:
 
 - [ ] All requirements of the task are implemented
 - [ ] The code follows Deno and Fresh conventions
+- [ ] The code uses JSR-style imports where applicable
+- [ ] Database operations use the `utils/db.ts` module
 - [ ] Proper error handling is in place
 - [ ] Types are defined and used correctly
 - [ ] The code is properly documented
@@ -188,6 +192,8 @@ Before considering a task complete, ensure:
 - [ ] Integration with existing code is smooth
 - [ ] The implementation is efficient and performant
 - [ ] Security considerations are addressed
+- [ ] Tests are written for critical functionality
+- [ ] The unstable-kv flag is included where needed
 
 By following these guidelines, AI assistants can help implement the Barsistant
 project in a consistent, maintainable, and effective manner that aligns with the

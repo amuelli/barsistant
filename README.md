@@ -21,6 +21,8 @@ cocktail recipes with AI-powered recipe extraction capabilities.
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **Runtime**: [Deno](https://deno.land/)
 - **Database**: [Deno KV](https://deno.com/kv) - Built-in key-value database
+- **Dependency Management**: [JSR](https://jsr.io/) - JavaScript Registry for
+  modern package imports
 - **AI Integration**: AI SDK for recipe extraction
 - **Deployment**: [Deno Deploy](https://deno.com/deploy)
 
@@ -49,19 +51,52 @@ deno task start
 Or use the watch mode for development:
 
 ```bash
-deno run -A dev.ts
+deno task start
 ```
 
 The application will be available at `http://localhost:8000`.
+
+### Running Tests
+
+Run the test suite with:
+
+```bash
+deno task test
+```
+
+> Note: Deno KV is currently an unstable API, so the `--unstable-kv` flag is
+> required to run the application and tests. This has been configured in the
+> deno.json task definitions.
 
 ## Project Structure
 
 - `/routes` - Page components and API endpoints
 - `/components` - Reusable UI components
-- `/utils` - Shared utility functions
-- `/models` - Database models and operations
-- `/types` - TypeScript type definitions
+- `/utils` - Shared utility functions and database utilities
+  - `/utils/db.ts` - Database connection and helper functions
 - `/static` - Static assets
+
+## Database Usage
+
+The application uses Deno KV as its database solution. A utility module at
+`utils/db.ts` provides:
+
+- Centralized database connection management
+- Error handling with retry logic
+- Helper functions for common operations
+- Type definitions for key patterns
+
+Example usage:
+
+```typescript
+import { kv, recipes } from "../utils/db.ts";
+
+// Get a recipe by ID
+const recipe = await recipes.get("old-fashioned");
+
+// List recipes by ingredient
+const bourbonRecipes = recipes.listByIngredient("bourbon");
+```
 
 ## Documentation
 
