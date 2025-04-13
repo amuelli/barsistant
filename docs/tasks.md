@@ -47,7 +47,7 @@ solution for the Barsistant application.
 |        | UI-8    | Develop recipe categories browsing interface       | Medium     | UI-1, DB-3       |
 |        | UI-9    | Create ingredient browsing interface               | Medium     | UI-1, DB-4       |
 |        | UI-10   | Implement measurements adjustment interface        | Medium     | UI-3             |
-|        | UI-11   | Create user favorites interface                    | Medium     | UI-1, DB-12      |
+|        | UI-11   | Create user favorites interface                    | Medium     | UI-1, DB-7       |
 |        | UI-12   | Implement accessibility features (WCAG compliance) | High       | UI-3, UI-4, UI-5 |
 |        | UI-13   | Add dark mode support                              | Low        | UI-1             |
 | ✅     | UI-14   | Develop responsive mobile navigation               | Medium     | UI-1, UI-2       |
@@ -76,7 +76,7 @@ solution for the Barsistant application.
 |        | INV-1   | Create inventory data model                 | Medium     | DB-1, DB-2    |
 |        | INV-2   | Implement user inventory management         | Medium     | INV-1, USER-2 |
 |        | INV-3   | Develop inventory tracking interface        | Medium     | UI-1, INV-1   |
-|        | INV-4   | Create recipe suggestion based on inventory | High       | INV-1, DB-11  |
+|        | INV-4   | Create recipe suggestion based on inventory | High       | INV-1, DB-6   |
 |        | INV-5   | Implement low stock notifications           | Medium     | INV-2         |
 |        | INV-6   | Add inventory categorization                | Low        | INV-1         |
 |        | INV-7   | Create shopping list generation feature     | Medium     | INV-2, DB-3   |

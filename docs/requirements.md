@@ -134,7 +134,7 @@ extraction capabilities.
 - Integration with AI services for recipe extraction
 - YouTube API for video processing
 - Potential integration with social media platforms for sharing
-- RESTful API for potential future mobile app development
+- Handler functions using Fresh's routing system for data operations
 
 ## 6. Other Requirements
 
@@ -224,11 +224,10 @@ streamlined option for our application, with features like:
     - Small bundle size with PurgeCSS
     - Easy theming and customization
   - **daisyUI**: Tailwind CSS component library
-    - Provides pre-designed components while maintaining Tailwind's flexibility
+    - Pre-designed components with Tailwind flexibility
     - Theme customization with semantic color names
-    - Reduces custom component development time
-    - Can be integrated with Fresh projects as discussed in
-      https://github.com/saadeghi/daisyui/discussions/2629
+    - Integrated dark mode support
+    - Production-ready components
   - Preact Signals for state management
   - Fresh routing for navigation
 
@@ -255,19 +254,67 @@ streamlined option for our application, with features like:
 - Transaction support for maintaining data integrity
 - Simplifies deployment with no external database dependencies
 
-The data modeling approach for recipe-inventory matching will use:
+The data modeling approach uses:
 
 - Primary keys for recipes: `["recipe", recipeId]` → recipe data
 - Primary keys for ingredients: `["ingredient", ingredientId]` → ingredient data
-- Recipe-ingredient relationships:
-  `["recipe_ingredient", recipeId, ingredientId]` → quantity data
-- Secondary indexes for efficient querying:
-  `["ingredient_recipes", ingredientId, recipeId]` → recipe reference
+- Recipe tags: `["tag_recipes", tag, recipeId]` → recipe reference
+- Recipe strength: `["strength_recipes", strength, recipeId]` → recipe reference
+- Recipe sweetness: `["sweetness_recipes", sweetness, recipeId]` → recipe
+  reference
+- Ingredient types: `["ingredient_type", type, ingredientId]` → ingredient
+  reference
+- Ingredient search: `["ingredient_search", term, ingredientId]` → true
+- Ingredient allergens: `["ingredient_allergen", allergen, ingredientId]` → true
+- User favorites: `["user_favorites", userId, recipeId]` → timestamp data
+- User inventory: `["user_inventory", userId, ingredientId]` → quantity data
+- User recipe notes: `["user_notes", userId, recipeId]` → notes data
+- Magic link tokens: `["auth_tokens", token]` → token data with email and
+  expiration
+- User sessions: `["user_sessions", sessionId]` → session data
+- User session lookup: `["user_session_lookup", userId, sessionId]` → true
+- User email lookup: `["user_emails", email]` → userId
 
-This structure will enable efficient querying to find recipes based on available
-ingredients, which is a core feature of the application.
+This structure enables:
 
-### 8.5 AI Service Integration
+- Efficient recipe and ingredient lookups by ID
+- Fast filtering by tags, strength, and sweetness
+- Quick ingredient searching and filtering
+- Robust user data management
+- Secure authentication state management
+
+### 8.5 Data Access Patterns
+
+The implementation supports these key access patterns:
+
+1. Recipe Operations:
+   - Get by ID: `KV.get(["recipe", recipeId])`
+   - List all: `KV.list({ prefix: ["recipe"] })`
+   - Filter by tag: `KV.list({ prefix: ["tag_recipes", tag] })`
+   - Filter by strength: `KV.list({ prefix: ["strength_recipes", strength] })`
+   - Filter by sweetness:
+     `KV.list({ prefix: ["sweetness_recipes", sweetness] })`
+
+2. Ingredient Operations:
+   - Get by ID: `KV.get(["ingredient", ingredientId])`
+   - List all: `KV.list({ prefix: ["ingredient"] })`
+   - Filter by type: `KV.list({ prefix: ["ingredient_type", type] })`
+   - Search by term: `KV.list({ prefix: ["ingredient_search", term] })`
+   - Filter by allergen:
+     `KV.list({ prefix: ["ingredient_allergen", allergen] })`
+
+3. User Operations:
+   - Get favorites: `KV.list({ prefix: ["user_favorites", userId] })`
+   - Get inventory: `KV.list({ prefix: ["user_inventory", userId] })`
+   - Get recipe notes: `KV.list({ prefix: ["user_notes", userId] })`
+   - Validate session: `KV.get(["user_sessions", sessionId])`
+   - Look up by email: `KV.get(["user_emails", email])`
+
+All database operations are performed using atomic transactions where necessary
+to maintain data consistency, and are wrapped in error handling utilities
+provided by the `executeDbOperation` function.
+
+### 8.6 AI Service Integration
 
 **AI SDK**: Provider-agnostic AI framework for recipe extraction
 
@@ -288,17 +335,18 @@ including:
 - Blog posts
 - Social media content
 
-The implementation will follow these steps:
+The implementation using Fresh's handler functions follows these steps:
 
-1. Fetch webpage content using Deno's native fetch API
-2. Extract relevant text content using an HTML parser
-3. Process the content through the AI SDK to identify recipe components:
+1. Recipe extraction handler receives URL in request
+2. Fetch webpage content using Deno's native fetch API
+3. Extract relevant text content using an HTML parser
+4. Process the content through the AI SDK to identify recipe components:
    - Recipe name
    - Ingredients and measurements
    - Preparation steps
    - Garnish information
    - Glassware recommendations
-4. Return structured data to be validated by the user before saving
+5. Return structured data to be validated by the user before saving
 
 Example implementation pattern:
 
@@ -310,40 +358,52 @@ const ai = new OpenAI({
   apiKey: Deno.env.get("AI_API_KEY"),
 });
 
-async function extractRecipeFromUrl(url: string) {
-  // Fetch and parse webpage content
-  const response = await fetch(url);
-  const htmlContent = await response.text();
-  const textContent = extractTextFromHtml(htmlContent);
+export default async function ExtractHandler(req: Request, ctx: FreshContext) {
+  if (req.method !== "POST") {
+    return new Response("Method Not Allowed", { status: 405 });
+  }
 
-  // Use AI to extract structured recipe data
-  const result = await ai.chat.completions.create({
-    model: "gpt-4",
-    messages: [
-      {
-        role: "system",
-        content: "Extract cocktail recipe details from the provided content.",
-      },
-      {
-        role: "user",
-        content: textContent,
-      },
-    ],
-    response_format: { type: "json_object" },
-  });
+  try {
+    const { url } = await req.json();
 
-  return JSON.parse(result.choices[0].message.content);
+    // Fetch and parse webpage content
+    const response = await fetch(url);
+    const htmlContent = await response.text();
+    const textContent = extractTextFromHtml(htmlContent);
+
+    // Use AI to extract structured recipe data
+    const result = await ai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "Extract cocktail recipe details from the provided content.",
+        },
+        {
+          role: "user",
+          content: textContent,
+        },
+      ],
+      response_format: { type: "json_object" },
+    });
+
+    const extractedRecipe = JSON.parse(result.choices[0].message.content);
+    return ctx.render({ recipe: extractedRecipe });
+  } catch (error) {
+    return new Response(error.message, { status: 400 });
+  }
 }
 ```
 
 This approach enables us to:
 
-1. Work with any provider supported by the AI SDK
+1. Handle extraction requests directly in Fresh routes
 2. Process content from various sources with a unified approach
 3. Structure the extracted data consistently regardless of source
-4. Easily switch providers if needed for cost, performance, or feature reasons
+4. Render results server-side for better performance
+5. Provide immediate user feedback
 
-### 8.6 Deployment Considerations
+### 8.7 Deployment Considerations
 
 - **Deno Deploy**: Native deployment platform for Fresh applications
   - Global edge network
@@ -353,7 +413,7 @@ This approach enables us to:
   - Automatic HTTPS
   - Integrated monitoring
 
-### 8.7 Authentication System
+### 8.8 Authentication System
 
 **Magic Links Authentication**: Simple, passwordless authentication system
 
