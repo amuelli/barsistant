@@ -95,38 +95,35 @@ solution for the Barsistant application.
 
 ## Deployment Tasks
 
-| Status | Task ID   | Description                                       | Complexity | Dependencies       |
-| ------ | --------- | ------------------------------------------------- | ---------- | ------------------ |
-| ✅     | DEPLOY-1  | Set up Deno Deploy configuration                  | Low        | None               |
-|        | DEPLOY-2  | Configure Deno Deploy for production environment  | Low        | DEPLOY-1           |
-| ✅     | DEPLOY-3  | Set up GitHub Actions for automated deployments   | Medium     | DEPLOY-1           |
-|        | DEPLOY-4  | Create staging and production environments        | Medium     | DEPLOY-2           |
-|        | DEPLOY-5  | Implement feature flag system for phased rollouts | Medium     | None               |
-|        | DEPLOY-6  | Configure application monitoring with Deno Deploy | Low        | DEPLOY-2           |
-|        | DEPLOY-7  | Set up error tracking and alerting                | Medium     | DEPLOY-6           |
-|        | DEPLOY-8  | Implement logging and monitoring                  | Medium     | DEPLOY-6           |
-|        | DEPLOY-9  | Create database backup strategy                   | Medium     | DB-1               |
-|        | DEPLOY-10 | Create automated deployment tests                 | Medium     | DEPLOY-3, TEST-6   |
-|        | DEPLOY-11 | Implement rollback procedures                     | Medium     | DEPLOY-3           |
-|        | DEPLOY-12 | Set up performance monitoring dashboards          | Medium     | DEPLOY-6           |
-|        | DEPLOY-13 | Configure custom domain and SSL certificates      | Low        | DEPLOY-2           |
-|        | DEPLOY-14 | Implement security headers and best practices     | Medium     | DEPLOY-2           |
-|        | DEPLOY-15 | Configure CI/CD pipeline with GitHub              | Medium     | DEPLOY-1, DEPLOY-3 |
-|        | DEPLOY-16 | Create deployment documentation                   | Low        | All DEPLOY tasks   |
+| Status | Task ID   | Description                                       | Complexity | Dependencies     |
+| ------ | --------- | ------------------------------------------------- | ---------- | ---------------- |
+| ✅     | DEPLOY-1  | Set up Deno Deploy configuration                  | Low        | None             |
+| ✅     | DEPLOY-2  | Configure Deno Deploy for production environment  | Low        | DEPLOY-1         |
+| ✅     | DEPLOY-3  | Set up GitHub Actions for automated deployments   | Medium     | DEPLOY-1         |
+|        | DEPLOY-5  | Implement feature flag system for phased rollouts | Medium     | None             |
+|        | DEPLOY-6  | Configure application monitoring with Deno Deploy | Low        | DEPLOY-2         |
+|        | DEPLOY-7  | Set up error tracking and alerting                | Medium     | DEPLOY-6         |
+|        | DEPLOY-8  | Implement logging and monitoring                  | Medium     | DEPLOY-6         |
+|        | DEPLOY-9  | Create database backup strategy                   | Medium     | DB-1             |
+|        | DEPLOY-10 | Create automated deployment tests                 | Medium     | DEPLOY-3, TEST-6 |
+|        | DEPLOY-11 | Implement rollback procedures                     | Medium     | DEPLOY-3         |
+|        | DEPLOY-12 | Set up performance monitoring dashboards          | Medium     | DEPLOY-6         |
+|        | DEPLOY-13 | Configure custom domain and SSL certificates      | Low        | DEPLOY-2         |
+|        | DEPLOY-14 | Implement security headers and best practices     | Medium     | DEPLOY-2         |
+|        | DEPLOY-16 | Create deployment documentation                   | Low        | All DEPLOY tasks |
 
 ## Testing Tasks
 
-| Status | Task ID | Description                                   | Complexity | Dependencies                   |
-| ------ | ------- | --------------------------------------------- | ---------- | ------------------------------ |
-|        | TEST-1  | Set up testing framework with Deno            | Low        | None                           |
-|        | TEST-2  | Create unit tests for database models         | Medium     | DB-3, DB-4, TEST-1             |
-|        | TEST-3  | Implement component tests for UI elements     | Medium     | UI-3, UI-4, UI-5, TEST-1       |
-|        | TEST-4  | Create handler function tests                 | Medium     | AI-7, TEST-1                   |
-|        | TEST-5  | Implement AI extraction tests                 | Medium     | AI-5, TEST-1                   |
-|        | TEST-6  | Add integration tests for critical user flows | High       | TEST-1, TEST-2, TEST-3, TEST-4 |
-|        | TEST-7  | Create accessibility testing suite            | Medium     | UI-12, TEST-1                  |
-|        | TEST-8  | Implement performance benchmarks              | Medium     | PERF-3, TEST-1                 |
-|        | TEST-9  | Create security testing suite                 | High       | USER-1, AI-7, TEST-1           |
+| Status | Task ID | Description                                   | Complexity | Dependencies             |
+| ------ | ------- | --------------------------------------------- | ---------- | ------------------------ |
+|        | TEST-1  | Set up testing framework with Deno            | Low        | None                     |
+|        | TEST-2  | Create unit tests for database models         | Medium     | DB-3, DB-4, TEST-1       |
+|        | TEST-3  | Implement component tests for UI elements     | Medium     | UI-3, UI-4, UI-5, TEST-1 |
+|        | TEST-5  | Implement AI extraction tests                 | Medium     | AI-5, TEST-1             |
+|        | TEST-6  | Add integration tests for critical user flows | High       | TEST-1, TEST-2, TEST-3   |
+|        | TEST-7  | Create accessibility testing suite            | Medium     | UI-12, TEST-1            |
+|        | TEST-8  | Implement performance benchmarks              | Medium     | PERF-3, TEST-1           |
+|        | TEST-9  | Create security testing suite                 | High       | USER-1, AI-7, TEST-1     |
 
 ## Data Structure Specifications
 
