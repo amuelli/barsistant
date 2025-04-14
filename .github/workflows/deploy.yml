@@ -32,5 +32,3 @@ jobs:
           project: "barsistant"
           entrypoint: "main.ts"
           root: "."
-          
-          
