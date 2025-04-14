@@ -231,7 +231,23 @@ streamlined option for our application, with features like:
   - Preact Signals for state management
   - Fresh routing for navigation
 
-### 8.3 Runtime Environment
+### 8.3 Frontend Framework and Libraries
+
+- Fresh framework for server-side rendering and routing
+- Tailwind CSS v4 for styling, using `@pakornv/fresh-plugin-tailwindcss`
+- DaisyUI v5 for component library and theming, configured via CSS:
+  ```css
+  @import "tailwindcss";
+
+  @plugin "daisyui" {
+    themes: ["lofi"];
+  }
+  ```
+- Preact for component development
+- CSS modules for component-specific styling when needed
+- Design system focused on clean, minimalist aesthetic using lofi theme
+
+### 8.4 Runtime Environment
 
 - **Deno**: Modern JavaScript/TypeScript runtime
   - Built-in TypeScript support
@@ -240,7 +256,7 @@ streamlined option for our application, with features like:
   - Built-in testing and formatting tools
   - Web-standard APIs
 
-### 8.4 Database Solution
+### 8.5 Database Solution
 
 **Deno KV**: Built-in key-value database for Deno
 

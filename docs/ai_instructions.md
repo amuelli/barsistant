@@ -42,11 +42,20 @@ best practices.
 
 ### UI Development
 
-- Use Tailwind CSS utility classes for styling
-- Leverage daisyUI components when appropriate
+- Use Tailwind CSS v4 with Fresh via `@pakornv/fresh-plugin-tailwindcss`
+- Configure DaisyUI v5 directly in the CSS file using the `@import` and
+  `@plugin` syntax:
+  ```css
+  @import "tailwindcss";
+
+  @plugin "daisyui" {
+    themes: ["lofi"];
+  }
+  ```
+- Apply themes using DaisyUI's theme system
 - Ensure responsive design for all UI components
 - Maintain accessibility standards (WCAG compliance)
-- Implement dark mode support using daisyUI themes
+- Use daisyUI components to maintain consistent UI patterns
 
 ## Implementation Process
 

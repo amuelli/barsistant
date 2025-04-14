@@ -144,3 +144,19 @@ Additional documentation can be found in the `/docs` directory:
 
 This project is licensed under the terms of the license included in the
 [LICENSE](LICENSE) file.
+
+## Development Setup
+
+### UI Framework
+
+The project uses Fresh with Tailwind CSS v4 and DaisyUI v5:
+
+1. Fresh's Tailwind plugin is configured via `@pakornv/fresh-plugin-tailwindcss`
+2. DaisyUI themes are configured directly in `static/styles.css`:
+   ```css
+   @import "tailwindcss";
+
+   @plugin "daisyui" {
+     themes: ["lofi"];
+   }
+   ```
