@@ -39,7 +39,7 @@ solution for the Barsistant application.
 | ------ | ------- | -------------------------------------------------- | ---------- | ---------------- |
 | ✅     | UI-1    | Set up Tailwind CSS and daisyUI integration        | Low        | None             |
 | ✅     | UI-2    | Create responsive layout templates                 | Medium     | UI-1             |
-|        | UI-3    | Implement recipe display component                 | Medium     | UI-1             |
+| ✅     | UI-3    | Implement recipe display component                 | Medium     | UI-1             |
 |        | UI-4    | Create recipe search and filter interface          | Medium     | UI-1, DB-7       |
 |        | UI-5    | Develop recipe submission form                     | Medium     | UI-1, DB-3       |
 |        | UI-6    | Implement recipe extraction form and preview       | High       | AI-5, AI-6, UI-1 |
