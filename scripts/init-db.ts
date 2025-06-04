@@ -10,6 +10,27 @@ const DB_VERSION_KEY = ["db_meta", "version"];
 const CURRENT_VERSION = 1;
 
 /**
+ * Prompt the user for confirmation
+ * @param message The message to display
+ * @returns True if confirmed, false otherwise
+ */
+async function confirm(message: string): Promise<boolean> {
+  console.log(`${message} (y/N)`);
+
+  // Create a buffer reader for stdin
+  const buffer = new Uint8Array(1024);
+  const n = await Deno.stdin.read(buffer);
+
+  if (n === null) {
+    return false; // EOF reached
+  }
+
+  const input = new TextDecoder().decode(buffer.subarray(0, n)).trim()
+    .toLowerCase();
+  return input === "y" || input === "yes";
+}
+
+/**
  * Check if the database has already been initialized
  */
 async function isInitialized(): Promise<boolean> {
@@ -342,6 +363,53 @@ async function initializeRecipes(): Promise<void> {
 }
 
 /**
+ * Reset the database by deleting all data
+ */
+async function resetDatabase(): Promise<void> {
+  console.log("Resetting database...");
+
+  // Delete ingredients
+  for await (const entry of kv.list({ prefix: ["ingredient"] })) {
+    await kv.delete(entry.key);
+  }
+
+  // Delete recipes
+  for await (const entry of kv.list({ prefix: ["recipe"] })) {
+    await kv.delete(entry.key);
+  }
+
+  // Delete recipe-ingredient relations
+  for await (const entry of kv.list({ prefix: ["recipe_ingredient"] })) {
+    await kv.delete(entry.key);
+  }
+
+  // Delete ingredient-recipes relations
+  for await (const entry of kv.list({ prefix: ["ingredient_recipes"] })) {
+    await kv.delete(entry.key);
+  }
+
+  // Delete tag-recipes relations
+  for await (const entry of kv.list({ prefix: ["tag_recipes"] })) {
+    await kv.delete(entry.key);
+  }
+
+  // Delete strength-recipes relations
+  for await (const entry of kv.list({ prefix: ["strength_recipes"] })) {
+    await kv.delete(entry.key);
+  }
+
+  // Delete sweetness-recipes relations
+  for await (const entry of kv.list({ prefix: ["sweetness_recipes"] })) {
+    await kv.delete(entry.key);
+  }
+
+  // Delete DB version
+  await kv.delete(DB_VERSION_KEY);
+
+  console.log("Database reset complete!");
+}
+
+/**
  * Main initialization function
  */
 async function initializeDatabase(): Promise<void> {
@@ -349,7 +417,15 @@ async function initializeDatabase(): Promise<void> {
     // Check if already initialized
     if (await isInitialized()) {
       console.log("Database is already initialized.");
-      return;
+
+      // Ask whether to reset
+      if (
+        await confirm("Do you want to reset the database and initialize again?")
+      ) {
+        await resetDatabase();
+      } else {
+        return;
+      }
     }
 
     console.log("Starting database initialization...");
