@@ -1,3 +1,14 @@
+import { page } from "fresh";
+import { define } from "../utils.ts";
+
+export const handler = define.handlers({
+  GET(ctx) {
+    ctx.state.title = "Recipes";
+
+    return page();
+  },
+});
+
 export default function ExtractRecipePage() {
   return (
     <div class="container mx-auto p-4">

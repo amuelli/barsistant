@@ -233,9 +233,13 @@ streamlined option for our application, with features like:
 
 ### 8.3 Frontend Framework and Libraries
 
-- Fresh framework for server-side rendering and routing
-- Tailwind CSS v4 for styling, using `@pakornv/fresh-plugin-tailwindcss`
-- DaisyUI v5 for component library and theming, configured via CSS:
+- Fresh framework (`jsr:@fresh/core@^2.0.0-alpha.34`) for server-side rendering
+  and routing
+- Tailwind CSS v4 (`npm:tailwindcss@^4.1.7`) for styling, using
+  `jsr:@pakornv/fresh-plugin-tailwindcss@2.0.0-alpha.1`
+- DaisyUI v5 (`npm:daisyui@^5.0.43`) for component library and theming,
+  configured via CSS:
+
   ```css
   @import "tailwindcss";
 
@@ -243,7 +247,9 @@ streamlined option for our application, with features like:
     themes: ["lofi"];
   }
   ```
-- Preact for component development
+
+- Preact (`npm:preact@^10.26.6`) for component development
+- Preact Signals (`@preact/signals@1.2.2`) for state management
 - CSS modules for component-specific styling when needed
 - Design system focused on clean, minimalist aesthetic using lofi theme
 
@@ -251,9 +257,6 @@ streamlined option for our application, with features like:
 
 - **Deno**: Modern JavaScript/TypeScript runtime
   - Built-in TypeScript support
-  - Enhanced security with permissions system
-  - Native ESM modules support
-  - Built-in testing and formatting tools
   - Web-standard APIs
 
 ### 8.5 Database Solution

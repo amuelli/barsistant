@@ -131,7 +131,7 @@ async function initializeRecipes(
         quantity: ing.quantity,
         unit: ing.unit,
         optional: ing.optional ?? false,
-      })
+      }),
     );
 
     // Create the recipe

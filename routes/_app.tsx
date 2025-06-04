@@ -1,12 +1,15 @@
-import { PageProps } from "$fresh/server.ts";
+import { PageProps } from "fresh";
+import { State } from "../utils.ts";
 
-export default function App({ Component }: PageProps) {
+export default function App({ Component, state }: PageProps<unknown, State>) {
   return (
     <html lang="en">
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Barsistant</title>
+        {state.title
+          ? <title>Barsistant - {state.title}</title>
+          : <title>Barsistant</title>}
         <link rel="stylesheet" href="/styles.css" />
       </head>
       <body data-theme="lofi">
@@ -67,12 +70,10 @@ export default function App({ Component }: PageProps) {
               {/* Dropdown menu removed as it's not needed yet */}
             </div>
           </div>
-
           {/* Main content */}
           <main class="flex-grow">
             <Component />
           </main>
-
           {/* Footer */}
           <footer class="footer p-10 bg-neutral text-neutral-content">
             <aside>
