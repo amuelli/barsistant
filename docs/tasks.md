@@ -115,8 +115,9 @@ solution for the Barsistant application.
 
 | Status | Task ID | Description                                   | Complexity | Dependencies             |
 | ------ | ------- | --------------------------------------------- | ---------- | ------------------------ |
-|        | TEST-1  | Set up testing framework with Deno            | Low        | None                     |
-|        | TEST-2  | Create unit tests for database models         | Medium     | DB-3, DB-4, TEST-1       |
+| ✅     | TEST-1  | Set up testing framework with Deno            | Low        | None                     |
+| ✅     | TEST-2  | Create unit tests for database models         | Medium     | DB-3, DB-4, TEST-1       |
+| ✅     | TEST-2a | Create unit tests for recipe helper module    | Medium     | DB-3, DB-4, TEST-1       |
 |        | TEST-3  | Implement component tests for UI elements     | Medium     | UI-3, UI-4, UI-5, TEST-1 |
 |        | TEST-5  | Implement AI extraction tests                 | Medium     | AI-5, TEST-1             |
 |        | TEST-6  | Add integration tests for critical user flows | High       | TEST-1, TEST-2, TEST-3   |

@@ -1,8 +1,10 @@
 import type { IngredientType, MeasurementUnit } from "../types/ingredient.ts";
-import type { RecipeIngredient } from "../types/recipe.ts";
 import { executeDbOperation, kv } from "../utils/db.ts";
 import { ingredientModel } from "../utils/ingredient-model.ts";
-import { recipeModel } from "../utils/recipe-model.ts";
+import {
+  createRecipeWithSimpleIngredients,
+  SimpleIngredient,
+} from "../utils/recipe-helper.ts";
 
 const DB_VERSION_KEY = ["db_meta", "version"];
 const CURRENT_VERSION = 1;
@@ -23,7 +25,8 @@ async function markInitialized(): Promise<void> {
 }
 
 /**
- * Initialize base ingredients
+ * Initialize base ingredients - this is still useful to have standard ingredients
+ * available for browsing, even with the JIT approach
  */
 async function initializeIngredients(): Promise<Map<string, string>> {
   // Map of ingredient name to ID for recipe relationships
@@ -72,76 +75,260 @@ async function initializeIngredients(): Promise<Map<string, string>> {
 }
 
 /**
- * Initialize starter recipes using the created ingredients
+ * Initialize starter recipes using JIT ingredient creation
  */
-async function initializeRecipes(
-  ingredientIds: Map<string, string>,
-): Promise<void> {
+async function initializeRecipes(): Promise<void> {
   const starterRecipes: Array<{
     name: string;
     description: string;
-    instructions: string[];
-    ingredients: Array<{
-      name: string;
-      quantity: string;
-      unit: MeasurementUnit;
-      optional?: boolean;
-    }>;
+    strength: number;
+    sweetness: number;
+    preparation: string[];
+    ingredients: SimpleIngredient[];
     tags?: string[];
-    glass?: string;
+    glassware?: string;
     garnish?: string[];
-    strength?: number;
-    sweetness?: number;
   }> = [
     {
       name: "Old Fashioned",
       description: "A classic cocktail that showcases the character of bourbon",
-      instructions: [
+      preparation: [
         "Add simple syrup and bitters to a rocks glass",
         "Add bourbon and stir",
         "Add a large ice cube and stir until well chilled",
         "Express orange peel over drink and garnish",
       ],
       ingredients: [
-        { name: "Bourbon Whiskey", quantity: "2", unit: "oz", optional: false },
-        { name: "Simple Syrup", quantity: "0.25", unit: "oz", optional: false },
+        {
+          name: "Bourbon Whiskey",
+          quantity: "2",
+          unit: "oz",
+          optional: false,
+          type: "spirit",
+          abv: 40,
+        },
+        {
+          name: "Simple Syrup",
+          quantity: "0.25",
+          unit: "oz",
+          optional: false,
+          type: "syrup",
+        },
         {
           name: "Angostura Bitters",
           quantity: "2",
           unit: "dash",
           optional: false,
+          type: "bitter",
         },
       ],
       tags: ["classic", "spirit-forward"],
-      glass: "rocks",
+      glassware: "rocks",
       garnish: ["orange peel"],
       strength: 8,
+      sweetness: 6,
+    },
+    {
+      name: "Negroni",
+      description: "A perfectly balanced bitter Italian classic cocktail",
+      preparation: [
+        "Add all ingredients to a mixing glass with ice",
+        "Stir until well-chilled (about 30 seconds)",
+        "Strain into a rocks glass over a large ice cube",
+        "Express an orange peel over the drink and garnish",
+      ],
+      ingredients: [
+        {
+          name: "London Dry Gin",
+          quantity: "1",
+          unit: "oz",
+          optional: false,
+          type: "spirit",
+          abv: 42,
+        },
+        {
+          name: "Campari",
+          quantity: "1",
+          unit: "oz",
+          optional: false,
+          type: "liqueur",
+          abv: 24,
+        },
+        {
+          name: "Sweet Vermouth",
+          quantity: "1",
+          unit: "oz",
+          optional: false,
+          type: "wine",
+          abv: 16,
+        },
+      ],
+      tags: ["classic", "bitter", "italian", "aperitif"],
+      glassware: "rocks",
+      garnish: ["orange peel"],
+      strength: 9,
+      sweetness: 4,
+    },
+    {
+      name: "Whiskey Sour",
+      description: "A perfectly balanced sweet and sour whiskey cocktail",
+      preparation: [
+        "Add all ingredients to a shaker with ice",
+        "Shake vigorously for about 15 seconds",
+        "Strain into a rocks glass over fresh ice",
+        "Garnish with an orange slice and a cherry",
+      ],
+      ingredients: [
+        {
+          name: "Bourbon Whiskey",
+          quantity: "2",
+          unit: "oz",
+          optional: false,
+          type: "spirit",
+          abv: 40,
+        },
+        {
+          name: "Fresh Lemon Juice",
+          quantity: "0.75",
+          unit: "oz",
+          optional: false,
+          type: "juice",
+        },
+        {
+          name: "Simple Syrup",
+          quantity: "0.5",
+          unit: "oz",
+          optional: false,
+          type: "syrup",
+        },
+        {
+          name: "Egg White",
+          quantity: "0.5",
+          unit: "oz",
+          optional: true,
+          type: "other",
+        },
+      ],
+      tags: ["classic", "sour", "shaken"],
+      glassware: "rocks",
+      garnish: ["orange slice", "cocktail cherry"],
+      strength: 7,
+      sweetness: 5,
+    },
+    {
+      name: "Mojito",
+      description: "A refreshing Cuban highball with mint and lime",
+      preparation: [
+        "In a highball glass, muddle mint leaves with simple syrup and lime juice",
+        "Add rum and fill the glass with crushed ice",
+        "Top with soda water and stir gently",
+        "Garnish with a mint sprig and lime wheel",
+      ],
+      ingredients: [
+        {
+          name: "White Rum",
+          quantity: "2",
+          unit: "oz",
+          optional: false,
+          type: "spirit",
+          abv: 40,
+        },
+        {
+          name: "Fresh Lime Juice",
+          quantity: "0.75",
+          unit: "oz",
+          optional: false,
+          type: "juice",
+        },
+        {
+          name: "Simple Syrup",
+          quantity: "0.5",
+          unit: "oz",
+          optional: false,
+          type: "syrup",
+        },
+        {
+          name: "Fresh Mint Leaves",
+          quantity: "8",
+          unit: "leaf",
+          optional: false,
+          type: "herb",
+        },
+        {
+          name: "Soda Water",
+          quantity: "2",
+          unit: "oz",
+          optional: false,
+          type: "mixer",
+        },
+      ],
+      tags: ["classic", "refreshing", "summer", "cuban"],
+      glassware: "highball",
+      garnish: ["mint sprig", "lime wheel"],
+      strength: 6,
+      sweetness: 6,
+    },
+    {
+      name: "Cosmopolitan",
+      description: "A sophisticated cranberry and citrus vodka cocktail",
+      preparation: [
+        "Add all ingredients to a shaker with ice",
+        "Shake until well-chilled",
+        "Double strain into a chilled cocktail glass",
+        "Garnish with a lime wheel or orange twist",
+      ],
+      ingredients: [
+        {
+          name: "Citrus Vodka",
+          quantity: "1.5",
+          unit: "oz",
+          optional: false,
+          type: "spirit",
+          abv: 40,
+        },
+        {
+          name: "Cointreau",
+          quantity: "0.75",
+          unit: "oz",
+          optional: false,
+          type: "liqueur",
+          abv: 40,
+        },
+        {
+          name: "Cranberry Juice",
+          quantity: "0.75",
+          unit: "oz",
+          optional: false,
+          type: "juice",
+        },
+        {
+          name: "Fresh Lime Juice",
+          quantity: "0.5",
+          unit: "oz",
+          optional: false,
+          type: "juice",
+        },
+      ],
+      tags: ["classic", "fruity", "shaken", "90s"],
+      glassware: "cocktail",
+      garnish: ["lime wheel", "orange twist"],
+      strength: 7,
       sweetness: 6,
     },
     // Add more starter recipes here
   ];
 
-  console.log("Initializing starter recipes...");
+  console.log("Initializing starter recipes with JIT ingredient creation...");
 
   for (const recipe of starterRecipes) {
-    // Convert ingredient references to IDs
-    const recipeIngredients: RecipeIngredient[] = recipe.ingredients.map(
-      (ing) => ({
-        ingredientId: ingredientIds.get(ing.name)!,
-        quantity: ing.quantity,
-        unit: ing.unit,
-        optional: ing.optional ?? false,
-      }),
-    );
-
-    // Create the recipe
-    await recipeModel.create({
+    // Create the recipe with JIT ingredient creation
+    await createRecipeWithSimpleIngredients({
       name: recipe.name,
       description: recipe.description,
-      preparation: recipe.instructions,
-      ingredients: recipeIngredients,
+      preparation: recipe.preparation,
+      ingredients: recipe.ingredients,
       tags: recipe.tags || [],
-      glassware: recipe.glass || "",
+      glassware: recipe.glassware || "",
       garnish: recipe.garnish || [],
       strength: recipe.strength || 5,
       sweetness: recipe.sweetness || 5,
@@ -168,9 +355,11 @@ async function initializeDatabase(): Promise<void> {
     console.log("Starting database initialization...");
 
     try {
-      // Initialize in order
-      const ingredientIds = await initializeIngredients();
-      await initializeRecipes(ingredientIds);
+      // Initialize in order - still create base ingredients for browsing
+      await initializeIngredients();
+
+      // Initialize recipes with JIT approach
+      await initializeRecipes();
 
       // Mark as initialized only after everything succeeds
       await markInitialized();
