@@ -18,8 +18,10 @@
 
 // npm imports for ai-sdk (Deno compatibility via npm specifier)
 import { openai } from "@ai-sdk/openai";
+import "@std/dotenv/load";
 import { type CreateMessage, generateObject, generateText } from "ai";
 import { z } from "zod";
+import { IngredientType, MeasurementUnit } from "../types/ingredient.ts";
 
 // import { anthropic } from "npm:@ai-sdk/anthropic@3.1.13"; // Uncomment if Anthropic is needed
 
@@ -76,15 +78,15 @@ export interface RecipeExtraction {
   description: string;
   ingredients: {
     name: string;
-    quantity: string;
-    unit: string;
+    quantity: number;
+    unit: MeasurementUnit;
     optional: boolean;
-    type: string;
+    type: IngredientType;
     notes?: string;
   }[];
   instructions: string[];
   garnish?: string[];
-  glassware?: string;
+  glassware: string;
   category?: string[];
   source: {
     url: string;
@@ -135,19 +137,27 @@ Provide concise notes on how to improve future extractions based on these correc
 
 // Zod schema for structured recipe extraction (matches RecipeExtraction interface)
 const RecipeExtractionSchema = z.object({
-  title: z.string(),
+  title: z.string().describe("The name of the cocktail recipe"),
   description: z.string(),
   ingredients: z.array(z.object({
     name: z.string(),
-    quantity: z.string(),
-    unit: z.string(),
+    quantity: z.number(),
+    unit: z.string().describe(
+      `needs to be a valid measurement unit from this list: ml, oz, cl, dash, drop, barspoon, tsp, tbsp, cup, pint, part, piece, slice, whole, pinch, spritz, leaf, sprig, rim.`,
+    ),
     optional: z.boolean(),
-    type: z.string(),
+    type: z.string().describe(
+      `needs to be a valid ingredient type from this list: spirit, liqueur, wine, mixer, juice, syrup, bitter, fruit, herb, spice, other.`,
+    ),
     notes: z.string().optional(),
   })),
-  instructions: z.array(z.string()),
+  instructions: z.array(z.string()).describe(
+    "Step-by-step instructions for preparing the cocktail",
+  ),
   garnish: z.array(z.string()).optional(),
-  glassware: z.string().optional(),
+  glassware: z.string().describe(
+    `needs to be a valid glassware type from this list: martini, coupe, highball, collins, old-fashioned, nick-and-nora, margarita, hurricane, sour, fizz, wine, shot, irish-coffee.`,
+  ),
   category: z.array(z.string()).optional(),
   source: z.object({
     url: z.string(),

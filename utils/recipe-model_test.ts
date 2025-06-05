@@ -5,7 +5,7 @@ import {
   assertExists,
 } from "https://deno.land/std@0.208.0/assert/mod.ts";
 import { MeasurementUnit } from "../types/ingredient.ts";
-import { Recipe } from "../types/recipe.ts";
+import { GlasswareType, Recipe } from "../types/recipe.ts";
 import { recipeModel } from "./recipe-model.ts";
 
 Deno.test("Recipe Model - CRUD Operations", async (t) => {
@@ -18,25 +18,25 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     ingredients: [
       {
         ingredientId: "bourbon123",
-        quantity: "60",
+        quantity: 60,
         unit: "ml" as MeasurementUnit,
         optional: false,
       },
       {
         ingredientId: "simple-syrup123",
-        quantity: "10",
+        quantity: 10,
         unit: "ml" as MeasurementUnit,
         optional: false,
       },
       {
         ingredientId: "bitters123",
-        quantity: "3",
+        quantity: 3,
         unit: "dash" as MeasurementUnit,
         optional: false,
       },
     ],
     garnish: ["Orange Peel"],
-    glassware: "Old-fashioned glass",
+    glassware: "old-fashioned" as GlasswareType,
     preparation: [
       "Add all ingredients to an old-fashioned glass with ice",
       "Stir until chilled",
@@ -58,37 +58,37 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     ingredients: [
       {
         ingredientId: "white-rum123",
-        quantity: "50",
+        quantity: 50,
         unit: "ml" as MeasurementUnit,
         optional: false,
       },
       {
         ingredientId: "lime123",
-        quantity: "1",
+        quantity: 1,
         unit: "piece" as MeasurementUnit,
         optional: false,
       },
       {
         ingredientId: "mint123",
-        quantity: "8",
+        quantity: 8,
         unit: "leaf" as MeasurementUnit,
         optional: false,
       },
       {
         ingredientId: "simple-syrup123",
-        quantity: "15",
+        quantity: 15,
         unit: "ml" as MeasurementUnit,
         optional: false,
       },
       {
         ingredientId: "soda123",
-        quantity: "60",
+        quantity: 60,
         unit: "ml" as MeasurementUnit,
         optional: false,
       },
     ],
     garnish: ["Mint Sprig", "Lime Wedge"],
-    glassware: "Highball glass",
+    glassware: "highball" as GlasswareType,
     preparation: [
       "Muddle mint leaves with simple syrup and lime juice",
       "Add rum and ice, shake briefly",
@@ -113,25 +113,25 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     ingredients: [
       {
         ingredientId: "gin123",
-        quantity: "30",
+        quantity: 30,
         unit: "ml" as MeasurementUnit,
         optional: false,
       },
       {
         ingredientId: "sweet-vermouth123",
-        quantity: "30",
+        quantity: 30,
         unit: "ml" as MeasurementUnit,
         optional: false,
       },
       {
         ingredientId: "campari123",
-        quantity: "30",
+        quantity: 30,
         unit: "ml" as MeasurementUnit,
         optional: false,
       },
     ],
     garnish: ["Orange Peel"],
-    glassware: "Rocks glass",
+    glassware: "rocks" as GlasswareType,
     preparation: [
       "Add all ingredients to a mixing glass with ice",
       "Stir until well-chilled",
@@ -156,7 +156,7 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     assertExists(oldFashioned.id, "Recipe should have an ID");
     assertEquals(oldFashioned.name, testOldFashioned.name);
     assertEquals(oldFashioned.ingredients.length, 3);
-    assertEquals(oldFashioned.ingredients[0].quantity, "60");
+    assertEquals(oldFashioned.ingredients[0].quantity, 60);
     assertEquals(oldFashioned.ingredients[0].unit, "ml");
     assertExists(oldFashioned.createdAt);
     assertExists(oldFashioned.updatedAt);
@@ -194,7 +194,7 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     assertEquals(recipe!.id, createdRecipes[0].id);
     assertEquals(recipe!.name, testOldFashioned.name);
     assertEquals(recipe!.ingredients.length, 3);
-    assertEquals(recipe!.ingredients[0].quantity, "60");
+    assertEquals(recipe!.ingredients[0].quantity, 60);
   });
 
   // Test updating a recipe
@@ -206,21 +206,21 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
         // Update the bourbon quantity
         {
           ingredientId: "bourbon123",
-          quantity: "75", // Increased from 60ml to 75ml
+          quantity: 75, // Increased from 60ml to 75ml
           unit: "ml" as MeasurementUnit,
           optional: false,
         },
         // Keep the simple syrup the same
         {
           ingredientId: "simple-syrup123",
-          quantity: "10",
+          quantity: 10,
           unit: "ml" as MeasurementUnit,
           optional: false,
         },
         // Keep the bitters the same
         {
           ingredientId: "bitters123",
-          quantity: "3",
+          quantity: 3,
           unit: "dash" as MeasurementUnit,
           optional: false,
         },
@@ -232,7 +232,7 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     assertEquals(updatedRecipe.strength, 9);
     assertEquals(updatedRecipe.ingredients.length, 3);
     // Check that the amount was updated
-    assertEquals(updatedRecipe.ingredients[0].quantity, "75");
+    assertEquals(updatedRecipe.ingredients[0].quantity, 75);
   });
 
   // Test listing recipes

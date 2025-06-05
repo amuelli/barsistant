@@ -1,4 +1,5 @@
 import type { IngredientType, MeasurementUnit } from "../types/ingredient.ts";
+import { GlasswareType } from "../types/recipe.ts";
 import { executeDbOperation, kv } from "../utils/db.ts";
 import { ingredientModel } from "../utils/ingredient-model.ts";
 import {
@@ -107,7 +108,7 @@ async function initializeRecipes(): Promise<void> {
     preparation: string[];
     ingredients: SimpleIngredient[];
     tags?: string[];
-    glassware?: string;
+    glassware: GlasswareType;
     garnish?: string[];
   }> = [
     {
@@ -122,7 +123,7 @@ async function initializeRecipes(): Promise<void> {
       ingredients: [
         {
           name: "Bourbon Whiskey",
-          quantity: "2",
+          quantity: 2,
           unit: "oz",
           optional: false,
           type: "spirit",
@@ -130,14 +131,14 @@ async function initializeRecipes(): Promise<void> {
         },
         {
           name: "Simple Syrup",
-          quantity: "0.25",
+          quantity: 0.25,
           unit: "oz",
           optional: false,
           type: "syrup",
         },
         {
           name: "Angostura Bitters",
-          quantity: "2",
+          quantity: 2,
           unit: "dash",
           optional: false,
           type: "bitter",
@@ -161,7 +162,7 @@ async function initializeRecipes(): Promise<void> {
       ingredients: [
         {
           name: "London Dry Gin",
-          quantity: "1",
+          quantity: 1,
           unit: "oz",
           optional: false,
           type: "spirit",
@@ -169,7 +170,7 @@ async function initializeRecipes(): Promise<void> {
         },
         {
           name: "Campari",
-          quantity: "1",
+          quantity: 1,
           unit: "oz",
           optional: false,
           type: "liqueur",
@@ -177,7 +178,7 @@ async function initializeRecipes(): Promise<void> {
         },
         {
           name: "Sweet Vermouth",
-          quantity: "1",
+          quantity: 1,
           unit: "oz",
           optional: false,
           type: "wine",
@@ -202,7 +203,7 @@ async function initializeRecipes(): Promise<void> {
       ingredients: [
         {
           name: "Bourbon Whiskey",
-          quantity: "2",
+          quantity: 2,
           unit: "oz",
           optional: false,
           type: "spirit",
@@ -210,21 +211,21 @@ async function initializeRecipes(): Promise<void> {
         },
         {
           name: "Fresh Lemon Juice",
-          quantity: "0.75",
+          quantity: 0.75,
           unit: "oz",
           optional: false,
           type: "juice",
         },
         {
           name: "Simple Syrup",
-          quantity: "0.5",
+          quantity: 0.5,
           unit: "oz",
           optional: false,
           type: "syrup",
         },
         {
           name: "Egg White",
-          quantity: "0.5",
+          quantity: 0.5,
           unit: "oz",
           optional: true,
           type: "other",
@@ -248,7 +249,7 @@ async function initializeRecipes(): Promise<void> {
       ingredients: [
         {
           name: "White Rum",
-          quantity: "2",
+          quantity: 2,
           unit: "oz",
           optional: false,
           type: "spirit",
@@ -256,28 +257,28 @@ async function initializeRecipes(): Promise<void> {
         },
         {
           name: "Fresh Lime Juice",
-          quantity: "0.75",
+          quantity: 0.75,
           unit: "oz",
           optional: false,
           type: "juice",
         },
         {
           name: "Simple Syrup",
-          quantity: "0.5",
+          quantity: 0.5,
           unit: "oz",
           optional: false,
           type: "syrup",
         },
         {
           name: "Fresh Mint Leaves",
-          quantity: "8",
+          quantity: 8,
           unit: "leaf",
           optional: false,
           type: "herb",
         },
         {
           name: "Soda Water",
-          quantity: "2",
+          quantity: 2,
           unit: "oz",
           optional: false,
           type: "mixer",
@@ -301,7 +302,7 @@ async function initializeRecipes(): Promise<void> {
       ingredients: [
         {
           name: "Citrus Vodka",
-          quantity: "1.5",
+          quantity: 1.5,
           unit: "oz",
           optional: false,
           type: "spirit",
@@ -309,7 +310,7 @@ async function initializeRecipes(): Promise<void> {
         },
         {
           name: "Cointreau",
-          quantity: "0.75",
+          quantity: 0.75,
           unit: "oz",
           optional: false,
           type: "liqueur",
@@ -317,21 +318,21 @@ async function initializeRecipes(): Promise<void> {
         },
         {
           name: "Cranberry Juice",
-          quantity: "0.75",
+          quantity: 0.75,
           unit: "oz",
           optional: false,
           type: "juice",
         },
         {
           name: "Fresh Lime Juice",
-          quantity: "0.5",
+          quantity: 0.5,
           unit: "oz",
           optional: false,
           type: "juice",
         },
       ],
       tags: ["classic", "fruity", "shaken", "90s"],
-      glassware: "cocktail",
+      glassware: "coupe",
       garnish: ["lime wheel", "orange twist"],
       strength: 7,
       sweetness: 6,
@@ -349,7 +350,7 @@ async function initializeRecipes(): Promise<void> {
       preparation: recipe.preparation,
       ingredients: recipe.ingredients,
       tags: recipe.tags || [],
-      glassware: recipe.glassware || "",
+      glassware: recipe.glassware,
       garnish: recipe.garnish || [],
       strength: recipe.strength || 5,
       sweetness: recipe.sweetness || 5,

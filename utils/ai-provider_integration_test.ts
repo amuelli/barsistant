@@ -1,7 +1,7 @@
 // Integration test for AI provider module
 // deno-lint-ignore-file no-explicit-any
 import { assert } from "@std/assert";
-import "jsr:@std/dotenv/load";
+import "@std/dotenv/load";
 import { AIError, extractRecipeFromContent } from "./ai-provider.ts";
 
 Deno.test({

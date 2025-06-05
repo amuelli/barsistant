@@ -12,7 +12,7 @@ import { MeasurementUnit } from "./ingredient.ts";
  */
 export interface RecipeIngredient {
   ingredientId: string;
-  quantity: string;
+  quantity: number;
   unit: MeasurementUnit;
   optional: boolean;
   notes?: string;
@@ -30,7 +30,7 @@ export interface Recipe {
   sweetness: number; // Scale of 1-10 (1 = very sour, 10 = very sweet)
   ingredients: RecipeIngredient[]; // Array of ingredients with their quantities
   garnish: string[];
-  glassware: string;
+  glassware: GlasswareType;
   preparation: string[];
   source: {
     name: string;
@@ -48,3 +48,19 @@ export interface Recipe {
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
 }
+
+export type GlasswareType =
+  | "collins"
+  | "coupe"
+  | "fizz"
+  | "highball"
+  | "hurricane"
+  | "irish-coffee"
+  | "margarita"
+  | "martini"
+  | "nick-and-nora"
+  | "old-fashioned"
+  | "rocks"
+  | "shot"
+  | "sour"
+  | "wine";

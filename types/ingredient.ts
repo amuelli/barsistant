@@ -73,7 +73,7 @@ export interface Ingredient {
 export interface IngredientRecipeLink {
   recipeId: string;
   ingredientId: string;
-  quantity: string;
+  quantity: number;
   unit: MeasurementUnit;
   optional: boolean;
   notes?: string;

@@ -14,6 +14,7 @@ import type {
   Recipe,
   RecipeIngredient,
 } from "../types/index.ts";
+import { GlasswareType } from "../types/recipe.ts";
 import { executeDbOperation, kv, recipes } from "./db.ts";
 
 /**
@@ -38,7 +39,7 @@ export interface CreateRecipeParams {
   sweetness: number;
   ingredients: RecipeIngredient[];
   garnish: string[];
-  glassware: string;
+  glassware: GlasswareType;
   preparation: string[];
   source: {
     name: string;

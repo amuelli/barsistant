@@ -24,7 +24,7 @@ import { recipeModel } from "./recipe-model.ts";
  */
 export interface SimpleIngredient {
   name: string;
-  quantity: string;
+  quantity: number;
   unit: MeasurementUnit;
   optional?: boolean;
   notes?: string;

@@ -138,7 +138,7 @@ When implementing a new feature, follow this general pattern:
 
 ```typescript
 // 1. Import dependencies using JSR style
-import { type FreshContext } from "$fresh/server.ts";
+import { type FreshContext, HttpError } from "fresh";
 import { ulid } from "@std/ulid";
 import { executeDbOperation, kv, recipes } from "../utils/db.ts";
 import type { Recipe } from "../types/recipe.ts";
@@ -183,13 +183,13 @@ export async function createRecipe(
 }
 
 // 4. For API handlers, use this structure:
-export async function handler(req: Request, ctx: FreshContext) {
-  if (req.method !== "POST") {
-    return new Response("Method Not Allowed", { status: 405 });
+export async function handler(ctx: FreshContext) {
+  if (ctx.req.method !== "POST") {
+    throw new HttpError(405, "Method Not Allowed");
   }
 
   try {
-    const params = await req.json() as CreateRecipeParams;
+    const params = await ctx.req.json() as CreateRecipeParams;
     const recipe = await createRecipe(params);
     return Response.json(recipe);
   } catch (error) {
@@ -197,6 +197,11 @@ export async function handler(req: Request, ctx: FreshContext) {
       console.error("Database error:", error);
       return Response.json({ error: "Internal server error" }, { status: 500 });
     }
+
+    if (error instanceof HttpError) {
+      throw error; // Let Fresh's error handling system manage HTTP errors
+    }
+
     return Response.json({ error: error.message }, { status: 400 });
   }
 }
