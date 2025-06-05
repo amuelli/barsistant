@@ -346,8 +346,8 @@ provided by the `executeDbOperation` function.
   changes
 - Structured Output: Supports JSON mode for structured recipe data extraction
 - **Environment Variables:**
-  - `AI_API_KEY` (required): API key for the selected provider (e.g., OpenAI,
-    Anthropic). See `.env.example` for details.
+  - `OPENAI_API_KEY` (required): API key for the selected provider (e.g.,
+    OpenAI, Anthropic). See `.env.example` for details.
   - `AI_PROVIDER` (required): The provider to use (e.g., `openai`, `anthropic`).
   - `AI_MODEL` (optional): The model to use for the selected provider (e.g.,
     `gpt-4o`, `gpt-4`, `claude-3-opus-20240229`). Defaults to `gpt-4o` for
@@ -385,7 +385,7 @@ import { OpenAI } from "https://esm.sh/ai";
 
 // Can be easily switched to another provider
 const ai = new OpenAI({
-  apiKey: Deno.env.get("AI_API_KEY"),
+  apiKey: Deno.env.get("OPENAI_API_KEY"),
 });
 
 export default async function ExtractHandler(req: Request, ctx: FreshContext) {

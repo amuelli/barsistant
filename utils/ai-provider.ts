@@ -8,10 +8,10 @@
  *
  * Environment variables required:
  *   - AI_PROVIDER: "openai" | "anthropic" | ...
- *   - AI_API_KEY: API key for the selected provider
+ *   - {PROVIDER}_API_KEY: API key for the selected provider
  *
  * To add a new provider:
- *   1. Set AI_PROVIDER and AI_API_KEY in your environment.
+ *   1. Set AI_PROVIDER and {PROVIDER}_API_KEY in your environment.
  *   2. Optionally extend the getAIClient() factory for custom logic.
  *   3. See https://ai-sdk.dev/docs/providers for details.
  */
@@ -20,6 +20,7 @@
 import { openai } from "@ai-sdk/openai";
 import { type CreateMessage, generateObject, generateText } from "ai";
 import { z } from "zod";
+
 // import { anthropic } from "npm:@ai-sdk/anthropic@3.1.13"; // Uncomment if Anthropic is needed
 
 // Error class for AI operations
@@ -32,15 +33,11 @@ export class AIError extends Error {
 
 // Provider selection from environment
 const PROVIDER = Deno.env.get("AI_PROVIDER") || "openai";
-const API_KEY = Deno.env.get("AI_API_KEY");
 const MODEL = Deno.env.get("AI_MODEL") ||
   (PROVIDER === "openai" ? "gpt-4o" : undefined);
 
 // Provider-agnostic model selector
 function getModel() {
-  if (!API_KEY) {
-    throw new AIError("AI API key not found in environment variables");
-  }
   switch (PROVIDER) {
     case "openai":
       return openai(MODEL || "gpt-4o");

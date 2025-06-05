@@ -25,15 +25,13 @@
     "@std/ulid": "jsr:@std/ulid@^1.0.0",
     "daisyui": "npm:daisyui@^5.0.43",
     "fresh": "jsr:@fresh/core@^2.0.0-alpha.34",
-    "preact": "npm:preact@^10.26.6",
+    "preact": "https://esm.sh/preact@10.22.0",
     "tailwindcss": "npm:tailwindcss@^4.1.7",
     "ai": "npm:ai@^4.3.16",
-    "zod": "npm:zod@^3.25.51"
+    "zod": "npm:zod@^3.25.51",
+    "preact/": "https://esm.sh/preact@10.22.0/"
   },
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "jsxImportSource": "preact"
-  },
+  "compilerOptions": { "jsx": "react-jsx", "jsxImportSource": "preact" },
   "nodeModulesDir": "auto",
   "unstable": ["kv"]
 }

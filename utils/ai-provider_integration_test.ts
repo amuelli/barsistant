@@ -7,7 +7,7 @@ import { AIError, extractRecipeFromContent } from "./ai-provider.ts";
 Deno.test({
   name:
     "extractRecipeFromContent returns structured data for valid input (integration)",
-  ignore: !Deno.env.get("AI_API_KEY"),
+  ignore: !Deno.env.get("OPENAI_API_KEY"),
   sanitizeOps: false,
   sanitizeResources: false,
   async fn() {
@@ -39,7 +39,7 @@ Deno.test({
 Deno.test({
   name:
     "extractRecipeFromContent returns a RecipeExtraction-like object for empty content (integration)",
-  ignore: !Deno.env.get("AI_API_KEY"),
+  ignore: !Deno.env.get("OPENAI_API_KEY"),
   async fn() {
     let result: any = null;
     try {

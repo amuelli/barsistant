@@ -37,8 +37,8 @@ Make sure to install Deno: https://deno.land/manual/getting_started/installation
 Create a `.env` file in the root directory with the following variables:
 
 ```
-AI_PROVIDER=your_provider_here
-AI_API_KEY=your_api_key_here
+AI_PROVIDER=openai
+OPENAI_API_KEY=your_api_key_here
 ```
 
 ### Running the Application
@@ -75,8 +75,8 @@ Barsistant requires a `.env` file in the project root for provider-agnostic AI
 integration. See `.env.example` for a template.
 
 - `AI_PROVIDER`: The AI provider to use (e.g. `openai`, `anthropic`).
-- `AI_API_KEY`: The API key for the selected provider. This is required for all
-  AI features.
+- `OPENAI_API_KEY`: The API key for the selected provider. This is required for
+  all AI features.
 - `AI_MODEL`: (Optional) The model to use for the selected provider (e.g.
   `gpt-4o`, `gpt-4`, `claude-3-opus-20240229`). Defaults to `gpt-4o` for OpenAI
   if not set.

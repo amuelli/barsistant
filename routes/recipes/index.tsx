@@ -1,10 +1,5 @@
-import type { Recipe } from "../../types/recipe.ts";
 import { define } from "../../utils.ts";
 import { recipeModel } from "../../utils/recipe-model.ts";
-
-interface RecipesData {
-  recipes: Recipe[];
-}
 
 export const handler = define.handlers({
   async GET(ctx) {

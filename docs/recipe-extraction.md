@@ -54,20 +54,30 @@ The Recipe Extraction feature consists of several components:
 
 1. **URL Content Fetcher** - Fetches and preprocesses content from web pages
    - Handles different content sources (websites)
-   - Cleans and prepares content for AI analysis
+   - Uses the `fetchUrlContent` function in `utils/url-content.ts`
 
-2. **AI Provider** - Integrates with OpenAI's API
-   - Sends content to the API with appropriate prompts
+2. **HTML Content Processor** - Prepares HTML for optimal AI processing
+   - Preserves semantic HTML structure important for recipe context
+   - Extracts structured data (JSON-LD) if available
+   - Removes noise elements like ads, navigation, footers
+   - Prioritizes content in recipe-specific sections
+   - Uses the `prepareHtmlForAI` function in `utils/url-content.ts`
+
+3. **AI Provider** - Integrates with OpenAI's API (or other providers)
+   - Sends optimized HTML content to the AI with appropriate prompts
    - Processes structured responses
+   - Provider-agnostic implementation allowing multiple AI services
 
-3. **Recipe Extraction Parser** - Converts AI output to structured recipe data
+4. **Recipe Extraction Parser** - Converts AI output to structured recipe data
+   - Uses Zod schema for validation and type safety
    - Maps extracted fields to appropriate database fields
-   - Validates and normalizes ingredient information
+   - Normalizes ingredient information
 
-4. **Verification Interface** - Allows users to review and edit extraction
+5. **Verification Interface** - Allows users to review and edit extraction
    results
-   - Displays confidence scores for the extraction
+   - Displays structured recipe data for user verification
    - Provides editing capabilities for all recipe components
+   - Saves user-verified recipes to the database
 
 ## Limitations
 
