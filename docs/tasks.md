@@ -121,7 +121,7 @@ solution for the Barsistant application.
 | ✅     | TEST-2  | Create unit tests for database models | Medium     | DB-3, DB-4, TEST-1       |
 | ✅     | TEST-2a | Create unit tests for recipe helper   | Medium     | DB-3, DB-4, TEST-1       |
 |        | TEST-3  | Implement UI component tests          | Medium     | UI-3, UI-4, UI-5, TEST-1 |
-|        | TEST-5  | Implement AI extraction tests         | Medium     | AI-5, TEST-1             |
+| ✅     | TEST-5  | Implement AI extraction tests         | Medium     | AI-5, TEST-1             |
 |        | TEST-6  | Add integration tests for user flows  | High       | TEST-1, TEST-2, TEST-3   |
 |        | TEST-7  | Create accessibility testing suite    | Medium     | UI-12, TEST-1            |
 |        | TEST-8  | Implement performance benchmarks      | Medium     | PERF-3, TEST-1           |
