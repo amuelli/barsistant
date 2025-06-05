@@ -14,6 +14,8 @@
   "lint": { "rules": { "tags": ["fresh", "recommended"] } },
   "exclude": ["**/_fresh/*"],
   "imports": {
+    "@ai-sdk/openai": "npm:@ai-sdk/openai@^1.3.22",
+    "@openai/openai": "jsr:@openai/openai@^4.102.0",
     "@pakornv/fresh-plugin-tailwindcss": "jsr:@pakornv/fresh-plugin-tailwindcss@2.0.0-alpha.1",
     "@preact/signals": "https://esm.sh/*@preact/signals@1.2.2",
     "@preact/signals-core": "https://esm.sh/*@preact/signals-core@1.5.1",
@@ -23,7 +25,9 @@
     "daisyui": "npm:daisyui@^5.0.43",
     "fresh": "jsr:@fresh/core@^2.0.0-alpha.34",
     "preact": "npm:preact@^10.26.6",
-    "tailwindcss": "npm:tailwindcss@^4.1.7"
+    "tailwindcss": "npm:tailwindcss@^4.1.7",
+    "ai": "npm:ai@^4.3.16",
+    "zod": "npm:zod@^3.25.51"
   },
   "compilerOptions": {
     "jsx": "react-jsx",

@@ -61,7 +61,10 @@ best practices.
 
 ## Implementation Process
 
-When implementing a task from the task list, follow these steps:
+Only work on one task at a time from the task list. Each task should be clearly
+defined and scoped to a specific feature or improvement. Tasks should be small
+enough to be completed in a single session, ideally within a few hours. gWhen
+implementing a task from the task list, follow these steps:
 
 1. **Understanding**: Fully understand the task requirements and how it fits
    into the overall system

@@ -5,6 +5,9 @@
  * rather than specific files
  */
 
+// Application state
+export type { State } from "../utils.ts";
+
 // Recipe types
 export type { Recipe, RecipeIngredient } from "./recipe.ts";
 

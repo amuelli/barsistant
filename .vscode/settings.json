@@ -15,5 +15,8 @@
     "editor.defaultFormatter": "denoland.vscode-deno"
   },
   "css.customData": [".vscode/tailwind.json"],
-  "cSpell.words": ["Barsistant"]
+  "cSpell.words": ["Barsistant"],
+  "[dotenv]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  }
 }

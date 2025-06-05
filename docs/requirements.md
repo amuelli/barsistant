@@ -345,6 +345,17 @@ provided by the `executeDbOperation` function.
 - Provider Switching: Allows changing AI providers without significant code
   changes
 - Structured Output: Supports JSON mode for structured recipe data extraction
+- **Environment Variables:**
+  - `AI_API_KEY` (required): API key for the selected provider (e.g., OpenAI,
+    Anthropic). See `.env.example` for details.
+  - `AI_PROVIDER` (required): The provider to use (e.g., `openai`, `anthropic`).
+  - `AI_MODEL` (optional): The model to use for the selected provider (e.g.,
+    `gpt-4o`, `gpt-4`, `claude-3-opus-20240229`). Defaults to `gpt-4o` for
+    OpenAI if not set.
+- **Provider-Agnostic Design:** The AI integration is implemented in
+  `utils/ai-provider.ts` using a factory pattern. To add or switch providers,
+  extend the factory and implement the required client logic. See code comments
+  in that file for details.
 
 The AI SDK will be used to extract recipe information from various web sources,
 including:
