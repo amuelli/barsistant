@@ -88,6 +88,17 @@ implementing a task from the task list, follow these steps:
    updating [README.md](/README.md), [requirements.md](/docs/requirements.md),
    or [tasks.md](/docs/tasks.md) as applicable, marking completed tasks, and
    documenting any architectural decisions or patterns established.
+9. **Completion Confirmation**: After implementation and verification, the agent
+   should ask the user if the task is complete.
+10. **Task List Update**: If the user confirms, update `tasks.md` to mark the
+    task as complete and add a brief summary if needed.
+11. **Commit Changes**: Commit all related changes with a message that includes
+    the task id (e.g., `feat(AI-2): ...`). The commit message should match the
+    scope of the changes and reference the completed task.
+
+Occasionally ask to update these instructions with new patterns or conventions
+that emerge during development. This will help maintain a consistent approach
+across the project as it evolves.
 
 ## Code Documentation
 

@@ -18,20 +18,20 @@ solution for the Barsistant application.
 
 ## AI Recipe Extraction Tasks
 
-| Status | Task ID | Description                                                                | Complexity | Dependencies |
-| ------ | ------- | -------------------------------------------------------------------------- | ---------- | ------------ |
-| ✅     | AI-1    | Set up provider-agnostic AI SDK integration with env vars and .env.example | Medium     | None         |
-|        | AI-2    | Create URL content fetching and parsing module                             | Medium     | None         |
-|        | AI-3    | Implement text content extraction from HTML                                | Medium     | AI-2         |
-|        | AI-4    | Develop AI prompt engineering for recipe extraction                        | High       | AI-1         |
-| ✅     | AI-5    | Create structured data parser for AI outputs                               | Medium     | AI-4         |
-|        | AI-6    | Implement recipe verification and correction interface                     | Medium     | AI-5, UI-3   |
-|        | AI-7    | Implement recipe extraction handler function                               | Medium     | AI-5, DB-3   |
-|        | AI-8    | Implement feedback mechanism to improve extraction quality                 | Medium     | AI-5, AI-6   |
-|        | AI-9    | Add support for YouTube content extraction                                 | High       | AI-2, AI-4   |
-|        | AI-10   | Add support for recipe website content extraction                          | High       | AI-2, AI-4   |
-|        | AI-11   | Develop error handling for extraction failures                             | Medium     | AI-5, AI-7   |
-|        | AI-12   | Create content sanitization for extracted recipes                          | Medium     | AI-5         |
+| Status | Task ID | Description                                                                                         | Complexity | Dependencies |
+| ------ | ------- | --------------------------------------------------------------------------------------------------- | ---------- | ------------ |
+| ✅     | AI-1    | Set up provider-agnostic AI SDK integration with env vars and .env.example                          | Medium     | None         |
+| ✅     | AI-2    | Create URL content fetching and parsing module (fetches HTML and extracts main text using deno-dom) | Medium     | None         |
+|        | AI-3    | Implement text content extraction from HTML                                                         | Medium     | AI-2         |
+|        | AI-4    | Develop AI prompt engineering for recipe extraction                                                 | High       | AI-1         |
+| ✅     | AI-5    | Create structured data parser for AI outputs                                                        | Medium     | AI-4         |
+|        | AI-6    | Implement recipe verification and correction interface                                              | Medium     | AI-5, UI-3   |
+|        | AI-7    | Implement recipe extraction handler function                                                        | Medium     | AI-5, DB-3   |
+|        | AI-8    | Implement feedback mechanism to improve extraction quality                                          | Medium     | AI-5, AI-6   |
+|        | AI-9    | Add support for YouTube content extraction                                                          | High       | AI-2, AI-4   |
+|        | AI-10   | Add support for recipe website content extraction                                                   | High       | AI-2, AI-4   |
+|        | AI-11   | Develop error handling for extraction failures                                                      | Medium     | AI-5, AI-7   |
+|        | AI-12   | Create content sanitization for extracted recipes                                                   | Medium     | AI-5         |
 
 ---
 
