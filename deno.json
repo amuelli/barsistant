@@ -35,5 +35,6 @@
     "jsxImportSource": "preact",
     "jsxPrecompileSkipElements": ["a", "img", "source", "body", "html", "head"]
   },
-  "unstable": ["kv"]
+  "unstable": ["kv"],
+  "nodeModulesDir": "auto"
 }
