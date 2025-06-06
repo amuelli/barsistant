@@ -1,0 +1,24 @@
+{
+  "name": "Barsistant",
+  "short_name": "Barsistant",
+  "description": "AI-powered cocktail recipe manager and extractor.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafaf9",
+  "theme_color": "#fafaf9",
+  "orientation": "portrait",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/static/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/favicon.ico",
+      "sizes": "48x48 32x32 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

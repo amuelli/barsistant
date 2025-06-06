@@ -3,6 +3,13 @@ export default function Home() {
     <div class="hero min-h-screen bg-base-200">
       <div class="hero-content text-center">
         <div class="max-w-md">
+          <div class="flex justify-center">
+            <img
+              class="w-24 h-24 mb-6"
+              src="/logo.svg"
+              alt="Barsistant logo"
+            />
+          </div>
           <h1 class="text-5xl font-bold text-primary">Barsistant</h1>
           <p class="py-6">
             Your smart cocktail recipe assistant with AI-powered recipe

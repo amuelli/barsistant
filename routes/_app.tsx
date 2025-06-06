@@ -11,6 +11,7 @@ export default function App({ Component, state }: PageProps<unknown, State>) {
           ? <title>Barsistant - {state.title}</title>
           : <title>Barsistant</title>}
         <link rel="stylesheet" href="/styles.css" />
+        <link rel="manifest" href="/manifest.json"></link>
       </head>
       <body data-theme="lofi">
         <div class="min-h-screen flex flex-col">
