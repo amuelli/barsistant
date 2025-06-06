@@ -13,49 +13,88 @@ export default function App({ Component, state }: PageProps<unknown, State>) {
         <link rel="stylesheet" href="/styles.css" />
         <link rel="manifest" href="/manifest.json"></link>
       </head>
-      <body data-theme="lofi">
+      <body data-theme="barsistant">
         <div class="min-h-screen flex flex-col">
-          {/* Navbar */}
-          <div class="navbar bg-base-100">
-            <div class="navbar-start">
-              <div class="dropdown">
-                <div tabIndex={0} role="button" class="btn btn-ghost lg:hidden">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+          <div class="drawer">
+            <input id="main-drawer" type="checkbox" class="drawer-toggle" />
+            <div class="drawer-content flex flex-col">
+              {/* Navbar */}
+              <div class="navbar bg-base-100 w-full">
+                <div class="flex-none lg:hidden">
+                  <label
+                    for="main-drawer"
+                    aria-label="open sidebar"
+                    class="btn btn-square btn-ghost"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M4 6h16M4 12h8m-8 6h16"
-                    />
-                  </svg>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      class="inline-block h-6 w-6 stroke-current"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M4 6h16M4 12h16M4 18h16"
+                      >
+                      </path>
+                    </svg>
+                  </label>
                 </div>
-                <ul
-                  tabIndex={0}
-                  class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
-                >
-                  <li>
-                    <a href="/">Home</a>
-                  </li>
-                  <li>
-                    <a href="/recipes">Recipes</a>
-                  </li>
-                  <li>
-                    <a href="/extract">Extract Recipe</a>
-                  </li>
-                </ul>
+                <a class="btn btn-ghost text-xl px-2" href="/">
+                  Barsistant
+                </a>
+                <div class="hidden flex-1 lg:flex justify-center">
+                  <ul class="menu menu-horizontal px-1">
+                    <li>
+                      <a href="/">Home</a>
+                    </li>
+                    <li>
+                      <a href="/recipes">Recipes</a>
+                    </li>
+                    <li>
+                      <a href="/extract">Extract Recipe</a>
+                    </li>
+                  </ul>
+                </div>
+                <div class="flex-none lg:hidden"></div>
               </div>
-              <a class="btn btn-ghost text-xl" href="/">
-                Barsistant
-              </a>
+              {/* Main content */}
+              <main class="flex-grow">
+                <Component />
+              </main>
+              {/* Footer */}
+              <footer class="footer p-10 bg-neutral text-neutral-content">
+                <aside>
+                  <p>
+                    Barsistant
+                    <br />
+                    Your smart cocktail recipe assistant
+                  </p>
+                </aside>
+                <nav>
+                  <h6 class="footer-title">Links</h6>
+                  <a class="link link-hover" href="/">
+                    Home
+                  </a>
+                  <a class="link link-hover" href="/recipes">
+                    Recipes
+                  </a>
+                  <a class="link link-hover" href="/extract">
+                    Extract Recipe
+                  </a>
+                </nav>
+              </footer>
             </div>
-            <div class="navbar-center hidden lg:flex">
-              <ul class="menu menu-horizontal px-1">
+            <div class="drawer-side">
+              <label
+                for="main-drawer"
+                aria-label="close sidebar"
+                class="drawer-overlay"
+              >
+              </label>
+              <ul class="menu bg-base-200 min-h-full w-80 p-4">
                 <li>
                   <a href="/">Home</a>
                 </li>
@@ -67,36 +106,7 @@ export default function App({ Component, state }: PageProps<unknown, State>) {
                 </li>
               </ul>
             </div>
-            <div class="navbar-end">
-              {/* Dropdown menu removed as it's not needed yet */}
-            </div>
           </div>
-          {/* Main content */}
-          <main class="flex-grow">
-            <Component />
-          </main>
-          {/* Footer */}
-          <footer class="footer p-10 bg-neutral text-neutral-content">
-            <aside>
-              <p>
-                Barsistant
-                <br />
-                Your smart cocktail recipe assistant
-              </p>
-            </aside>
-            <nav>
-              <h6 class="footer-title">Links</h6>
-              <a class="link link-hover" href="/">
-                Home
-              </a>
-              <a class="link link-hover" href="/recipes">
-                Recipes
-              </a>
-              <a class="link link-hover" href="/extract">
-                Extract Recipe
-              </a>
-            </nav>
-          </footer>
         </div>
       </body>
     </html>
