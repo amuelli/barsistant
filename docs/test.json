@@ -1,0 +1,67 @@
+{
+  "id": "01JX24CVC8ZVG2BYZKTT7WDV8M",
+  "name": "Waku Waku",
+  "description": "Discover how to make a Waku Waku using Sake, Fino sherry, Light white rum, Chamomile/Camomile liqueur (+ 3 more) in just 5 easy to follow steps",
+  "strength": 5,
+  "sweetness": 5,
+  "ingredients": [
+    {
+      "ingredientId": "01JX24CT2GGEKGTKSXKWGD7H3M",
+      "quantity": 30,
+      "unit": "ml",
+      "optional": false
+    },
+    {
+      "ingredientId": "01JX24CT90T4WG4N1ZMEWNVYX7",
+      "quantity": 30,
+      "unit": "ml",
+      "optional": false
+    },
+    {
+      "ingredientId": "01JX24CTFAT02RF3TR8PDK4XQN",
+      "quantity": 15,
+      "unit": "ml",
+      "optional": false
+    },
+    {
+      "ingredientId": "01JX24CTNS1RX7CSNBQCGRYTSV",
+      "quantity": 15,
+      "unit": "ml",
+      "optional": false
+    },
+    {
+      "ingredientId": "01JX24CTW8XEDV3JRA5B6E3RKT",
+      "quantity": 7.5,
+      "unit": "ml",
+      "optional": false
+    },
+    {
+      "ingredientId": "01JX24CV2P9CTNNSKH9FRGB4XN",
+      "quantity": 1,
+      "unit": "dash",
+      "optional": false
+    },
+    {
+      "ingredientId": "01JX24CV8ZQRYEXFWCR4J30AH3",
+      "quantity": 3,
+      "unit": "drop",
+      "optional": false
+    }
+  ],
+  "garnish": ["Sprig of Gypsophila (Baby's Breath)", "Elderflower"],
+  "glassware": "coupe",
+  "preparation": [
+    "Select and pre-chill a Coupe glass.",
+    "Prepare garnish of sprig of Gypsophila (Baby's Breath) or elderflower.",
+    "STIR all ingredients with ice.",
+    "STRAIN into chilled glass.",
+    "Garnish with a sprig of Gypsophila (Baby's Breath) or elderflower pegged to rim."
+  ],
+  "source": {
+    "name": "Difford's Guide",
+    "url": "https://www.diffordsguide.com/cocktails/recipe/35393/waku-waku"
+  },
+  "tags": ["Aperitivo/aperitif", "Floral (e.g. Elderflower spritz)"],
+  "createdAt": "2025-06-06T08:05:55.720Z",
+  "updatedAt": "2025-06-06T08:05:55.720Z"
+}

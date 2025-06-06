@@ -32,6 +32,7 @@ solution for the Barsistant application.
 |        | AI-10   | Add recipe website extraction support         | High       | AI-2, AI-4   |
 |        | AI-11   | Develop extraction error handling             | Medium     | AI-5, AI-7   |
 |        | AI-12   | Create content sanitization for recipes       | Medium     | AI-5         |
+|        | AI-13   | Implement AI cocktail image generation        | High       | AI-1, DB-3   |
 
 ---
 
@@ -53,6 +54,7 @@ solution for the Barsistant application.
 |        | UI-12   | Implement accessibility features (WCAG) | High       | UI-3, UI-4, UI-5 |
 |        | UI-13   | Add dark mode support                   | Low        | UI-1             |
 | ✅     | UI-14   | Develop responsive mobile navigation    | Medium     | UI-1, UI-2       |
+|        | UI-15   | Improve extraction loading feedback     | Low        | UI-1, AI-7       |
 
 ## User Management Tasks
 

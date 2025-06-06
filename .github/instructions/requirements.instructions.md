@@ -1,3 +1,7 @@
+---
+applyTo: "**"
+---
+
 # Barsistant Project Requirements Document
 
 ## 1. Introduction
@@ -529,6 +533,44 @@ Below is an example of how cocktail recipes could be structured in the database,
 using two classic cocktails as examples:
 
 ```typescript
+// Type definitions
+type MeasurementUnit =
+  | "ml"
+  | "oz"
+  | "cl"
+  | "dash"
+  | "drop"
+  | "barspoon"
+  | "tsp"
+  | "tbsp"
+  | "cup"
+  | "pint"
+  | "part"
+  | "piece"
+  | "slice"
+  | "whole"
+  | "pinch"
+  | "spritz"
+  | "leaf"
+  | "sprig"
+  | "rim";
+
+type GlasswareType =
+  | "collins"
+  | "coupe"
+  | "fizz"
+  | "highball"
+  | "hurricane"
+  | "irish-coffee"
+  | "margarita"
+  | "martini"
+  | "nick-and-nora"
+  | "old-fashioned"
+  | "rocks"
+  | "shot"
+  | "sour"
+  | "wine";
+
 // Recipe type definition
 interface Recipe {
   id: string;
@@ -536,9 +578,9 @@ interface Recipe {
   description: string;
   strength: number; // Scale of 1-10
   sweetness: number; // Scale of 1-10 (1 = very sour, 10 = very sweet)
-  ingredients: Ingredient[];
+  ingredients: RecipeIngredient[];
   garnish: string[];
-  glassware: string;
+  glassware: GlasswareType;
   preparation: string[];
   source: {
     name: string;
@@ -553,12 +595,24 @@ interface Recipe {
     standardDrinks: number;
   };
   allergens?: string[];
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
 }
 
-interface Ingredient {
+interface RecipeIngredient {
+  ingredientId: string;
+  quantity: number;
+  unit: MeasurementUnit;
+  optional: boolean;
+  notes?: string;
+  substitutes?: string[]; // IDs of substitute ingredients
+}
+
+// For display purposes in examples
+interface SimpleIngredient {
   name: string;
-  quantity: string;
-  unit: string;
+  quantity: number;
+  unit: MeasurementUnit;
   optional: boolean;
   substitutes?: string[];
 }
@@ -573,42 +627,43 @@ const exampleRecipes = [
     strength: 9,
     sweetness: 6,
     ingredients: [
+      // For display simplicity, using name instead of ingredientId
       {
-        name: "Bourbon whiskey",
-        quantity: "45",
+        name: "Bourbon whiskey", // This would be ingredientId in the real implementation
+        quantity: 45,
         unit: "ml",
         optional: false,
       },
       {
         name: "Straight rye whiskey",
-        quantity: "30",
+        quantity: 30,
         unit: "ml",
         optional: false,
         substitutes: ["Additional bourbon"],
       },
       {
         name: "Demerara/Muscovado/brown sugar syrup",
-        quantity: "10",
+        quantity: 10,
         unit: "ml",
         optional: false,
         substitutes: ["Simple syrup"],
       },
       {
         name: "Bob's Abbotts bitters",
-        quantity: "8",
+        quantity: 8,
         unit: "drop",
         optional: false,
         substitutes: ["Angostura bitters"],
       },
       {
         name: "Saline solution",
-        quantity: "3",
+        quantity: 3,
         unit: "drop",
         optional: true,
       },
     ],
     garnish: ["Orange zest twist"],
-    glassware: "Old-fashioned glass",
+    glassware: "old-fashioned",
     preparation: [
       "Select and pre-chill an Old-fashioned glass.",
       "Prepare garnish of orange zest twist.",
@@ -639,25 +694,25 @@ const exampleRecipes = [
     ingredients: [
       {
         name: "Disaronno amaretto",
-        quantity: "60",
+        quantity: 60,
         unit: "ml",
         optional: false,
       },
       {
         name: "Lemon juice (freshly squeezed)",
-        quantity: "30",
+        quantity: 30,
         unit: "ml",
         optional: false,
       },
       {
         name: "Angostura Aromatic Bitters",
-        quantity: "1",
+        quantity: 1,
         unit: "dash",
         optional: false,
       },
       {
         name: "Egg white (pasteurised)",
-        quantity: "15",
+        quantity: 15,
         unit: "ml",
         optional: false,
         substitutes: [
@@ -667,7 +722,7 @@ const exampleRecipes = [
       },
     ],
     garnish: ["Lemon slice", "Luxardo Maraschino Cherry"],
-    glassware: "Old-fashioned glass",
+    glassware: "old-fashioned",
     preparation: [
       "Pre-chill an Old-fashioned glass.",
       "SHAKE all ingredients with ice.",
@@ -688,6 +743,8 @@ const exampleRecipes = [
       standardDrinks: 1,
     },
     allergens: ["Eggs"],
+    createdAt: "2025-05-12T14:32:00.000Z",
+    updatedAt: "2025-05-12T14:32:00.000Z",
   },
 ];
 ```
