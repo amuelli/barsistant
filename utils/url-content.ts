@@ -92,11 +92,13 @@ function extractStructuredRecipeData(doc: HTMLDocument): string | null {
         if (
           jsonData["@type"] === "Recipe" ||
           (jsonData["@graph"] &&
-            jsonData["@graph"].some((item: any) => item["@type"] === "Recipe"))
+            jsonData["@graph"].some((item: { [key: string]: unknown }) =>
+              item["@type"] === "Recipe"
+            ))
         ) {
           return content;
         }
-      } catch (e) {
+      } catch (_e) {
         // Ignore JSON parse errors and continue checking other scripts
         continue;
       }

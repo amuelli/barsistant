@@ -6,6 +6,7 @@ import type {
   IngredientType,
   MeasurementUnit,
 } from "../../types/ingredient.ts";
+import { GlasswareType } from "../../types/recipe.ts";
 import {
   extractRecipeFromContent,
   type RecipeExtraction,
@@ -205,7 +206,7 @@ function mapExtractionToRecipe(
     sweetness: 5,
     ingredients,
     garnish: extraction.garnish || [],
-    glassware: extraction.glassware,
+    glassware: extraction.glassware as GlasswareType,
     preparation: extraction.instructions,
     source: {
       name: extraction.source.name || new URL(sourceUrl).hostname,

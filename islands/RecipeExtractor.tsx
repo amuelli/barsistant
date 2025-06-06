@@ -47,7 +47,7 @@ export default function RecipeExtractor() {
 
       // Success - redirect to the newly created recipe
       extractionState.value = "success";
-      window.location.href = `/recipes/${result.recipeId}`;
+      globalThis.location.href = `/recipes/${result.recipeId}`;
     } catch (error) {
       extractionState.value = "error";
       errorMessage.value = error instanceof Error
