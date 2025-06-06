@@ -96,6 +96,16 @@ solution for the Barsistant application.
 |        | PERF-5  | Add health check endpoints               | Low        | None         |
 |        | PERF-6  | Create load testing suite                | Medium     | AI-7         |
 
+## Progressive Web App Tasks
+
+| Status | Task ID | Description                                  | Complexity | Dependencies |
+| ------ | ------- | -------------------------------------------- | ---------- | ------------ |
+|        | PWA-1   | Create manifest.json for app configuration   | Low        | None         |
+|        | PWA-2   | Add app icons in various sizes               | Low        | None         |
+|        | PWA-3   | Implement service worker for offline support | Medium     | None         |
+|        | PWA-4   | Implement installable app experience         | Medium     | PWA-1, PWA-2 |
+|        | PWA-5   | Configure offline recipe viewing capability  | Medium     | PWA-3, DB-3  |
+
 ## Deployment Tasks
 
 | Status | Task ID   | Description                               | Complexity | Dependencies     |
