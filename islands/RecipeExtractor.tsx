@@ -1,4 +1,4 @@
-import { signal } from "@preact/signals";
+import { useSignal } from "@preact/signals";
 import { useState } from "preact/hooks";
 
 interface RecipeExtractionResult {
@@ -8,11 +8,10 @@ interface RecipeExtractionResult {
 }
 
 export default function RecipeExtractor() {
-  const extractionState = signal<"idle" | "loading" | "success" | "error">(
+  const extractionState = useSignal<"idle" | "loading" | "success" | "error">(
     "idle",
   );
-  const errorMessage = signal<string | null>(null);
-
+  const errorMessage = useSignal<string | null>(null);
   const [url, setUrl] = useState("");
 
   const extract = async () => {
