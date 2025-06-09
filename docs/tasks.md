@@ -18,21 +18,23 @@ solution for the Barsistant application.
 
 ## AI Recipe Extraction Tasks
 
-| Status | Task ID | Description                                   | Complexity | Dependencies |
-| ------ | ------- | --------------------------------------------- | ---------- | ------------ |
-| ✅     | AI-1    | Set up provider-agnostic AI SDK integration   | Medium     | None         |
-| ✅     | AI-2    | Create URL content fetching module            | Medium     | None         |
-| ✅     | AI-3    | Implement HTML text content extraction        | Medium     | AI-2         |
-|        | AI-4    | Develop recipe extraction prompt engineering  | High       | AI-1         |
-| ✅     | AI-5    | Create structured data parser for AI outputs  | Medium     | AI-4         |
-|        | AI-6    | Implement recipe verification interface       | Medium     | AI-5, UI-3   |
-| ✅     | AI-7    | Implement recipe extraction handler           | Medium     | AI-5, DB-3   |
-|        | AI-8    | Add feedback mechanism for extraction quality | Medium     | AI-5, AI-6   |
-|        | AI-9    | Add YouTube content extraction support        | High       | AI-2, AI-4   |
-|        | AI-10   | Add recipe website extraction support         | High       | AI-2, AI-4   |
-|        | AI-11   | Develop extraction error handling             | Medium     | AI-5, AI-7   |
-|        | AI-12   | Create content sanitization for recipes       | Medium     | AI-5         |
-|        | AI-13   | Implement AI cocktail image generation        | High       | AI-1, DB-3   |
+| Status | Task ID | Description                                                     | Complexity | Dependencies |
+| ------ | ------- | --------------------------------------------------------------- | ---------- | ------------ |
+| ✅     | AI-1    | Set up provider-agnostic AI SDK integration                     | Medium     | None         |
+| ✅     | AI-2    | Create URL content fetching module                              | Medium     | None         |
+| ✅     | AI-3    | Implement HTML text content extraction                          | Medium     | AI-2         |
+| ✅     | AI-4    | Develop recipe extraction prompt engineering                    | High       | AI-1         |
+| ✅     | AI-5    | Create structured data parser for AI outputs                    | Medium     | AI-4         |
+|        | AI-6    | Implement recipe verification interface                         | Medium     | AI-5, UI-3   |
+| ✅     | AI-7    | Implement recipe extraction handler                             | Medium     | AI-5, DB-3   |
+|        | AI-8    | Add feedback mechanism for extraction quality                   | Medium     | AI-5, AI-6   |
+|        | AI-9    | Add YouTube content extraction support                          | High       | AI-2, AI-4   |
+|        | AI-10   | Add recipe website extraction support                           | High       | AI-2, AI-4   |
+|        | AI-11   | Develop extraction error handling                               | Medium     | AI-5, AI-7   |
+|        | AI-12   | Create content sanitization for recipes                         | Medium     | AI-5         |
+| ✅     | AI-13   | Implement AI cocktail image generation                          | High       | AI-1, DB-3   |
+| ✅     | AI-14   | Adapt AI extraction to retrieve cocktail image URL from website | Medium     | AI-7, AI-10  |
+| ✅     | AI-15   | AI-generated cocktail images for recipes                        | High       | AI-14, DB-3  |
 
 ---
 

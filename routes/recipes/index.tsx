@@ -44,14 +44,15 @@ export default define.page<typeof handler>(
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {recipes.map((recipe) => (
-            <div key={recipe.id} class="card bg-base-100 shadow-xl">
+            <div key={recipe.id} class="card bg-base-100 shadow-sm">
               <figure>
                 {recipe.image
                   ? (
                     <img
                       src={recipe.image}
                       alt={recipe.name}
-                      class="h-48 w-full object-cover"
+                      class="h-48 w-full object-contain"
+                      style={{ backgroundColor: "#f3f4f6" }}
                     />
                   )
                   : <div class="bg-gray-300 h-48 w-full"></div>}

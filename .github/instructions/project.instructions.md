@@ -22,6 +22,7 @@ applyTo: '**'
 5. Use Browser MCP for UI verification, write unit tests for backend/logic
 6. Update docs as needed (README.md, docs/tasks.md, etc.)
 7. After user confirms completion, mark the task as done in docs/tasks.md and commit with a descriptive message
+- Keep task descriptions in docs/tasks.md short and concise. If more detail is needed, add it to project.instructions.md or another appropriate documentation file.
 
 ## Technical Implementation
 - Use utils/db.ts for all Deno KV operations

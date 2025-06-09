@@ -57,7 +57,7 @@ export default define.page<typeof handler>(
                 <img
                   src={recipe.image}
                   alt={recipe.name}
-                  class="w-full h-96 object-cover rounded-lg shadow-lg"
+                  class="w-full h-96 object-contain rounded-lg shadow-lg"
                 />
               )
               : <div class="w-full h-96 bg-gray-300 rounded-lg"></div>}

@@ -20,6 +20,7 @@
 import { openai } from "@ai-sdk/openai";
 import "@std/dotenv/load";
 import { type CreateMessage, generateObject, generateText } from "ai";
+import OpenAI from "jsr:@openai/openai";
 import { z } from "zod";
 import { IngredientType, MeasurementUnit } from "../types/ingredient.ts";
 
@@ -93,6 +94,7 @@ export interface RecipeExtraction {
     name?: string;
     author?: string;
   };
+  image?: string; // URL of a cocktail image from the website, if available
 }
 
 /**
@@ -105,6 +107,7 @@ Focus on cocktail name, ingredients with precise measurements, and preparation s
 Use standard cocktail measurement units (oz, ml, dash, etc.) and ensure quantities are numeric when possible.
 For ingredients, determine the type (e.g., spirit, liqueur, mixer, garnish) based on context.
 Organize instructions into clear, sequential steps.
+If a clear image of the cocktail is present on the website, extract its direct image URL and include it as the 'image' field. Prefer the main cocktail photo, not logos or unrelated images. If not available, omit the field.
 Return data in the specified JSON structure without any additional commentary.
 `;
 
@@ -164,6 +167,9 @@ const RecipeExtractionSchema = z.object({
     name: z.string().optional(),
     author: z.string().optional(),
   }),
+  image: z.string().url().optional().describe(
+    "Direct URL to a clear image of the cocktail from the website, if available. Prefer the main cocktail photo, not logos or unrelated images. Omit if not available.",
+  ),
 });
 
 /**
@@ -277,5 +283,97 @@ async function getExtractionImprovementInsights(): Promise<void> {
     }
   } catch (error) {
     console.error("Failed to get extraction improvement insights:", error);
+  }
+}
+
+/**
+ * Generates a cocktail image using an AI image provider (OpenAI DALL-E/gpt-image-1)
+ *
+ * @param recipeName The name of the cocktail (used in the prompt)
+ * @param ingredients The main ingredients (used in the prompt)
+ * @param cocktailImageUrl (Optional) A URL to a cocktail image (PNG or JPG). If provided, the image will be used as input for image-to-image generation. If omitted, only the prompt will be used (text-to-image).
+ * @returns The URL of the generated image, or undefined if generation fails
+ */
+export async function generateCocktailImage(
+  recipeName: string,
+  ingredients: string[],
+  cocktailImageUrl?: string,
+): Promise<string | undefined> {
+  const apiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!apiKey) return undefined;
+
+  // Download the cocktail image as ArrayBuffer (if provided)
+  let cocktailImageBuffer: ArrayBuffer | undefined = undefined;
+  let imageType = "image/png";
+  let imageExt = "png";
+  if (cocktailImageUrl) {
+    try {
+      const cocktailRes = await fetch(cocktailImageUrl);
+      if (cocktailRes.ok) {
+        const contentType = cocktailRes.headers.get("content-type") || "";
+        if (contentType.includes("jpeg") || contentType.includes("jpg")) {
+          imageType = "image/jpeg";
+          imageExt = "jpg";
+        }
+        cocktailImageBuffer = await cocktailRes.arrayBuffer();
+      }
+    } catch (err) {
+      console.warn("Failed to fetch cocktail image for image edit", err);
+    }
+  }
+
+  // Sanitize the cocktail name for a safe filename
+  const safeName = recipeName.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  const localPath = `static/${safeName}.png`;
+  const localUrl = `/${safeName}.png`;
+
+  const prompt =
+    `minimalist, flat-style vector illustration of a cocktail drink (do not include any text or lettering in the image) called '${recipeName}', made with ${
+      ingredients.join(", ")
+    },${
+      cocktailImageUrl ? " based on the photo provided," : ""
+    } the style should match modern cocktail icons, with clean black outlines, simplified shapes, and subtle use of flat colors. Include a garnish like a cherry, lime, or umbrella if present in the original.`;
+
+  const openai = new OpenAI({ apiKey });
+  try {
+    let response: OpenAI.ImagesResponse;
+    if (cocktailImageBuffer) {
+      response = await openai.images.edit({
+        image: new File([cocktailImageBuffer], `cocktail.${imageExt}`, {
+          type: imageType,
+        }),
+        prompt,
+        n: 1,
+        model: "gpt-image-1",
+        quality: "low",
+        background: "transparent",
+      });
+    } else {
+      // Fallback to text-to-image if no image is provided
+      response = await openai.images.generate({
+        prompt,
+        n: 1,
+        model: "gpt-image-1",
+        quality: "low",
+        background: "transparent",
+      });
+    }
+    // Always handle base64-encoded image (gpt-image-1 returns b64_json, not url)
+    const b64 = response.data?.[0]?.b64_json;
+    if (b64) {
+      const binary = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      await Deno.writeFile(localPath, binary);
+      console.log(`[ai-provider] Saved generated image to ${localPath}`);
+      return localUrl;
+    }
+    console.error(
+      "OpenAI image API error: No base64 image returned",
+      JSON.stringify(response),
+    );
+    return undefined;
+  } catch (err) {
+    console.error("AI image generation failed:", err);
+    return undefined;
   }
 }

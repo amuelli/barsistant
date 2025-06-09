@@ -9,6 +9,7 @@ import type {
 import { GlasswareType } from "../../types/recipe.ts";
 import {
   extractRecipeFromContent,
+  generateCocktailImage,
   type RecipeExtraction,
 } from "../../utils/ai-provider.ts";
 import { createRecipeWithSimpleIngredients } from "../../utils/recipe-helper.ts";
@@ -20,13 +21,10 @@ interface ExtractRequestBody {
 }
 
 export async function handler(ctx: FreshContext) {
-  // Only accept POST requests
-  if (ctx.req.method !== "POST") {
-    return Response.json(
-      { success: false, error: "Method not allowed" },
-      { status: 405 },
-    );
-  }
+  console.log("[extract] Incoming request", {
+    method: ctx.req.method,
+    contentType: ctx.req.headers.get("content-type"),
+  });
 
   try {
     // Parse request body - handle both JSON and form data
@@ -35,6 +33,7 @@ export async function handler(ctx: FreshContext) {
 
     if (requestContentType.includes("application/json")) {
       body = await ctx.req.json();
+      console.log("[extract] Parsed JSON body", body);
     } else if (
       requestContentType.includes("application/x-www-form-urlencoded")
     ) {
@@ -42,7 +41,9 @@ export async function handler(ctx: FreshContext) {
       body = {
         url: formData.get("url")?.toString() || "",
       };
+      console.log("[extract] Parsed form body", body);
     } else {
+      console.warn("[extract] Unsupported content type", requestContentType);
       return Response.json(
         { success: false, error: "Unsupported content type" },
         { status: 400 },
@@ -51,6 +52,7 @@ export async function handler(ctx: FreshContext) {
 
     // Validate URL
     if (!body.url || !body.url.trim()) {
+      console.warn("[extract] Missing or empty URL");
       return Response.json(
         { success: false, error: "URL is required" },
         { status: 400 },
@@ -58,15 +60,18 @@ export async function handler(ctx: FreshContext) {
     }
 
     // Fetch content from URL
+    console.log("[extract] Fetching content from URL", body.url);
     const { html, contentType: responseContentType } = await fetchUrlContent(
       body.url,
     );
+    console.log("[extract] Fetched content type", responseContentType);
 
     // Check if content is HTML
     if (
       !responseContentType.includes("text/html") &&
       !responseContentType.includes("application/xhtml+xml")
     ) {
+      console.warn("[extract] URL did not return HTML content");
       return Response.json(
         { success: false, error: "URL must point to a valid HTML page" },
         { status: 400 },
@@ -74,8 +79,10 @@ export async function handler(ctx: FreshContext) {
     }
 
     // Prepare HTML for AI extraction
+    console.log("[extract] Preparing HTML for AI extraction");
     const optimizedContent = prepareHtmlForAI(html);
     if (!optimizedContent) {
+      console.warn("[extract] Could not parse HTML content");
       return Response.json(
         { success: false, error: "Could not parse HTML content" },
         { status: 400 },
@@ -84,7 +91,6 @@ export async function handler(ctx: FreshContext) {
 
     // Extract recipe using AI service
     let extractedRecipe: RecipeExtraction;
-
     try {
       // Check if API provider and key are configured
       const aiProvider = Deno.env.get("AI_PROVIDER");
@@ -96,42 +102,64 @@ export async function handler(ctx: FreshContext) {
           "AI provider not configured. Please set the AI_PROVIDER environment variable.",
         );
       }
-
       if (aiProvider === "openai" && !openaiApiKey) {
         throw new Error(
           "OpenAI API key not set. Please set the OPENAI_API_KEY environment variable.",
         );
       }
-
       if (aiProvider === "anthropic" && !anthropicApiKey) {
         throw new Error(
           "Anthropic API key not set. Please set the ANTHROPIC_API_KEY environment variable.",
         );
       }
-
       if (!openaiApiKey && !anthropicApiKey) {
         throw new Error(
           "No API key configured. Please set either OPENAI_API_KEY or ANTHROPIC_API_KEY environment variable.",
         );
       }
-
-      console.log("Using AI provider:", aiProvider);
+      console.log("[extract] Using AI provider:", aiProvider);
       extractedRecipe = await extractRecipeFromContent(
         optimizedContent,
         body.url,
       );
+      console.log("[extract] AI extraction complete", extractedRecipe);
     } catch (error) {
-      console.error("AI extraction failed:", error);
-      throw error; // Re-throw the error to be handled by the outer catch block
+      console.error("[extract] AI extraction failed:", error);
+      throw error;
     }
 
-    console.log("Extracted recipe:", extractedRecipe);
+    // Generate AI cocktail image (if possible)
+    let aiImageUrl: string | undefined = undefined;
+    try {
+      console.log("[extract] Generating AI cocktail image");
+      aiImageUrl = await generateCocktailImage(
+        extractedRecipe.title,
+        extractedRecipe.ingredients.map((i) => i.name),
+        extractedRecipe.image,
+      );
+      if (aiImageUrl) {
+        console.log("[extract] AI image generated and saved at", aiImageUrl);
+      } else {
+        console.warn("[extract] No AI image generated");
+      }
+    } catch (err) {
+      console.warn(
+        "[extract] AI image generation failed, falling back to extracted image.",
+        err,
+      );
+    }
 
-    // Map AI extraction to recipe model
-    const recipeParams = mapExtractionToRecipe(extractedRecipe, body.url);
+    // Map AI extraction to recipe model, only use generated image if available
+    console.log("[extract] Mapping extraction to recipe model");
+    const recipeParams = mapExtractionToRecipe(
+      { ...extractedRecipe, image: aiImageUrl || undefined },
+      body.url,
+    );
 
     // Save recipe to database using the helper function that handles ingredients automatically
+    console.log("[extract] Saving recipe to database");
     const recipe = await createRecipeWithSimpleIngredients(recipeParams);
+    console.log("[extract] Recipe saved", { id: recipe.id });
 
     // Return success response with the new recipe ID
     return Response.json({
@@ -213,5 +241,6 @@ function mapExtractionToRecipe(
       url: sourceUrl,
     },
     tags: extraction.category || [],
+    image: extraction.image, // Pass through the image URL if present
   };
 }

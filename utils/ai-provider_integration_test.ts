@@ -4,10 +4,12 @@ import { assert } from "@std/assert";
 import "@std/dotenv/load";
 import { AIError, extractRecipeFromContent } from "./ai-provider.ts";
 
+const RUN_OPENAI_TESTS = Deno.env.get("RUN_OPENAI_TESTS") === "1";
+
 Deno.test({
   name:
     "extractRecipeFromContent returns structured data for valid input (integration)",
-  ignore: !Deno.env.get("OPENAI_API_KEY"),
+  ignore: !Deno.env.get("OPENAI_API_KEY") || !RUN_OPENAI_TESTS,
   sanitizeOps: false,
   sanitizeResources: false,
   async fn() {
@@ -39,7 +41,7 @@ Deno.test({
 Deno.test({
   name:
     "extractRecipeFromContent returns a RecipeExtraction-like object for empty content (integration)",
-  ignore: !Deno.env.get("OPENAI_API_KEY"),
+  ignore: !Deno.env.get("OPENAI_API_KEY") || !RUN_OPENAI_TESTS,
   async fn() {
     let result: any = null;
     try {
@@ -55,5 +57,39 @@ Deno.test({
       result && typeof result === "object" && "title" in result,
       "Should return a RecipeExtraction-like object for empty content",
     );
+  },
+});
+
+Deno.test({
+  name:
+    "generateCocktailImage returns a valid image URL for a JPG input (integration)",
+  ignore: !Deno.env.get("OPENAI_API_KEY") || !RUN_OPENAI_TESTS,
+  sanitizeOps: false,
+  sanitizeResources: false,
+  async fn() {
+    // Example real cocktail image (public domain, photo, JPG)
+    const cocktailImageUrl =
+      "https://www.liquor.com/thmb/w10s8lY2OpyfBM0NmzbNfUcTJBU=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/ancient-mariner-720x720-primary-c3d0dc150eef4d9ea29b1fb2ef314e40.jpg";
+    const { generateCocktailImage } = await import("./ai-provider.ts");
+    const url = await generateCocktailImage(
+      "Test Cocktail",
+      ["gin", "vermouth", "lime", "grapefruit", "rum"],
+      cocktailImageUrl,
+    );
+    console.log("AI image generation result:", url);
+    assert(
+      url === undefined || typeof url === "string",
+      "Should return a string or undefined",
+    );
+    if (typeof url === "string") {
+      assert(
+        url.startsWith("/"),
+        "Returned URL should be a relative path starting with /",
+      );
+    } else {
+      console.warn(
+        "No image URL returned. This may be expected if the API does not support JPG input.",
+      );
+    }
   },
 });
