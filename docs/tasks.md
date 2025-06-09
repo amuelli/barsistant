@@ -35,6 +35,35 @@ solution for the Barsistant application.
 | ✅     | AI-13   | Implement AI cocktail image generation                          | High       | AI-1, DB-3   |
 | ✅     | AI-14   | Adapt AI extraction to retrieve cocktail image URL from website | Medium     | AI-7, AI-10  |
 | ✅     | AI-15   | AI-generated cocktail images for recipes                        | High       | AI-14, DB-3  |
+|        | AI-16   | Store generated cocktail image in S3                            | Medium     | AI-13, AI-15 |
+|        | AI-17   | Make image generation non-blocking for recipe creation          | Medium     | AI-13, AI-15 |
+
+### AI-16 Implementation Details
+
+- Use a utility in `utils/` (e.g., `utils/s3.ts`) for S3 upload logic
+- Prefer [`s3-lite-client`](https://github.com/bradenmacdonald/s3-lite-client) for S3 integration (or [`@hk/s3`](https://jsr.io/@hk/s3) / AWS SDK v3 via JSR if needed)
+- Use environment variables for S3 credentials and bucket info
+- Accept image (Buffer or URL) from AI generation step
+- Upload image to S3 and get the public URL
+- Store the S3 image URL in the recipe record (Deno KV)
+- Add error handling for upload failures
+- Write unit tests for the S3 utility
+- Document S3 config in README if not already present
+
+---
+
+### AI-17 Implementation Details
+
+- Decouple image generation from the main recipe creation API/handler
+- On recipe creation, immediately store recipe data (without waiting for image)
+- Trigger image generation as a background task (e.g., queue, async function, or
+  scheduled job)
+- When image is ready, upload to S3 and update the recipe record with the image
+  URL
+- Ensure UI can handle recipes without images and update when image becomes
+  available
+- Add error handling and logging for background image generation failures
+- Write tests for non-blocking flow and background update logic
 
 ---
 
