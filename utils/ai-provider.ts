@@ -292,13 +292,13 @@ async function getExtractionImprovementInsights(): Promise<void> {
  * @param recipeName The name of the cocktail (used in the prompt)
  * @param ingredients The main ingredients (used in the prompt)
  * @param cocktailImageUrl (Optional) A URL to a cocktail image (PNG or JPG). If provided, the image will be used as input for image-to-image generation. If omitted, only the prompt will be used (text-to-image).
- * @returns The URL of the generated image, or undefined if generation fails
+ * @returns The generated image as a Uint8Array (PNG or JPG), or undefined if generation fails
  */
 export async function generateCocktailImage(
   recipeName: string,
   ingredients: string[],
   cocktailImageUrl?: string,
-): Promise<string | undefined> {
+): Promise<Uint8Array | undefined> {
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) return undefined;
 
@@ -321,12 +321,6 @@ export async function generateCocktailImage(
       console.warn("Failed to fetch cocktail image for image edit", err);
     }
   }
-
-  // Sanitize the cocktail name for a safe filename
-  const safeName = recipeName.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-  const localPath = `static/${safeName}.png`;
-  const localUrl = `/${safeName}.png`;
 
   const prompt =
     `minimalist, flat-style vector illustration of a cocktail drink (do not include any text or lettering in the image) called '${recipeName}', made with ${
@@ -363,9 +357,7 @@ export async function generateCocktailImage(
     const b64 = response.data?.[0]?.b64_json;
     if (b64) {
       const binary = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-      await Deno.writeFile(localPath, binary);
-      console.log(`[ai-provider] Saved generated image to ${localPath}`);
-      return localUrl;
+      return binary;
     }
     console.error(
       "OpenAI image API error: No base64 image returned",

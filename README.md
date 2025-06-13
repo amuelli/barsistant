@@ -84,6 +84,21 @@ integration. See `.env.example` for a template.
 No setup script is required—just copy `.env.example` to `.env` and fill in your
 values before running the app or tests.
 
+## S3 Image Upload Configuration
+
+To enable AI-generated cocktail image uploads, set the following environment
+variables:
+
+- `S3_ENDPOINT`: The S3-compatible endpoint URL (e.g., https://s3.amazonaws.com
+  or your MinIO/Supabase endpoint)
+- `S3_ACCESS_KEY_ID`: Your S3 access key ID
+- `S3_SECRET_ACCESS_KEY`: Your S3 secret access key
+- `S3_BUCKET`: The bucket name to store images
+- `S3_REGION`: (Optional) The S3 region (default: us-east-1)
+
+For local development, copy `.env.example` to `.env` and fill in your values.
+For production, set these variables in your deployment environment.
+
 ## Project Structure
 
 - `/routes` - Page components and API endpoints

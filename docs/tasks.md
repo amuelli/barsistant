@@ -35,7 +35,7 @@ solution for the Barsistant application.
 | ✅     | AI-13   | Implement AI cocktail image generation                          | High       | AI-1, DB-3   |
 | ✅     | AI-14   | Adapt AI extraction to retrieve cocktail image URL from website | Medium     | AI-7, AI-10  |
 | ✅     | AI-15   | AI-generated cocktail images for recipes                        | High       | AI-14, DB-3  |
-|        | AI-16   | Store generated cocktail image in S3                            | Medium     | AI-13, AI-15 |
+| ✅     | AI-16   | S3 storage for generated cocktail images                        | Medium     | AI-13, AI-15 |
 |        | AI-17   | Make image generation non-blocking for recipe creation          | Medium     | AI-13, AI-15 |
 
 ### AI-16 Implementation Details

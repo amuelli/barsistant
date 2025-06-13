@@ -1,6 +1,7 @@
 /// <reference lib="deno.unstable" />
 
 // Extraction API endpoint for handling recipe extraction requests
+import { ulid } from "@std/ulid";
 import { FreshContext } from "fresh";
 import type {
   IngredientType,
@@ -13,6 +14,7 @@ import {
   type RecipeExtraction,
 } from "../../utils/ai-provider.ts";
 import { createRecipeWithSimpleIngredients } from "../../utils/recipe-helper.ts";
+import { uploadImageToS3 } from "../../utils/s3.ts";
 import { fetchUrlContent, prepareHtmlForAI } from "../../utils/url-content.ts";
 
 // Interface for extract API request body
@@ -132,13 +134,24 @@ export async function handler(ctx: FreshContext) {
     let aiImageUrl: string | undefined = undefined;
     try {
       console.log("[extract] Generating AI cocktail image");
-      aiImageUrl = await generateCocktailImage(
+      const aiImageBuffer = await generateCocktailImage(
         extractedRecipe.title,
         extractedRecipe.ingredients.map((i) => i.name),
         extractedRecipe.image,
       );
-      if (aiImageUrl) {
-        console.log("[extract] AI image generated and saved at", aiImageUrl);
+      if (aiImageBuffer) {
+        // Upload to S3
+        const s3Key = `images/${ulid()}.png`;
+        const s3Result = await uploadImageToS3(
+          aiImageBuffer,
+          s3Key,
+          "image/png",
+        );
+        aiImageUrl = s3Result.url;
+        console.log(
+          "[extract] AI image generated and uploaded to S3 at",
+          aiImageUrl,
+        );
       } else {
         console.warn("[extract] No AI image generated");
       }
