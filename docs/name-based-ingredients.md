@@ -129,7 +129,6 @@ The system is implemented through:
      ingredients
    - `findIngredientByName`: Searches for ingredients by name (case-insensitive)
    - `findOrCreateIngredient`: Finds or creates ingredients by name
-   - `getRecipeWithIngredientNames`: Gets a recipe with full ingredient details
    - `getRecipesByIngredientName`: Finds recipes that use a specific ingredient
      by name
    - `createIngredientNameMap`: Creates a mapping from ingredient names to IDs

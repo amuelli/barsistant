@@ -18,18 +18,21 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     ingredients: [
       {
         ingredientId: "bourbon123",
+        name: "Bourbon",
         quantity: 60,
         unit: "ml" as MeasurementUnit,
         optional: false,
       },
       {
         ingredientId: "simple-syrup123",
+        name: "Simple Syrup",
         quantity: 10,
         unit: "ml" as MeasurementUnit,
         optional: false,
       },
       {
         ingredientId: "bitters123",
+        name: "Aromatic Bitters",
         quantity: 3,
         unit: "dash" as MeasurementUnit,
         optional: false,
@@ -58,30 +61,35 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     ingredients: [
       {
         ingredientId: "white-rum123",
+        name: "White Rum",
         quantity: 50,
         unit: "ml" as MeasurementUnit,
         optional: false,
       },
       {
         ingredientId: "lime123",
+        name: "Lime",
         quantity: 1,
         unit: "piece" as MeasurementUnit,
         optional: false,
       },
       {
         ingredientId: "mint123",
+        name: "Mint",
         quantity: 8,
         unit: "leaf" as MeasurementUnit,
         optional: false,
       },
       {
         ingredientId: "simple-syrup123",
+        name: "Simple Syrup",
         quantity: 15,
         unit: "ml" as MeasurementUnit,
         optional: false,
       },
       {
         ingredientId: "soda123",
+        name: "Soda Water",
         quantity: 60,
         unit: "ml" as MeasurementUnit,
         optional: false,
@@ -113,18 +121,21 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     ingredients: [
       {
         ingredientId: "gin123",
+        name: "Gin",
         quantity: 30,
         unit: "ml" as MeasurementUnit,
         optional: false,
       },
       {
         ingredientId: "sweet-vermouth123",
+        name: "Sweet Vermouth",
         quantity: 30,
         unit: "ml" as MeasurementUnit,
         optional: false,
       },
       {
         ingredientId: "campari123",
+        name: "Campari",
         quantity: 30,
         unit: "ml" as MeasurementUnit,
         optional: false,
@@ -206,6 +217,7 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
         // Update the bourbon quantity
         {
           ingredientId: "bourbon123",
+          name: "Bourbon",
           quantity: 75, // Increased from 60ml to 75ml
           unit: "ml" as MeasurementUnit,
           optional: false,
@@ -213,6 +225,7 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
         // Keep the simple syrup the same
         {
           ingredientId: "simple-syrup123",
+          name: "Simple Syrup",
           quantity: 10,
           unit: "ml" as MeasurementUnit,
           optional: false,
@@ -220,6 +233,7 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
         // Keep the bitters the same
         {
           ingredientId: "bitters123",
+          name: "Aromatic Bitters",
           quantity: 3,
           unit: "dash" as MeasurementUnit,
           optional: false,

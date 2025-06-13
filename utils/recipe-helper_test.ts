@@ -13,7 +13,6 @@ import {
   findIngredientByName,
   findOrCreateIngredient,
   getRecipesByIngredientName,
-  getRecipeWithIngredientNames,
   updateRecipeWithSimpleIngredients,
 } from "./recipe-helper.ts";
 import { recipeModel } from "./recipe-model.ts";
@@ -149,31 +148,6 @@ Deno.test("Recipe Helper - JIT Ingredient Creation and Recipe Management", async
     }
   });
 
-  // Test getRecipeWithIngredientNames
-  await t.step("getRecipeWithIngredientNames", async () => {
-    const recipe = await getRecipeWithIngredientNames(createdRecipeId!);
-
-    assertExists(recipe, "Should return the recipe with full ingredients");
-    assertEquals(recipe.id, createdRecipeId);
-    assertExists(
-      (recipe as any).ingredients[0].name,
-      "Ingredients should have name property",
-    );
-
-    // Check that the ingredient names match what we expect
-    const ingredientNames = (recipe as any).ingredients.map((i: any) => i.name);
-    assertEquals(
-      ingredientNames.includes(testGin.name),
-      true,
-      `Ingredients should include ${testGin.name}`,
-    );
-    assertEquals(
-      ingredientNames.includes(testCampari.name),
-      true,
-      `Ingredients should include ${testCampari.name}`,
-    );
-  });
-
   // Test updateRecipeWithSimpleIngredients
   await t.step("updateRecipeWithSimpleIngredients", async () => {
     // Update the recipe with a new ingredient and different quantities
@@ -230,19 +204,14 @@ Deno.test("Recipe Helper - JIT Ingredient Creation and Recipe Management", async
     );
 
     // Check if lemon twist was added
-    const fullRecipe = await recipeModel.getWithFullIngredients(
-      createdRecipeId!,
-    );
-    assertExists(fullRecipe);
-
-    const hasLemonTwist = (fullRecipe!.ingredients as any).some(
-      (i: any) => i.name === testLemonTwist.name,
+    const hasLemonTwist = updatedNegroni.ingredients.some(
+      (i) => i.name === testLemonTwist.name,
     );
     assertEquals(hasLemonTwist, true, "Recipe should include lemon twist");
 
     // Make sure orange peel is gone
-    const hasOrangePeel = (fullRecipe!.ingredients as any).some(
-      (i: any) => i.name === testOrangePeel.name,
+    const hasOrangePeel = updatedNegroni.ingredients.some(
+      (i) => i.name === testOrangePeel.name,
     );
     assertEquals(
       hasOrangePeel,

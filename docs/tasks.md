@@ -41,7 +41,9 @@ solution for the Barsistant application.
 ### AI-16 Implementation Details
 
 - Use a utility in `utils/` (e.g., `utils/s3.ts`) for S3 upload logic
-- Prefer [`s3-lite-client`](https://github.com/bradenmacdonald/s3-lite-client) for S3 integration (or [`@hk/s3`](https://jsr.io/@hk/s3) / AWS SDK v3 via JSR if needed)
+- Prefer [`s3-lite-client`](https://github.com/bradenmacdonald/s3-lite-client)
+  for S3 integration (or [`@hk/s3`](https://jsr.io/@hk/s3) / AWS SDK v3 via JSR
+  if needed)
 - Use environment variables for S3 credentials and bucket info
 - Accept image (Buffer or URL) from AI generation step
 - Upload image to S3 and get the public URL

@@ -4,7 +4,8 @@ import { recipeModel } from "../../utils/recipe-model.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {
-    const recipe = await recipeModel.getWithFullIngredients(ctx.params.id);
+    // Use getById instead of getWithFullIngredients; all display data is now in the recipe
+    const recipe = await recipeModel.getById(ctx.params.id);
     if (!recipe) {
       throw new HttpError(404, "Recipe not found");
     }

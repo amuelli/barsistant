@@ -9,25 +9,12 @@
 
 import { ulid } from "@std/ulid";
 import type {
-  Ingredient,
   IngredientRecipeLink,
   Recipe,
   RecipeIngredient,
 } from "../types/index.ts";
 import { GlasswareType } from "../types/recipe.ts";
 import { executeDbOperation, kv, recipes } from "./db.ts";
-
-/**
- * Represents a recipe with full ingredient details, for display purposes
- */
-export interface RecipeWithFullIngredients extends Omit<Recipe, "ingredients"> {
-  ingredients: (RecipeIngredient & {
-    name: string;
-    description: string;
-    type: string;
-    image?: string;
-  })[];
-}
 
 /**
  * Recipe creation parameters
@@ -100,12 +87,18 @@ export const recipeModel = {
         throw new Error("At least one ingredient is required");
       }
 
+      // Ensure every ingredient has a name
+      for (const ingredient of params.ingredients) {
+        if (!ingredient.name || ingredient.name.trim() === "") {
+          throw new Error("Each ingredient must have a name");
+        }
+      }
+
       // Generate unique ID
       const id = ulid();
       const now = new Date().toISOString();
 
-      // Create recipe object - note that we don't store full ingredient details
-      // in the recipe itself, just a list of ingredient IDs
+      // Create recipe object
       const recipe: Recipe = {
         id,
         name: params.name.trim(),
@@ -191,60 +184,6 @@ export const recipeModel = {
   },
 
   /**
-   * Get a recipe with full ingredient details
-   *
-   * @param id Recipe ID
-   * @returns The recipe with ingredient details or null if not found
-   * @throws {DatabaseError} If the database operation fails
-   */
-  async getWithFullIngredients(
-    id: string,
-  ): Promise<RecipeWithFullIngredients | null> {
-    return await executeDbOperation(async () => {
-      // Get the base recipe
-      const recipe = await this.getById(id);
-      if (!recipe) {
-        return null;
-      }
-
-      // Get the ingredient relationships
-      const ingredients = [];
-      for (const ingredient of recipe.ingredients) {
-        // Get the relationship data
-        const relationKey = ["recipe_ingredient", id, ingredient.ingredientId];
-        const relation = await kv.get<IngredientRecipeLink>(relationKey);
-
-        if (relation.value) {
-          // Get the ingredient data
-          const ingredientData = await kv.get<Ingredient>([
-            "ingredient",
-            ingredient.ingredientId,
-          ]);
-
-          if (ingredientData.value) {
-            // Combine the relationship and ingredient data
-            ingredients.push({
-              ...relation.value,
-              name: ingredientData.value.name,
-              description: ingredientData.value.description,
-              type: ingredientData.value.type,
-              image: ingredientData.value.image,
-            });
-          }
-        }
-      }
-
-      // Create the combined recipe with ingredients
-      const recipeWithFullIngredients: RecipeWithFullIngredients = {
-        ...recipe,
-        ingredients,
-      };
-
-      return recipeWithFullIngredients;
-    }, "Failed to get recipe with ingredients");
-  },
-
-  /**
    * Update an existing recipe
    *
    * @param id Recipe ID
@@ -263,6 +202,15 @@ export const recipeModel = {
       }
 
       const now = new Date().toISOString();
+
+      // If ingredients are being updated, ensure every ingredient has a name
+      if (params.ingredients) {
+        for (const ingredient of params.ingredients) {
+          if (!ingredient.name || ingredient.name.trim() === "") {
+            throw new Error("Each ingredient must have a name");
+          }
+        }
+      }
 
       // Update recipe fields while preserving existing data
       const updatedRecipe: Recipe = {
@@ -716,3 +664,5 @@ export const recipeModel = {
     }, `Failed to get recipes by ingredient ${ingredientId}`);
   },
 };
+
+// Removed: getWithFullIngredients and related legacy code.

@@ -77,10 +77,12 @@ export async function createRecipeWithSimpleIngredients(
       );
 
       let ingredientId: string;
+      let ingredientName: string = simpleIngredient.name;
 
       if (existingIngredient) {
         // Use existing ingredient
         ingredientId = existingIngredient.id;
+        ingredientName = existingIngredient.name;
       } else {
         // Create new ingredient with sensible defaults
         const newIngredient = await ingredientModel.create({
@@ -96,6 +98,7 @@ export async function createRecipeWithSimpleIngredients(
         });
 
         ingredientId = newIngredient.id;
+        ingredientName = newIngredient.name;
       }
 
       // Store for later use
@@ -104,6 +107,7 @@ export async function createRecipeWithSimpleIngredients(
       // Add to processed ingredients
       processedIngredients.push({
         ingredientId,
+        name: ingredientName,
         quantity: simpleIngredient.quantity,
         unit: simpleIngredient.unit,
         optional: simpleIngredient.optional ?? false,
@@ -150,10 +154,12 @@ export async function updateRecipeWithSimpleIngredients(
       );
 
       let ingredientId: string;
+      let ingredientName: string = simpleIngredient.name;
 
       if (existingIngredient) {
         // Use existing ingredient
         ingredientId = existingIngredient.id;
+        ingredientName = existingIngredient.name;
       } else {
         // Create new ingredient with sensible defaults
         const newIngredient = await ingredientModel.create({
@@ -169,11 +175,13 @@ export async function updateRecipeWithSimpleIngredients(
         });
 
         ingredientId = newIngredient.id;
+        ingredientName = newIngredient.name;
       }
 
       // Add to processed ingredients
       processedIngredients.push({
         ingredientId,
+        name: ingredientName,
         quantity: simpleIngredient.quantity,
         unit: simpleIngredient.unit,
         optional: simpleIngredient.optional ?? false,
@@ -189,22 +197,6 @@ export async function updateRecipeWithSimpleIngredients(
 
     return recipe;
   }, `Failed to update recipe ${id} with simple ingredients`);
-}
-
-/**
- * Get a recipe with ingredient names instead of IDs
- *
- * @param id Recipe ID
- * @returns The recipe with ingredient details
- */
-export async function getRecipeWithIngredientNames(
-  id: string,
-): Promise<Recipe | null> {
-  return await executeDbOperation(async () => {
-    // Use the existing getWithFullIngredients to get a recipe with all details
-    const recipe = await recipeModel.getWithFullIngredients(id);
-    return recipe;
-  }, `Failed to get recipe ${id} with ingredient names`);
 }
 
 /**

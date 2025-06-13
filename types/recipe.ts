@@ -12,6 +12,7 @@ import { MeasurementUnit } from "./ingredient.ts";
  */
 export interface RecipeIngredient {
   ingredientId: string;
+  name: string; // Ingredient display name (copied from Ingredient at creation time)
   quantity: number;
   unit: MeasurementUnit;
   optional: boolean;

@@ -152,7 +152,9 @@ const RecipeExtractionSchema = z.object({
     type: z.string().describe(
       `needs to be a valid ingredient type from this list: spirit, liqueur, wine, mixer, juice, syrup, bitter, fruit, herb, spice, other.`,
     ),
-    notes: z.string().optional(),
+    notes: z.string().optional().describe(
+      "Any additional notes about the ingredient, such as preparation or specific brand recommendations.",
+    ),
   })),
   instructions: z.array(z.string()).describe(
     "Step-by-step instructions for preparing the cocktail",
