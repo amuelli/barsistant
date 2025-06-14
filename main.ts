@@ -1,5 +1,7 @@
+import "@std/dotenv/load";
 import { App, fsRoutes, staticFiles } from "fresh";
 import { type State } from "./utils.ts";
+import { startQueueHandler } from "./utils/db/queue-handler.ts";
 
 export const app = new App<State>();
 
@@ -12,5 +14,5 @@ await fsRoutes(app, {
 
 if (import.meta.main) {
   await app.listen();
-  await import("./utils/db/queue-handler.ts");
+  await startQueueHandler();
 }
