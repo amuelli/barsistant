@@ -36,9 +36,10 @@ export interface Recipe {
   source: {
     name: string;
     url?: string;
+    image?: string; // The image URL extracted from the original source (website, blog, etc.)
   };
+  image?: string; // The AI-generated cocktail image (S3 URL, preferred for display)
   tags: string[];
-  image?: string;
   rating?: number; // Average user rating
   calories?: number;
   alcoholContent?: {

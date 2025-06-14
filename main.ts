@@ -12,4 +12,5 @@ await fsRoutes(app, {
 
 if (import.meta.main) {
   await app.listen();
+  await import("./utils/queue-handler.ts");
 }

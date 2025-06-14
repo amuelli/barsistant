@@ -1,4 +1,5 @@
 import { HttpError } from "fresh";
+import RecipeImage from "../../islands/RecipeImage.tsx";
 import { define } from "../../utils.ts";
 import { recipeModel } from "../../utils/recipe-model.ts";
 
@@ -53,15 +54,7 @@ export default define.page<typeof handler>(
 
           {/* Recipe Image */}
           <div class="lg:order-first">
-            {recipe.image
-              ? (
-                <img
-                  src={recipe.image}
-                  alt={recipe.name}
-                  class="w-full h-96 object-contain rounded-lg shadow-lg"
-                />
-              )
-              : <div class="w-full h-96 bg-gray-300 rounded-lg"></div>}
+            <RecipeImage recipe={recipe} />
           </div>
         </div>
 

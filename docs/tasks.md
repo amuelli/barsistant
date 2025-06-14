@@ -36,7 +36,7 @@ solution for the Barsistant application.
 | ✅     | AI-14   | Adapt AI extraction to retrieve cocktail image URL from website | Medium     | AI-7, AI-10  |
 | ✅     | AI-15   | AI-generated cocktail images for recipes                        | High       | AI-14, DB-3  |
 | ✅     | AI-16   | S3 storage for generated cocktail images                        | Medium     | AI-13, AI-15 |
-|        | AI-17   | Make image generation non-blocking for recipe creation          | Medium     | AI-13, AI-15 |
+| ✅     | AI-17   | Make image generation non-blocking for recipe creation          | Medium     | AI-13, AI-15 |
 
 ### AI-16 Implementation Details
 
@@ -54,20 +54,54 @@ solution for the Barsistant application.
 
 ---
 
-### AI-17 Implementation Details
+### AI-17 Implementation Details (Expanded)
 
-- Decouple image generation from the main recipe creation API/handler
-- On recipe creation, immediately store recipe data (without waiting for image)
-- Trigger image generation as a background task (e.g., queue, async function, or
-  scheduled job)
-- When image is ready, upload to S3 and update the recipe record with the image
-  URL
-- Ensure UI can handle recipes without images and update when image becomes
-  available
-- Add error handling and logging for background image generation failures
-- Write tests for non-blocking flow and background update logic
+- **Decouple image generation from recipe creation API:**
+  - On recipe creation, immediately store recipe data in Deno KV (without
+    waiting for image).
+  - Enqueue an image generation job using
+    `kv.enqueue({ type: "generate_recipe_image", recipeId })` after recipe is
+    saved.
+  - Optionally, use a KV atomic transaction to ensure recipe and job are created
+    together.
 
----
+- **Background image generation with Deno KV Queues:**
+  - Implement a `kv.listenQueue` handler to process `generate_recipe_image`
+    jobs.
+  - Handler should:
+    1. Fetch recipe data by `recipeId`.
+    2. Generate image using AI provider.
+    3. Upload image to S3 (via `utils/s3.ts`).
+    4. Update recipe record in KV with new image URL.
+    5. Log success or failure.
+  - Ensure handler is idempotent (safe to run more than once for same recipe).
+
+- **Error handling & retries:**
+  - If image generation or upload fails, throw in handler to trigger automatic
+    retry (Deno queues guarantee at-least-once delivery, with max retries).
+  - For persistent failures, log error and optionally store failed job in a
+    backup KV key (see `keysIfUndelivered`).
+  - Add structured logging for all background job steps and errors.
+
+- **UI/UX considerations:**
+  - Ensure UI can display recipes without images (show placeholder or loading
+    state).
+  - When image becomes available, update UI (e.g., via polling, signals, or
+    subscription).
+
+- **Testing & monitoring:**
+  - Write unit tests for enqueue logic, queue handler, and S3 upload.
+  - Test non-blocking recipe creation and background update flow.
+  - Add monitoring/logging for queue handler activity and failures.
+
+- **References:**
+  - See
+    [Deno Queues docs](https://docs.deno.com/deploy/kv/manual/queue_overview/)
+    and [blog post](https://deno.com/blog/queues) for usage patterns and best
+    practices.
+  - Example enqueue:
+    `await kv.enqueue({ type: "generate_recipe_image", recipeId })`
+  - Example handler: `kv.listenQueue(async (msg) => { ... })`
 
 ## User Interface Tasks
 

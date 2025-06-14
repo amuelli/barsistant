@@ -22,7 +22,6 @@ import "@std/dotenv/load";
 import { type CreateMessage, generateObject, generateText } from "ai";
 import OpenAI from "jsr:@openai/openai";
 import { z } from "zod";
-import { IngredientType, MeasurementUnit } from "../types/ingredient.ts";
 
 // import { anthropic } from "npm:@ai-sdk/anthropic@3.1.13"; // Uncomment if Anthropic is needed
 
@@ -69,32 +68,6 @@ export async function executeAIOperation<T>(
     console.error(`${errorMessage}:`, error);
     throw new AIError(errorMessage, error);
   }
-}
-
-/**
- * Interface for recipe extraction from text content
- */
-export interface RecipeExtraction {
-  title: string;
-  description: string;
-  ingredients: {
-    name: string;
-    quantity: number;
-    unit: MeasurementUnit;
-    optional: boolean;
-    type: IngredientType;
-    notes?: string;
-  }[];
-  instructions: string[];
-  garnish?: string[];
-  glassware: string;
-  category?: string[];
-  source: {
-    url: string;
-    name?: string;
-    author?: string;
-  };
-  image?: string; // URL of a cocktail image from the website, if available
 }
 
 /**
@@ -168,10 +141,10 @@ const RecipeExtractionSchema = z.object({
     url: z.string(),
     name: z.string().optional(),
     author: z.string().optional(),
+    image: z.string().url().optional().describe(
+      "Direct URL to a clear image of the cocktail from the website, if available. Prefer the main cocktail photo, not logos or unrelated images. Omit if not available.",
+    ),
   }),
-  image: z.string().url().optional().describe(
-    "Direct URL to a clear image of the cocktail from the website, if available. Prefer the main cocktail photo, not logos or unrelated images. Omit if not available.",
-  ),
 });
 
 /**
@@ -371,3 +344,6 @@ export async function generateCocktailImage(
     return undefined;
   }
 }
+
+// Remove the manual RecipeExtraction interface
+export type RecipeExtraction = z.infer<typeof RecipeExtractionSchema>;

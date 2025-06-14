@@ -1,7 +1,6 @@
 /// <reference lib="deno.unstable" />
 
 // Extraction API endpoint for handling recipe extraction requests
-import { ulid } from "@std/ulid";
 import { FreshContext } from "fresh";
 import type {
   IngredientType,
@@ -10,11 +9,10 @@ import type {
 import { GlasswareType } from "../../types/recipe.ts";
 import {
   extractRecipeFromContent,
-  generateCocktailImage,
   type RecipeExtraction,
 } from "../../utils/ai-provider.ts";
+import { kv } from "../../utils/db.ts";
 import { createRecipeWithSimpleIngredients } from "../../utils/recipe-helper.ts";
-import { uploadImageToS3 } from "../../utils/s3.ts";
 import { fetchUrlContent, prepareHtmlForAI } from "../../utils/url-content.ts";
 
 // Interface for extract API request body
@@ -130,42 +128,10 @@ export async function handler(ctx: FreshContext) {
       throw error;
     }
 
-    // Generate AI cocktail image (if possible)
-    let aiImageUrl: string | undefined = undefined;
-    try {
-      console.log("[extract] Generating AI cocktail image");
-      const aiImageBuffer = await generateCocktailImage(
-        extractedRecipe.title,
-        extractedRecipe.ingredients.map((i) => i.name),
-        extractedRecipe.image,
-      );
-      if (aiImageBuffer) {
-        // Upload to S3
-        const s3Key = `images/${ulid()}.png`;
-        const s3Result = await uploadImageToS3(
-          aiImageBuffer,
-          s3Key,
-          "image/png",
-        );
-        aiImageUrl = s3Result.url;
-        console.log(
-          "[extract] AI image generated and uploaded to S3 at",
-          aiImageUrl,
-        );
-      } else {
-        console.warn("[extract] No AI image generated");
-      }
-    } catch (err) {
-      console.warn(
-        "[extract] AI image generation failed, falling back to extracted image.",
-        err,
-      );
-    }
-
-    // Map AI extraction to recipe model, only use generated image if available
+    // Map AI extraction to recipe model, do not generate image here
     console.log("[extract] Mapping extraction to recipe model");
     const recipeParams = mapExtractionToRecipe(
-      { ...extractedRecipe, image: aiImageUrl || undefined },
+      extractedRecipe,
       body.url,
     );
 
@@ -173,6 +139,17 @@ export async function handler(ctx: FreshContext) {
     console.log("[extract] Saving recipe to database");
     const recipe = await createRecipeWithSimpleIngredients(recipeParams);
     console.log("[extract] Recipe saved", { id: recipe.id });
+
+    // Enqueue background image generation job
+    try {
+      await kv.enqueue({ type: "generate_recipe_image", recipeId: recipe.id });
+      console.log(
+        "[extract] Enqueued background image generation for",
+        recipe.id,
+      );
+    } catch (err) {
+      console.error("[extract] Failed to enqueue image generation job", err);
+    }
 
     // Return success response with the new recipe ID
     return Response.json({
@@ -252,8 +229,8 @@ function mapExtractionToRecipe(
     source: {
       name: extraction.source.name || new URL(sourceUrl).hostname,
       url: sourceUrl,
+      image: extraction.source.image,
     },
     tags: extraction.category || [],
-    image: extraction.image, // Pass through the image URL if present
   };
 }
