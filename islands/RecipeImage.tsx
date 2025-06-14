@@ -30,12 +30,12 @@ export default function RecipeImage(
       <img
         src={recipe.image}
         alt={recipe.name}
-        class="w-full h-96 object-contain rounded-lg shadow-lg"
+        class="w-full h-96 object-contain rounded-lg shadow-lg bg-base-300"
       />
     )
     : (
-      <div class="w-full h-96 skeleton rounded-lg animate-pulse flex items-center justify-center">
-        <span class="text-gray-500">Generating image…</span>
+      <div class="w-full h-96 skeleton rounded-lg bg-base-300 flex items-center justify-center">
+        <span class="text-gray-500 animate-pulse">Generating image…</span>
       </div>
     );
 }

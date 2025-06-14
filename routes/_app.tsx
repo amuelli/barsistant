@@ -17,7 +17,7 @@ export default function App({ Component, state }: PageProps<unknown, State>) {
         <div class="min-h-screen flex flex-col">
           <div class="drawer">
             <input id="main-drawer" type="checkbox" class="drawer-toggle" />
-            <div class="drawer-content flex flex-col">
+            <div class="drawer-content flex flex-col bg-base-100">
               {/* Navbar */}
               <div class="navbar bg-base-100 w-full">
                 <div class="flex-none lg:hidden">
