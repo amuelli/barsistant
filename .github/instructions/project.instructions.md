@@ -43,6 +43,24 @@ applyTo: '**'
 - Use caching and pagination where needed
 - Optimize UI rendering
 
+## Commit Message Guidelines
+
+- Use a short, descriptive title with a prefix and task ID in brackets:
+  - `feat(AI-3): implement ai provider`
+  - `fix(DB-2): correct recipe model bug`
+  - `refactor(UI-5): update recipe form layout`
+  - `doc(README): update setup instructions`
+- Prefixes: `feat`, `fix`, `refactor`, `doc`, `test`, etc.
+- List additional details as bullet points in the body below the title, if needed.
+- Example:
+
+  ```
+  feat(AI-3): implement ai provider
+  
+  - Add provider-agnostic AI SDK integration
+  - Update environment variable docs
+  ```
+
 ## Reference
 - See README.md for setup, stack, and conventions
 - See docs/tasks.md for task status
