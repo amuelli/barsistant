@@ -8,7 +8,7 @@ import type {
   Ingredient,
   IngredientType,
   MeasurementUnit,
-} from "../types/ingredient.ts";
+} from "../../types/ingredient.ts";
 import { ingredientModel } from "./ingredient-model.ts";
 
 Deno.test("Ingredient Model - CRUD Operations", async (t) => {

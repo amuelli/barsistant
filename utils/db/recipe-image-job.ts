@@ -1,9 +1,9 @@
 import { ulid } from "@std/ulid";
 import { z } from "zod";
-import type { Recipe } from "../types/recipe.ts";
-import { generateCocktailImage } from "./ai-provider.ts";
+import type { Recipe } from "../../types/recipe.ts";
+import { generateCocktailImage } from "../ai/image-generation.ts";
+import { uploadImageToS3 } from "../storage/s3.ts";
 import { DatabaseError, recipes } from "./db.ts";
-import { uploadImageToS3 } from "./s3.ts";
 
 export const GenerateRecipeImageJobSchema = z.object({
   type: z.literal("generate_recipe_image"),

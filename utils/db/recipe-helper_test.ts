@@ -4,8 +4,11 @@ import {
   assertEquals,
   assertExists,
 } from "https://deno.land/std@0.208.0/assert/mod.ts";
-import type { IngredientType, MeasurementUnit } from "../types/ingredient.ts";
-import { GlasswareType } from "../types/recipe.ts";
+import type {
+  IngredientType,
+  MeasurementUnit,
+} from "../../types/ingredient.ts";
+import { GlasswareType } from "../../types/recipe.ts";
 import { ingredientModel } from "./ingredient-model.ts";
 import {
   createIngredientNameMap,

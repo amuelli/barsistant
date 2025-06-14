@@ -1,7 +1,7 @@
 import { S3Client } from "@bradenmacdonald/s3-lite-client";
 import { assertRejects } from "@std/assert";
 import "@std/dotenv/load";
-import { uploadImageToS3 } from "./s3.ts";
+import { uploadImageToS3 } from "../storage/s3.ts";
 
 Deno.test("uploadImageToS3 throws on missing env vars", async () => {
   const originalEnv = { ...Deno.env.toObject() };

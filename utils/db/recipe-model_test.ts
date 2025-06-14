@@ -4,8 +4,8 @@ import {
   assertEquals,
   assertExists,
 } from "https://deno.land/std@0.208.0/assert/mod.ts";
-import { MeasurementUnit } from "../types/ingredient.ts";
-import { GlasswareType, Recipe } from "../types/recipe.ts";
+import { MeasurementUnit } from "../../types/ingredient.ts";
+import { GlasswareType, Recipe } from "../../types/recipe.ts";
 import { recipeModel } from "./recipe-model.ts";
 
 Deno.test("Recipe Model - CRUD Operations", async (t) => {

@@ -1,5 +1,5 @@
 import { FreshContext } from "fresh";
-import { recipeModel } from "../../../utils/recipe-model.ts";
+import { recipeModel } from "../../../utils/db/recipe-model.ts";
 
 export async function handler(ctx: FreshContext) {
   const id = ctx.params.id;

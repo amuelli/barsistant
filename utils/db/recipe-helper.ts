@@ -12,8 +12,8 @@ import type {
   Ingredient,
   IngredientType,
   MeasurementUnit,
-} from "../types/ingredient.ts";
-import type { Recipe, RecipeIngredient } from "../types/recipe.ts";
+} from "../../types/ingredient.ts";
+import type { Recipe, RecipeIngredient } from "../../types/recipe.ts";
 import { executeDbOperation, kv } from "./db.ts";
 import { ingredientModel } from "./ingredient-model.ts";
 import type { CreateRecipeParams, UpdateRecipeParams } from "./recipe-model.ts";

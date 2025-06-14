@@ -2,9 +2,9 @@
 // Run this script once after deploying the new RecipeIngredient structure
 
 import type { Recipe } from "../types/recipe.ts";
-import { kv } from "../utils/db.ts";
-import { ingredientModel } from "../utils/ingredient-model.ts";
-import { recipeModel } from "../utils/recipe-model.ts";
+import { kv } from "../utils/db/db.ts";
+import { ingredientModel } from "../utils/db/ingredient-model.ts";
+import { recipeModel } from "../utils/db/recipe-model.ts";
 
 async function migrateAllRecipes() {
   let updatedCount = 0;

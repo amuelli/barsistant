@@ -9,10 +9,10 @@ import type {
 import { GlasswareType } from "../../types/recipe.ts";
 import {
   extractRecipeFromContent,
-  type RecipeExtraction,
-} from "../../utils/ai-provider.ts";
-import { kv } from "../../utils/db.ts";
-import { createRecipeWithSimpleIngredients } from "../../utils/recipe-helper.ts";
+  RecipeExtraction,
+} from "../../utils/ai/extraction.ts";
+import { kv } from "../../utils/db/db.ts";
+import { createRecipeWithSimpleIngredients } from "../../utils/db/recipe-helper.ts";
 import { fetchUrlContent, prepareHtmlForAI } from "../../utils/url-content.ts";
 
 // Interface for extract API request body

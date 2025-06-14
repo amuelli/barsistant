@@ -8,12 +8,8 @@
  */
 
 import { ulid } from "@std/ulid";
-import type {
-  IngredientRecipeLink,
-  Recipe,
-  RecipeIngredient,
-} from "../types/index.ts";
-import { GlasswareType } from "../types/recipe.ts";
+import type { IngredientRecipeLink } from "../../types/ingredient.ts";
+import { GlasswareType, Recipe, RecipeIngredient } from "../../types/recipe.ts";
 import { executeDbOperation, kv, recipes } from "./db.ts";
 
 /**

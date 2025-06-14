@@ -8,11 +8,11 @@
  */
 
 import { ulid } from "@std/ulid";
-import type {
+import {
   Ingredient,
   IngredientType,
   MeasurementUnit,
-} from "../types/index.ts";
+} from "../../types/ingredient.ts";
 import { executeDbOperation, kv } from "./db.ts";
 
 /**

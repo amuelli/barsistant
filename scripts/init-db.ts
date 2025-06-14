@@ -1,11 +1,11 @@
 import type { IngredientType, MeasurementUnit } from "../types/ingredient.ts";
 import { GlasswareType } from "../types/recipe.ts";
-import { executeDbOperation, kv } from "../utils/db.ts";
-import { ingredientModel } from "../utils/ingredient-model.ts";
+import { executeDbOperation, kv } from "../utils/db/db.ts";
+import { ingredientModel } from "../utils/db/ingredient-model.ts";
 import {
   createRecipeWithSimpleIngredients,
   SimpleIngredient,
-} from "../utils/recipe-helper.ts";
+} from "../utils/db/recipe-helper.ts";
 
 const DB_VERSION_KEY = ["db_meta", "version"];
 const CURRENT_VERSION = 1;

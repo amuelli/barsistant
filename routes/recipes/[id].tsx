@@ -1,7 +1,7 @@
 import { HttpError } from "fresh";
 import RecipeImage from "../../islands/RecipeImage.tsx";
 import { define } from "../../utils.ts";
-import { recipeModel } from "../../utils/recipe-model.ts";
+import { recipeModel } from "../../utils/db/recipe-model.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {
