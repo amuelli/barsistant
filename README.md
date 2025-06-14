@@ -67,7 +67,7 @@ deno task test
 
 > Note: Deno KV is currently an unstable API, so the `--unstable-kv` flag is
 > required to run the application and tests. This has been configured in the
-> deno.json task definitions.
+> [deno.json](deno.json) task definitions.
 
 ## Environment Variables
 
@@ -104,13 +104,13 @@ For production, set these variables in your deployment environment.
 - `/routes` - Page components and API endpoints
 - `/components` - Reusable UI components
 - `/utils` - Shared utility functions and database utilities
-  - `/utils/db.ts` - Database connection and helper functions
+  - [`utils/db.ts`](utils/db.ts) - Database connection and helper functions
 - `/static` - Static assets
 
 ## Database Usage
 
 The application uses Deno KV as its database solution. A utility module at
-`utils/db.ts` provides:
+[`utils/db.ts`](utils/db.ts) provides:
 
 - Centralized database connection management
 - Error handling with retry logic
@@ -158,17 +158,17 @@ await ingredientModel.delete("some-ingredient-id");
 
 ## Documentation
 
-Additional documentation can be found in the `/docs` directory:
+Key documentation files:
 
-- [Requirements Document](docs/requirements.md)
+- [Project Requirements](.github/instructions/requirements.instructions.md)
+- [AI Development Instructions](.github/instructions/project.instructions.md)
 - [Implementation Tasks](docs/tasks.md)
-- [AI Instructions](docs/ai_instructions.md)
 
 ## Contributing
 
-1. Review the [requirements document](docs/requirements.md) and
-   [tasks list](docs/tasks.md)
-2. Follow the coding guidelines in [AI instructions](docs/ai_instructions.md)
+1. Review the [Project Requirements](.github/instructions/requirements.instructions.md) and
+   [Implementation Tasks](docs/tasks.md)
+2. Follow the coding guidelines in [AI Development Instructions](.github/instructions/project.instructions.md)
 3. Test your changes thoroughly
 
 ## License
@@ -183,7 +183,7 @@ This project is licensed under the terms of the license included in the
 The project uses Fresh with Tailwind CSS v4 and DaisyUI v5:
 
 1. Fresh's Tailwind plugin is configured via `@pakornv/fresh-plugin-tailwindcss`
-2. DaisyUI themes are configured directly in `static/styles.css`:
+2. DaisyUI themes are configured directly in [`static/styles.css`](static/styles.css):
    ```css
    @import "tailwindcss";
 
