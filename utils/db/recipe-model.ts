@@ -9,34 +9,13 @@
 
 import { ulid } from "@std/ulid";
 import type { IngredientRecipeLink } from "../../types/ingredient.ts";
-import { GlasswareType, Recipe, RecipeIngredient } from "../../types/recipe.ts";
-import { executeDbOperation, kv, recipes } from "./db.ts";
+import { Recipe } from "../../types/recipe.ts";
+import { executeDbOperation, kv } from "./db.ts";
 
 /**
  * Recipe creation parameters
  */
-export interface CreateRecipeParams {
-  name: string;
-  description: string;
-  strength: number;
-  sweetness: number;
-  ingredients: RecipeIngredient[];
-  garnish: string[];
-  glassware: GlasswareType;
-  preparation: string[];
-  source: {
-    name: string;
-    url?: string;
-  };
-  tags: string[];
-  image?: string;
-  calories?: number;
-  alcoholContent?: {
-    percentage: number;
-    standardDrinks: number;
-  };
-  allergens?: string[];
-}
+export type CreateRecipeParams = Omit<Recipe, "id" | "createdAt" | "updatedAt">;
 
 /**
  * Recipe update parameters (same as create but all fields optional)
@@ -111,12 +90,6 @@ export const recipeModel = {
         updatedAt: now,
       };
 
-      // Add optional fields
-      if (params.image) recipe.image = params.image;
-      if (params.calories) recipe.calories = params.calories;
-      if (params.alcoholContent) recipe.alcoholContent = params.alcoholContent;
-      if (params.allergens) recipe.allergens = params.allergens;
-
       // Start a transaction for atomic operations
       const transaction = kv.atomic();
 
@@ -175,7 +148,8 @@ export const recipeModel = {
    */
   async getById(id: string): Promise<Recipe | null> {
     return await executeDbOperation(async () => {
-      return await recipes.get<Recipe>(id);
+      const result = await kv.get<Recipe>(["recipe", id]);
+      return result.value;
     }, "Failed to get recipe");
   },
 
@@ -191,12 +165,13 @@ export const recipeModel = {
   async update(id: string, params: UpdateRecipeParams): Promise<Recipe> {
     return await executeDbOperation(async () => {
       // Get existing recipe
-      const existingRecipe = await recipes.get<Recipe>(id);
+      const result = await kv.get<Recipe>(["recipe", id]);
 
-      if (!existingRecipe) {
+      if (!result.value) {
         throw new Error(`Recipe with ID ${id} not found`);
       }
 
+      const existingRecipe = result.value;
       const now = new Date().toISOString();
 
       // If ingredients are being updated, ensure every ingredient has a name
@@ -298,10 +273,10 @@ export const recipeModel = {
       }
 
       // Commit transaction
-      const result = await transaction.commit();
+      const result2 = await transaction.commit();
 
-      if (!result.ok) {
-        throw new Error(`Failed to update recipe: ${result.toString()}`);
+      if (!result2.ok) {
+        throw new Error(`Failed to update recipe: ${result2.toString()}`);
       }
 
       return updatedRecipe;
@@ -318,7 +293,7 @@ export const recipeModel = {
   async delete(id: string): Promise<boolean> {
     return await executeDbOperation(async () => {
       // Get existing recipe to remove all indexes
-      const existingRecipe = await recipes.get<Recipe>(id);
+      const existingRecipe = (await kv.get<Recipe>(["recipe", id])).value;
 
       if (!existingRecipe) {
         return false;
@@ -535,7 +510,7 @@ export const recipeModel = {
       let count = 0;
 
       for (const recipeId of matchingRecipeIds) {
-        const recipe = await recipes.get<Recipe>(recipeId);
+        const recipe = (await kv.get<Recipe>(["recipe", recipeId])).value;
 
         if (!recipe) continue;
 

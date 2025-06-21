@@ -11,7 +11,7 @@ import {
   extractRecipeFromContent,
   RecipeExtraction,
 } from "../../utils/ai/extraction.ts";
-import { kv } from "../../utils/db/db.ts";
+import { enqueueJob } from "../../utils/db/queue-handler.ts";
 import { createRecipeWithSimpleIngredients } from "../../utils/db/recipe-helper.ts";
 import { fetchUrlContent, prepareHtmlForAI } from "../../utils/url-content.ts";
 
@@ -142,7 +142,10 @@ export async function handler(ctx: FreshContext) {
 
     // Enqueue background image generation job
     try {
-      await kv.enqueue({ type: "generate_recipe_image", recipeId: recipe.id });
+      await enqueueJob({
+        type: "generate_recipe_raster_image",
+        recipeId: recipe.id,
+      });
       console.log(
         "[extract] Enqueued background image generation for",
         recipe.id,

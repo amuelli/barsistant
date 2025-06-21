@@ -8,40 +8,29 @@
  * don't exist yet in the database.
  */
 
-import type {
-  Ingredient,
-  IngredientType,
-  MeasurementUnit,
-} from "../../types/ingredient.ts";
+import type { Ingredient, IngredientType } from "../../types/ingredient.ts";
 import type { Recipe, RecipeIngredient } from "../../types/recipe.ts";
-import { executeDbOperation, kv } from "./db.ts";
 import { ingredientModel } from "./ingredient-model.ts";
-import type { CreateRecipeParams, UpdateRecipeParams } from "./recipe-model.ts";
-import { recipeModel } from "./recipe-model.ts";
+import {
+  CreateRecipeParams,
+  recipeModel,
+  UpdateRecipeParams,
+} from "./recipe-model.ts";
 
 /**
  * Simple ingredient specification for JIT creation
+ * (All fields from Ingredient except id, createdAt, updatedAt, plus recipe-specific fields)
  */
-export interface SimpleIngredient {
-  name: string;
-  quantity: number;
-  unit: MeasurementUnit;
-  optional?: boolean;
-  notes?: string;
-  type: IngredientType;
-  description?: string;
-  abv?: number;
-  commonMeasurements?: MeasurementUnit[];
-  allergens?: string[];
-  image?: string;
-}
+export type SimpleRecipeIngredient =
+  & Omit<Ingredient, "id" | "createdAt" | "updatedAt">
+  & Omit<RecipeIngredient, "ingredientId">;
 
 /**
  * Recipe creation parameters with simple ingredient names
  */
 export interface CreateRecipeWithSimpleIngredientsParams
   extends Omit<CreateRecipeParams, "ingredients"> {
-  ingredients: SimpleIngredient[];
+  ingredients: SimpleRecipeIngredient[];
 }
 
 /**
@@ -49,7 +38,7 @@ export interface CreateRecipeWithSimpleIngredientsParams
  */
 export interface UpdateRecipeWithSimpleIngredientsParams
   extends Omit<UpdateRecipeParams, "ingredients"> {
-  ingredients?: SimpleIngredient[];
+  ingredients?: SimpleRecipeIngredient[];
 }
 
 /**
@@ -65,64 +54,59 @@ export interface UpdateRecipeWithSimpleIngredientsParams
 export async function createRecipeWithSimpleIngredients(
   params: CreateRecipeWithSimpleIngredientsParams,
 ): Promise<Recipe> {
-  return await executeDbOperation(async () => {
-    // Process each ingredient
-    const processedIngredients: RecipeIngredient[] = [];
-    const ingredientNameMap = new Map<string, string>(); // Maps ingredient names to IDs
+  // Process each ingredient
+  const processedIngredients: RecipeIngredient[] = [];
+  const ingredientNameMap = new Map<string, string>(); // Maps ingredient names to IDs
 
-    for (const simpleIngredient of params.ingredients) {
-      // Try to find existing ingredient by name
-      const existingIngredient = await findIngredientByName(
-        simpleIngredient.name,
-      );
+  for (const simpleIngredient of params.ingredients) {
+    // Try to find existing ingredient by name
+    const existingIngredient = await findIngredientByName(
+      simpleIngredient.name,
+    );
 
-      let ingredientId: string;
-      let ingredientName: string = simpleIngredient.name;
+    let ingredientId: string;
+    let ingredientName: string = simpleIngredient.name;
 
-      if (existingIngredient) {
-        // Use existing ingredient
-        ingredientId = existingIngredient.id;
-        ingredientName = existingIngredient.name;
-      } else {
-        // Create new ingredient with sensible defaults
-        const newIngredient = await ingredientModel.create({
-          name: simpleIngredient.name,
-          description: simpleIngredient.description ||
-            `${simpleIngredient.name} for cocktails`,
-          type: simpleIngredient.type,
-          commonMeasurements: simpleIngredient.commonMeasurements ||
-            [simpleIngredient.unit],
-          abv: simpleIngredient.abv,
-          allergens: simpleIngredient.allergens,
-          image: simpleIngredient.image,
-        });
-
-        ingredientId = newIngredient.id;
-        ingredientName = newIngredient.name;
-      }
-
-      // Store for later use
-      ingredientNameMap.set(simpleIngredient.name, ingredientId);
-
-      // Add to processed ingredients
-      processedIngredients.push({
-        ingredientId,
-        name: ingredientName,
-        quantity: simpleIngredient.quantity,
-        unit: simpleIngredient.unit,
-        optional: simpleIngredient.optional ?? false,
-        notes: simpleIngredient.notes,
+    if (existingIngredient) {
+      // Use existing ingredient
+      ingredientId = existingIngredient.id;
+      ingredientName = existingIngredient.name;
+    } else {
+      // Create new ingredient with sensible defaults
+      const newIngredient = await ingredientModel.create({
+        name: simpleIngredient.name,
+        description: simpleIngredient.description ||
+          `${simpleIngredient.name} for cocktails`,
+        type: simpleIngredient.type,
+        abv: simpleIngredient.abv,
+        allergens: simpleIngredient.allergens,
       });
+
+      ingredientId = newIngredient.id;
+      ingredientName = newIngredient.name;
     }
 
-    // Create the recipe with processed ingredients
-    const recipe = await recipeModel.create({
-      ...params,
-      ingredients: processedIngredients,
-    });
+    // Store for later use
+    ingredientNameMap.set(simpleIngredient.name, ingredientId);
 
-    return recipe;
-  }, "Failed to create recipe with simple ingredients");
+    // Add to processed ingredients
+    processedIngredients.push({
+      ingredientId,
+      name: ingredientName,
+      quantity: simpleIngredient.quantity,
+      unit: simpleIngredient.unit,
+      optional: simpleIngredient.optional ?? false,
+      notes: simpleIngredient.notes,
+    });
+  }
+
+  // Create the recipe with processed ingredients
+  const recipe = await recipeModel.create({
+    ...params,
+    ingredients: processedIngredients,
+  });
+
+  return recipe;
 }
 
 /**
@@ -136,67 +120,62 @@ export async function updateRecipeWithSimpleIngredients(
   id: string,
   params: UpdateRecipeWithSimpleIngredientsParams,
 ): Promise<Recipe> {
-  return await executeDbOperation(async () => {
-    // If no ingredient updates, just do a regular update without the ingredients property
-    if (!params.ingredients) {
-      // Create a new object without the ingredients property to satisfy the type checker
-      const { ingredients: _ingredients, ...updateParams } = params;
-      return await recipeModel.update(id, updateParams);
-    }
+  // If no ingredient updates, just do a regular update without the ingredients property
+  if (!params.ingredients) {
+    // Create a new object without the ingredients property to satisfy the type checker
+    const { ingredients: _ingredients, ...updateParams } = params;
+    return await recipeModel.update(id, updateParams);
+  }
 
-    // Process each ingredient
-    const processedIngredients: RecipeIngredient[] = [];
+  // Process each ingredient
+  const processedIngredients: RecipeIngredient[] = [];
 
-    for (const simpleIngredient of params.ingredients) {
-      // Try to find existing ingredient by name
-      const existingIngredient = await findIngredientByName(
-        simpleIngredient.name,
-      );
+  for (const simpleIngredient of params.ingredients) {
+    // Try to find existing ingredient by name
+    const existingIngredient = await findIngredientByName(
+      simpleIngredient.name,
+    );
 
-      let ingredientId: string;
-      let ingredientName: string = simpleIngredient.name;
+    let ingredientId: string;
+    let ingredientName: string = simpleIngredient.name;
 
-      if (existingIngredient) {
-        // Use existing ingredient
-        ingredientId = existingIngredient.id;
-        ingredientName = existingIngredient.name;
-      } else {
-        // Create new ingredient with sensible defaults
-        const newIngredient = await ingredientModel.create({
-          name: simpleIngredient.name,
-          description: simpleIngredient.description ||
-            `${simpleIngredient.name} for cocktails`,
-          type: simpleIngredient.type,
-          commonMeasurements: simpleIngredient.commonMeasurements ||
-            [simpleIngredient.unit],
-          abv: simpleIngredient.abv,
-          allergens: simpleIngredient.allergens,
-          image: simpleIngredient.image,
-        });
-
-        ingredientId = newIngredient.id;
-        ingredientName = newIngredient.name;
-      }
-
-      // Add to processed ingredients
-      processedIngredients.push({
-        ingredientId,
-        name: ingredientName,
-        quantity: simpleIngredient.quantity,
-        unit: simpleIngredient.unit,
-        optional: simpleIngredient.optional ?? false,
-        notes: simpleIngredient.notes,
+    if (existingIngredient) {
+      // Use existing ingredient
+      ingredientId = existingIngredient.id;
+      ingredientName = existingIngredient.name;
+    } else {
+      // Create new ingredient with sensible defaults
+      const newIngredient = await ingredientModel.create({
+        name: simpleIngredient.name,
+        description: simpleIngredient.description ||
+          `${simpleIngredient.name} for cocktails`,
+        type: simpleIngredient.type,
+        abv: simpleIngredient.abv,
+        allergens: simpleIngredient.allergens,
       });
+
+      ingredientId = newIngredient.id;
+      ingredientName = newIngredient.name;
     }
 
-    // Update the recipe with processed ingredients
-    const recipe = await recipeModel.update(id, {
-      ...params,
-      ingredients: processedIngredients,
+    // Add to processed ingredients
+    processedIngredients.push({
+      ingredientId,
+      name: ingredientName,
+      quantity: simpleIngredient.quantity,
+      unit: simpleIngredient.unit,
+      optional: simpleIngredient.optional ?? false,
+      notes: simpleIngredient.notes,
     });
+  }
 
-    return recipe;
-  }, `Failed to update recipe ${id} with simple ingredients`);
+  // Update the recipe with processed ingredients
+  const recipe = await recipeModel.update(id, {
+    ...params,
+    ingredients: processedIngredients,
+  });
+
+  return recipe;
 }
 
 /**
@@ -208,19 +187,17 @@ export async function updateRecipeWithSimpleIngredients(
 export async function findIngredientByName(
   name: string,
 ): Promise<Ingredient | null> {
-  return await executeDbOperation(async () => {
-    const normalizedName = name.toLowerCase().trim();
+  const normalizedName = name.toLowerCase().trim();
 
-    // Search for ingredients by normalized name
-    for await (const entry of kv.list<Ingredient>({ prefix: ["ingredient"] })) {
-      const ingredient = entry.value;
-      if (ingredient.name.toLowerCase() === normalizedName) {
-        return ingredient;
-      }
+  // Search for ingredients by normalized name
+  for await (const entry of ingredientModel.list()) {
+    const ingredient = entry.value;
+    if (ingredient.name.toLowerCase() === normalizedName) {
+      return ingredient;
     }
+  }
 
-    return null;
-  }, `Failed to find ingredient by name: ${name}`);
+  return null;
 }
 
 /**
@@ -234,34 +211,29 @@ export async function findOrCreateIngredient(
     name: string;
     type: IngredientType;
     description?: string;
-    commonMeasurements?: MeasurementUnit[];
     abv?: number;
     allergens?: string[];
     image?: string;
   },
 ): Promise<Ingredient> {
-  return await executeDbOperation(async () => {
-    // Try to find existing ingredient by name
-    const existingIngredient = await findIngredientByName(ingredientInfo.name);
+  // Try to find existing ingredient by name
+  const existingIngredient = await findIngredientByName(ingredientInfo.name);
 
-    if (existingIngredient) {
-      return existingIngredient;
-    }
+  if (existingIngredient) {
+    return existingIngredient;
+  }
 
-    // Create new ingredient
-    const newIngredient = await ingredientModel.create({
-      name: ingredientInfo.name,
-      description: ingredientInfo.description ||
-        `${ingredientInfo.name} for cocktails`,
-      type: ingredientInfo.type,
-      commonMeasurements: ingredientInfo.commonMeasurements || ["oz", "ml"],
-      abv: ingredientInfo.abv,
-      allergens: ingredientInfo.allergens,
-      image: ingredientInfo.image,
-    });
+  // Create new ingredient
+  const newIngredient = await ingredientModel.create({
+    name: ingredientInfo.name,
+    description: ingredientInfo.description ||
+      `${ingredientInfo.name} for cocktails`,
+    type: ingredientInfo.type,
+    abv: ingredientInfo.abv,
+    allergens: ingredientInfo.allergens,
+  });
 
-    return newIngredient;
-  }, `Failed to find or create ingredient: ${ingredientInfo.name}`);
+  return newIngredient;
 }
 
 /**
@@ -277,15 +249,13 @@ export async function getRecipesByIngredientName(
   limit = 20,
   offset = 0,
 ): Promise<Recipe[]> {
-  return await executeDbOperation(async () => {
-    const ingredient = await findIngredientByName(name);
+  const ingredient = await findIngredientByName(name);
 
-    if (!ingredient) {
-      return [];
-    }
+  if (!ingredient) {
+    return [];
+  }
 
-    return await recipeModel.getByIngredient(ingredient.id, limit, offset);
-  }, `Failed to get recipes by ingredient name: ${name}`);
+  return await recipeModel.getByIngredient(ingredient.id, limit, offset);
 }
 
 /**
@@ -297,16 +267,14 @@ export async function getRecipesByIngredientName(
 export async function createIngredientNameMap(
   names: string[],
 ): Promise<Map<string, string>> {
-  return await executeDbOperation(async () => {
-    const nameMap = new Map<string, string>();
+  const nameMap = new Map<string, string>();
 
-    for (const name of names) {
-      const ingredient = await findIngredientByName(name);
-      if (ingredient) {
-        nameMap.set(name, ingredient.id);
-      }
+  for (const name of names) {
+    const ingredient = await findIngredientByName(name);
+    if (ingredient) {
+      nameMap.set(name, ingredient.id);
     }
+  }
 
-    return nameMap;
-  }, "Failed to create ingredient name map");
+  return nameMap;
 }

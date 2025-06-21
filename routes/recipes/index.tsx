@@ -4,7 +4,7 @@ import { recipeModel } from "../../utils/db/recipe-model.ts";
 export const handler = define.handlers({
   async GET(ctx) {
     ctx.state.title = "Recipes";
-    const recipes = await recipeModel.listAll(20, 0);
+    const recipes = await recipeModel.listAll(30, 0);
     return { data: recipes };
   },
 });
@@ -51,15 +51,27 @@ export default define.page<typeof handler>(
               tabIndex={0}
             >
               <figure>
-                {recipe.image
+                {recipe.images?.vector?.url
                   ? (
                     <img
-                      src={recipe.image}
+                      src={recipe.images.vector.url}
                       alt={recipe.name}
                       class="h-48 w-full object-contain bg-base-300"
                     />
                   )
-                  : <div class="bg-gray-300 h-48 w-full"></div>}
+                  : recipe.images?.raster?.url
+                  ? (
+                    <img
+                      src={recipe.images.raster.url}
+                      alt={recipe.name}
+                      class="h-48 w-full object-contain bg-base-300"
+                    />
+                  )
+                  : (
+                    <div class="bg-base-300 h-48 w-full flex items-center justify-center text-gray-400">
+                      No image
+                    </div>
+                  )}
               </figure>
               <div class="card-body">
                 <h2 class="card-title">{recipe.name}</h2>
@@ -75,7 +87,6 @@ export default define.page<typeof handler>(
                     </span>
                   ))}
                 </div>
-                {/* Removed boozy and sweetness scale */}
               </div>
             </a>
           ))}

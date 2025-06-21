@@ -1,4 +1,5 @@
 import "@std/dotenv/load";
+import type { MeasurementUnit } from "../../types/ingredient.ts";
 
 const RUN_OPENAI_TESTS = Deno.env.get("RUN_OPENAI_TESTS") === "1";
 
@@ -13,11 +14,65 @@ Deno.test({
     const cocktailImageUrl =
       "https://www.liquor.com/thmb/w10s8lY2OpyfBM0NmzbNfUcTJBU=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/ancient-mariner-720x720-primary-c3d0dc150eef4d9ea29b1fb2ef314e40.jpg";
     const { generateCocktailImage } = await import("./image-generation.ts");
-    const imageBuffer = await generateCocktailImage(
-      "Test Cocktail",
-      ["gin", "vermouth", "lime", "grapefruit", "rum"],
-      cocktailImageUrl,
-    );
+
+    // Create a mock recipe object with the minimum required properties
+    const mockRecipe = {
+      id: "test-recipe-id",
+      name: "Test Cocktail",
+      description: "Test description",
+      strength: 5,
+      sweetness: 5,
+      ingredients: [
+        {
+          ingredientId: "1",
+          name: "gin",
+          quantity: 1,
+          unit: "oz" as MeasurementUnit,
+          optional: false,
+        },
+        {
+          ingredientId: "2",
+          name: "vermouth",
+          quantity: 0.5,
+          unit: "oz" as MeasurementUnit,
+          optional: false,
+        },
+        {
+          ingredientId: "3",
+          name: "lime",
+          quantity: 0.5,
+          unit: "oz" as MeasurementUnit,
+          optional: false,
+        },
+        {
+          ingredientId: "4",
+          name: "grapefruit",
+          quantity: 0.5,
+          unit: "oz" as MeasurementUnit,
+          optional: false,
+        },
+        {
+          ingredientId: "5",
+          name: "rum",
+          quantity: 1,
+          unit: "oz" as MeasurementUnit,
+          optional: false,
+        },
+      ],
+      garnish: ["lime twist"],
+      glassware: "coupe" as const,
+      preparation: ["Shake", "Strain"],
+      source: {
+        name: "Test Source",
+        url: "https://example.com",
+        image: cocktailImageUrl,
+      },
+      tags: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const imageBuffer = await generateCocktailImage(mockRecipe);
     console.log(
       "AI image generation result (buffer length):",
       imageBuffer?.length,

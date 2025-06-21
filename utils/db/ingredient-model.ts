@@ -8,26 +8,16 @@
  */
 
 import { ulid } from "@std/ulid";
-import {
-  Ingredient,
-  IngredientType,
-  MeasurementUnit,
-} from "../../types/ingredient.ts";
+import { Ingredient, IngredientType } from "../../types/ingredient.ts";
 import { executeDbOperation, kv } from "./db.ts";
 
 /**
  * Ingredient creation parameters
  */
-export interface CreateIngredientParams {
-  name: string;
-  description: string;
-  type: IngredientType;
-  abv?: number;
-  commonMeasurements: MeasurementUnit[];
-  substitutes?: string[];
-  image?: string;
-  allergens?: string[];
-}
+export type CreateIngredientParams = Omit<
+  Ingredient,
+  "id" | "createdAt" | "updatedAt"
+>;
 
 /**
  * Ingredient update parameters (same as create but all fields optional)
@@ -68,13 +58,6 @@ export const ingredientModel = {
         throw new Error("Ingredient type is required");
       }
 
-      if (
-        !Array.isArray(params.commonMeasurements) ||
-        params.commonMeasurements.length === 0
-      ) {
-        throw new Error("At least one common measurement unit is required");
-      }
-
       // Generate unique ID
       const id = ulid();
       const now = new Date().toISOString();
@@ -85,7 +68,6 @@ export const ingredientModel = {
         name: params.name.trim(),
         description: params.description || "",
         type: params.type,
-        commonMeasurements: params.commonMeasurements,
         createdAt: now,
         updatedAt: now,
       };
@@ -614,106 +596,6 @@ export const ingredientModel = {
   },
 
   /**
-   * Get substitutes for an ingredient
-   *
-   * @param id Ingredient ID
-   * @returns Array of substitute ingredients
-   * @throws {DatabaseError} If the database operation fails
-   */
-  async getSubstitutes(id: string): Promise<Ingredient[]> {
-    return await executeDbOperation(async () => {
-      const substitutes: Ingredient[] = [];
-
-      const ingredient = await this.getById(id);
-      if (
-        !ingredient || !ingredient.substitutes ||
-        ingredient.substitutes.length === 0
-      ) {
-        return [];
-      }
-
-      for (const substituteId of ingredient.substitutes) {
-        const substitute = await this.getById(substituteId);
-        if (substitute) {
-          substitutes.push(substitute);
-        }
-      }
-
-      return substitutes;
-    }, `Failed to get substitutes for ingredient ${id}`);
-  },
-
-  /**
-   * Find ingredients that can be substituted by the specified ingredient
-   *
-   * @param id Ingredient ID
-   * @returns Array of ingredients that can be substituted
-   * @throws {DatabaseError} If the database operation fails
-   */
-  async getSubstituteFor(id: string): Promise<Ingredient[]> {
-    return await executeDbOperation(async () => {
-      const substituteFors: Ingredient[] = [];
-
-      for await (
-        const entry of kv.list<boolean>({
-          prefix: ["ingredient_substitute_for", id],
-        })
-      ) {
-        const ingredientId = entry.key[2] as string;
-        const ingredient = await this.getById(ingredientId);
-
-        if (ingredient) {
-          substituteFors.push(ingredient);
-        }
-      }
-
-      return substituteFors;
-    }, `Failed to get substitute-for relationships for ingredient ${id}`);
-  },
-
-  /**
-   * Get all ingredients with a specific allergen
-   *
-   * @param allergen Allergen to filter by
-   * @param limit Maximum number of ingredients to return
-   * @param offset Number of ingredients to skip
-   * @returns Array of matching ingredients
-   * @throws {DatabaseError} If the database operation fails
-   */
-  async getByAllergen(
-    allergen: string,
-    limit = 20,
-    offset = 0,
-  ): Promise<Ingredient[]> {
-    return await executeDbOperation(async () => {
-      const ingredients: Ingredient[] = [];
-      let count = 0;
-
-      for await (
-        const entry of kv.list<boolean>({
-          prefix: ["ingredient_allergen", allergen],
-        })
-      ) {
-        if (count >= offset && ingredients.length < limit) {
-          const ingredientId = entry.key[2] as string;
-          const ingredient = await this.getById(ingredientId);
-
-          if (ingredient) {
-            ingredients.push(ingredient);
-          }
-        }
-        count++;
-
-        if (ingredients.length >= limit) {
-          break;
-        }
-      }
-
-      return ingredients;
-    }, `Failed to get ingredients by allergen ${allergen}`);
-  },
-
-  /**
    * Get all recipes that use a specific ingredient
    *
    * @param id Ingredient ID
@@ -747,5 +629,64 @@ export const ingredientModel = {
 
       return recipeIds;
     }, `Failed to get recipes for ingredient ${id}`);
+  },
+
+  /**
+   * Find an ingredient by name, case-insensitive
+   *
+   * @param name Ingredient name to search for
+   * @returns Ingredient or null if not found
+   */
+  async findByName(name: string): Promise<Ingredient | null> {
+    return await executeDbOperation(async () => {
+      const normalizedName = name.toLowerCase().trim();
+      for await (
+        const entry of kv.list<Ingredient>({ prefix: ["ingredient"] })
+      ) {
+        const ingredient = entry.value;
+        if (ingredient.name.toLowerCase() === normalizedName) {
+          return ingredient;
+        }
+      }
+      return null;
+    }, `Failed to find ingredient by name: ${name}`);
+  },
+
+  /**
+   * Find or create an ingredient by name
+   *
+   * @param ingredientInfo Simple ingredient information
+   * @returns The found or created ingredient
+   */
+  async findOrCreate(ingredientInfo: {
+    name: string;
+    type: IngredientType;
+    description?: string;
+    abv?: number;
+    allergens?: string[];
+    image?: string;
+  }): Promise<Ingredient> {
+    return await executeDbOperation(async () => {
+      const existing = await this.findByName(ingredientInfo.name);
+      if (existing) return existing;
+      // Create new ingredient
+      return await this.create({
+        name: ingredientInfo.name,
+        description: ingredientInfo.description ||
+          `${ingredientInfo.name} for cocktails`,
+        type: ingredientInfo.type,
+        abv: ingredientInfo.abv,
+        allergens: ingredientInfo.allergens,
+        image: ingredientInfo.image,
+      });
+    }, `Failed to find or create ingredient: ${ingredientInfo.name}`);
+  },
+
+  /**
+   * List all ingredients (raw iterator, for internal use)
+   * @returns AsyncIterable<{ key: Deno.KvKey; value: Ingredient }>
+   */
+  list(): AsyncIterable<{ key: Deno.KvKey; value: Ingredient }> {
+    return kv.list<Ingredient>({ prefix: ["ingredient"] });
   },
 };

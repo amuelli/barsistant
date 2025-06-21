@@ -16,37 +16,41 @@ import {
   findIngredientByName,
   findOrCreateIngredient,
   getRecipesByIngredientName,
+  SimpleRecipeIngredient,
   updateRecipeWithSimpleIngredients,
 } from "./recipe-helper.ts";
 import { recipeModel } from "./recipe-model.ts";
 
 Deno.test("Recipe Helper - JIT Ingredient Creation and Recipe Management", async (t) => {
   // Test data for ingredients that will be created just-in-time
-  const testGin = {
+  const testGin: SimpleRecipeIngredient = {
     name: "Test Gin",
     type: "spirit" as IngredientType,
     quantity: 30,
     unit: "ml" as MeasurementUnit,
     description: "A test gin for cocktails",
     abv: 40.0,
+    optional: false,
   };
 
-  const testCampari = {
+  const testCampari: SimpleRecipeIngredient = {
     name: "Test Campari",
     type: "liqueur" as IngredientType,
     quantity: 30,
     unit: "ml" as MeasurementUnit,
     description: "A test bitter Italian liqueur",
     abv: 24.0,
+    optional: false,
   };
 
-  const testSweetVermouth = {
+  const testSweetVermouth: SimpleRecipeIngredient = {
     name: "Test Sweet Vermouth",
     type: "fortified_wine" as IngredientType,
     quantity: 30,
     unit: "ml" as MeasurementUnit,
     description: "A test sweet vermouth",
     abv: 16.0,
+    optional: false,
   };
 
   const testOrangePeel = {
@@ -54,6 +58,7 @@ Deno.test("Recipe Helper - JIT Ingredient Creation and Recipe Management", async
     type: "garnish" as IngredientType,
     quantity: 1,
     unit: "piece" as MeasurementUnit,
+    description: "A test orange peel garnish",
     optional: true,
   };
 
@@ -154,11 +159,12 @@ Deno.test("Recipe Helper - JIT Ingredient Creation and Recipe Management", async
   // Test updateRecipeWithSimpleIngredients
   await t.step("updateRecipeWithSimpleIngredients", async () => {
     // Update the recipe with a new ingredient and different quantities
-    const testLemonTwist = {
+    const testLemonTwist: SimpleRecipeIngredient = {
       name: "Test Lemon Twist",
-      type: "garnish" as IngredientType,
+      type: "other" as IngredientType,
       quantity: 1,
       unit: "piece" as MeasurementUnit,
+      description: "A test lemon twist garnish",
       optional: true,
     };
 

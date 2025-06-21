@@ -8,6 +8,8 @@ cocktail recipes with AI-powered recipe extraction capabilities.
 - **Recipe Management**: Create, search, and organize cocktail recipes
 - **AI Recipe Extraction**: Automatically extract recipes from URLs (websites,
   YouTube videos, blogs)
+- **AI Image Generation**: Create beautiful cocktail images with OpenAI and
+  vector (SVG) images with recraft.ai
 - **Ingredient Tracking**: Manage your home bar inventory
 - **Recipe Discovery**: Find cocktails based on available ingredients
 - **Personalization**: Save favorites and add personal notes to recipes
@@ -37,8 +39,20 @@ Make sure to install Deno: https://deno.land/manual/getting_started/installation
 Create a `.env` file in the root directory with the following variables:
 
 ```
+# AI Provider settings
 AI_PROVIDER=openai
-OPENAI_API_KEY=your_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Optional: Recraft.ai integration for vector images
+RECRAFT_API_TOKEN=your_recraft_api_token_here
+RECRAFT_MODEL=recraftv3  # or recraftv2
+
+# S3 Storage for images
+S3_ENDPOINT=https://your-s3-endpoint.com
+S3_ACCESS_KEY_ID=your_access_key
+S3_SECRET_ACCESS_KEY=your_secret_key
+S3_BUCKET=your_bucket_name
+S3_REGION=us-east-1
 ```
 
 ### Running the Application
@@ -134,7 +148,6 @@ const newIngredient = await ingredientModel.create({
   name: "Angostura Bitters",
   description: "Aromatic bitters used in many classic cocktails",
   type: "bitters",
-  commonMeasurements: ["dash", "drop"],
   allergens: ["gentian"],
 });
 
@@ -166,9 +179,11 @@ Key documentation files:
 
 ## Contributing
 
-1. Review the [Project Requirements](.github/instructions/requirements.instructions.md) and
+1. Review the
+   [Project Requirements](.github/instructions/requirements.instructions.md) and
    [Implementation Tasks](docs/tasks.md)
-2. Follow the coding guidelines in [AI Development Instructions](.github/instructions/project.instructions.md)
+2. Follow the coding guidelines in
+   [AI Development Instructions](.github/instructions/project.instructions.md)
 3. Test your changes thoroughly
 
 ## License
@@ -183,7 +198,8 @@ This project is licensed under the terms of the license included in the
 The project uses Fresh with Tailwind CSS v4 and DaisyUI v5:
 
 1. Fresh's Tailwind plugin is configured via `@pakornv/fresh-plugin-tailwindcss`
-2. DaisyUI themes are configured directly in [`static/styles.css`](static/styles.css):
+2. DaisyUI themes are configured directly in
+   [`static/styles.css`](static/styles.css):
    ```css
    @import "tailwindcss";
 

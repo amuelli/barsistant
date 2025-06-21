@@ -4,11 +4,7 @@ import {
   assertEquals,
   assertExists,
 } from "https://deno.land/std@0.208.0/assert/mod.ts";
-import type {
-  Ingredient,
-  IngredientType,
-  MeasurementUnit,
-} from "../../types/ingredient.ts";
+import type { Ingredient, IngredientType } from "../../types/ingredient.ts";
 import { ingredientModel } from "./ingredient-model.ts";
 
 Deno.test("Ingredient Model - CRUD Operations", async (t) => {
@@ -18,7 +14,6 @@ Deno.test("Ingredient Model - CRUD Operations", async (t) => {
     description: "A test bourbon whiskey for cocktails",
     type: "spirit" as IngredientType,
     abv: 45.0,
-    commonMeasurements: ["ml", "oz", "dash"] as MeasurementUnit[],
     allergens: ["gluten"],
   };
 
@@ -28,7 +23,6 @@ Deno.test("Ingredient Model - CRUD Operations", async (t) => {
     description: "Equal parts sugar and water, heated and cooled",
     type: "syrup" as IngredientType,
     abv: 0,
-    commonMeasurements: ["ml", "oz", "dash", "barspoon"] as MeasurementUnit[],
   };
 
   // Test data for third ingredient - Angostura Bitters
@@ -37,7 +31,6 @@ Deno.test("Ingredient Model - CRUD Operations", async (t) => {
     description: "Classic aromatic bitters for cocktails",
     type: "bitter" as IngredientType,
     abv: 44.7,
-    commonMeasurements: ["dash", "drop"] as MeasurementUnit[],
     allergens: ["spices"],
   };
 
@@ -53,7 +46,6 @@ Deno.test("Ingredient Model - CRUD Operations", async (t) => {
     assertEquals(bourbon.name, testBourbon.name);
     assertEquals(bourbon.type, "spirit");
     assertEquals(bourbon.abv, 45.0);
-    assertEquals(bourbon.commonMeasurements.length, 3);
     assertEquals(bourbon.allergens?.length, 1);
     assertEquals(bourbon.allergens?.[0], "gluten");
     assertExists(bourbon.createdAt);
@@ -68,7 +60,6 @@ Deno.test("Ingredient Model - CRUD Operations", async (t) => {
     assertEquals(simpleSyrup.name, testSimpleSyrup.name);
     assertEquals(simpleSyrup.type, "syrup");
     assertEquals(simpleSyrup.abv, 0);
-    assertEquals(simpleSyrup.commonMeasurements.length, 4);
 
     createdIngredients.push(simpleSyrup);
 
@@ -79,7 +70,6 @@ Deno.test("Ingredient Model - CRUD Operations", async (t) => {
     assertEquals(bitters.name, testBitters.name);
     assertEquals(bitters.type, "bitter");
     assertEquals(bitters.abv, 44.7);
-    assertEquals(bitters.commonMeasurements.length, 2);
 
     createdIngredients.push(bitters);
   });
@@ -102,48 +92,14 @@ Deno.test("Ingredient Model - CRUD Operations", async (t) => {
       {
         name: "Updated Test Bourbon",
         abv: 47.5,
-        commonMeasurements: ["ml", "oz"] as MeasurementUnit[], // Remove 'dash'
       },
     );
 
     assertEquals(updatedIngredient.id, createdIngredients[0].id);
     assertEquals(updatedIngredient.name, "Updated Test Bourbon");
     assertEquals(updatedIngredient.abv, 47.5);
-    assertEquals(updatedIngredient.commonMeasurements.length, 2);
-    assertEquals(updatedIngredient.commonMeasurements[0], "ml");
-    assertEquals(updatedIngredient.commonMeasurements[1], "oz");
     // Type should remain the same
     assertEquals(updatedIngredient.type, testBourbon.type);
-  });
-
-  // Test adding substitutes
-  await t.step("update ingredient with substitutes", async () => {
-    // Set the first ingredient to have the other two as substitutes
-    const updatedBourbon = await ingredientModel.update(
-      createdIngredients[0].id,
-      {
-        substitutes: [createdIngredients[1].id, createdIngredients[2].id],
-      },
-    );
-
-    assertEquals(updatedBourbon.id, createdIngredients[0].id);
-    assertExists(updatedBourbon.substitutes);
-    assertEquals(updatedBourbon.substitutes?.length, 2);
-    assertEquals(updatedBourbon.substitutes?.[0], createdIngredients[1].id);
-    assertEquals(updatedBourbon.substitutes?.[1], createdIngredients[2].id);
-
-    // Get substitutes to verify the relationship
-    const substitutes = await ingredientModel.getSubstitutes(
-      createdIngredients[0].id,
-    );
-    assertEquals(substitutes.length, 2);
-
-    // Check the inverse relationship
-    const substitutesFor = await ingredientModel.getSubstituteFor(
-      createdIngredients[1].id,
-    );
-    assertEquals(substitutesFor.length, 1);
-    assertEquals(substitutesFor[0].id, createdIngredients[0].id);
   });
 
   // Test listing ingredients
@@ -179,22 +135,6 @@ Deno.test("Ingredient Model - CRUD Operations", async (t) => {
     // Check that our test simple syrup is included
     const hasSimpleSyrup = syrups.some((i) => i.name.includes("Simple Syrup"));
     assertEquals(hasSimpleSyrup, true);
-  });
-
-  // Test searching ingredients by allergen
-  await t.step("get ingredients by allergen", async () => {
-    // Search for gluten allergens
-    const glutenIngredients = await ingredientModel.getByAllergen("gluten");
-
-    assertExists(glutenIngredients);
-    assertEquals(Array.isArray(glutenIngredients), true);
-    assertEquals(glutenIngredients.length >= 1, true);
-
-    // Check that our test bourbon is included
-    const hasTestBourbon = glutenIngredients.some((i) =>
-      i.name.includes("Bourbon")
-    );
-    assertEquals(hasTestBourbon, true);
   });
 
   // Test advanced search - by type

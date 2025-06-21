@@ -37,6 +37,7 @@ solution for the Barsistant application.
 | ✅     | AI-15   | AI-generated cocktail images for recipes                        | High       | AI-14, DB-3  |
 | ✅     | AI-16   | S3 storage for generated cocktail images                        | Medium     | AI-13, AI-15 |
 | ✅     | AI-17   | Make image generation non-blocking for recipe creation          | Medium     | AI-13, AI-15 |
+| ✅     | AI-18   | Integrate recraft.ai for vector (SVG) cocktail image generation | High       | AI-13, AI-16 |
 
 ### AI-16 Implementation Details
 
@@ -60,14 +61,14 @@ solution for the Barsistant application.
   - On recipe creation, immediately store recipe data in Deno KV (without
     waiting for image).
   - Enqueue an image generation job using
-    `kv.enqueue({ type: "generate_recipe_image", recipeId })` after recipe is
-    saved.
+    `kv.enqueue({ type: "generate_recipe_raster_image", recipeId })` after
+    recipe is saved.
   - Optionally, use a KV atomic transaction to ensure recipe and job are created
     together.
 
 - **Background image generation with Deno KV Queues:**
-  - Implement a `kv.listenQueue` handler to process `generate_recipe_image`
-    jobs.
+  - Implement a `kv.listenQueue` handler to process
+    `generate_recipe_raster_image` jobs.
   - Handler should:
     1. Fetch recipe data by `recipeId`.
     2. Generate image using AI provider.
@@ -100,8 +101,21 @@ solution for the Barsistant application.
     and [blog post](https://deno.com/blog/queues) for usage patterns and best
     practices.
   - Example enqueue:
-    `await kv.enqueue({ type: "generate_recipe_image", recipeId })`
+    `await kv.enqueue({ type: "generate_recipe_raster_image", recipeId })`
   - Example handler: `kv.listenQueue(async (msg) => { ... })`
+
+### AI-18 Implementation Details
+
+- Add utility in `utils/ai/` (e.g., `utils/ai/recraft.ts`) for recraft.ai API
+  calls
+- Add another function to generate SVG images in `utils/ai/image-generation.ts`
+- Accept recipe data, generate SVG via recraft.ai, upload to S3, store URL in
+  recipe record
+- Update background job handler to support vector image generation
+- Ensure UI can display SVGs and fallback to raster images if needed
+- Add error handling, retries, and logging
+- Write unit tests for recraft utility and handler
+- Document recraft.ai config in README
 
 ## User Interface Tasks
 

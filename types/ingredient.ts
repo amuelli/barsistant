@@ -27,7 +27,8 @@ export type MeasurementUnit =
   | "spritz"
   | "leaf"
   | "sprig"
-  | "rim";
+  | "rim"
+  | "count";
 
 /**
  * Represents a type of ingredient
@@ -36,6 +37,7 @@ export type IngredientType =
   | "spirit"
   | "liqueur"
   | "wine"
+  | "fortified_wine"
   | "mixer"
   | "juice"
   | "syrup"
@@ -55,7 +57,7 @@ export interface Ingredient {
   description: string;
   type: IngredientType;
   abv?: number; // Alcohol by volume percentage
-  commonMeasurements: MeasurementUnit[];
+  origin?: string; // Where the ingredient is typically sourced from
   substitutes?: string[]; // IDs of substitute ingredients
   image?: string;
   allergens?: string[];
@@ -77,4 +79,28 @@ export interface IngredientRecipeLink {
   unit: MeasurementUnit;
   optional: boolean;
   notes?: string;
+}
+
+/**
+ * Helper function to get appropriate measurement units based on ingredient type
+ */
+const measurementUnitsByType: Record<IngredientType, MeasurementUnit[]> = {
+  spirit: ["ml", "oz", "cl"],
+  liqueur: ["ml", "oz", "cl"],
+  wine: ["ml", "oz", "cl"],
+  fortified_wine: ["ml", "oz", "cl"],
+  juice: ["ml", "oz", "dash", "cl"],
+  syrup: ["ml", "oz", "dash", "cl"],
+  mixer: ["ml", "oz", "dash", "cl"],
+  bitter: ["drop", "dash"],
+  herb: ["pinch", "sprig", "leaf"],
+  spice: ["pinch", "sprig", "leaf"],
+  fruit: ["piece", "slice", "whole"],
+  other: ["ml", "oz", "cl"],
+};
+
+export function getMeasurementsForType(
+  type: IngredientType,
+): MeasurementUnit[] {
+  return measurementUnitsByType[type] ?? ["ml", "oz", "dash"];
 }

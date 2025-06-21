@@ -11,13 +11,15 @@ export default function RecipeImage(
   const [recipe, setRecipe] = useState(initialRecipe);
 
   useEffect(() => {
-    if (recipe.image) return;
+    if (getImageUrl(recipe)) return;
     const interval = setInterval(async () => {
       const res = await fetch(`/api/recipes/${recipe.id}`);
       if (res.ok) {
         const updated = await res.json();
-        if (updated.image) {
-          setRecipe(updated);
+
+        setRecipe(updated);
+
+        if (getImageUrl(updated)) {
           clearInterval(interval);
         }
       }
@@ -25,17 +27,40 @@ export default function RecipeImage(
     return () => clearInterval(interval);
   }, [recipe]);
 
-  return recipe.image
+  return getImageUrl(recipe)
     ? (
       <img
-        src={recipe.image}
+        src={getImageUrl(recipe)}
         alt={recipe.name}
         class="w-full h-96 object-contain rounded-lg shadow-lg bg-base-300"
       />
     )
+    : isImageGenerating(recipe)
+    ? (
+      <div class="w-full h-96 flex flex-col items-center justify-center rounded-lg bg-base-300 animate-pulse">
+        <span class="text-gray-500">Generating image…</span>
+      </div>
+    )
     : (
-      <div class="w-full h-96 skeleton rounded-lg bg-base-300 flex items-center justify-center">
-        <span class="text-gray-500 animate-pulse">Generating image…</span>
+      <div class="w-full h-96 flex flex-col items-center justify-center rounded-lg bg-base-300">
+        <span class="text-gray-400">No image available</span>
       </div>
     );
+}
+
+function getImageUrl(
+  recipe: Recipe,
+): string | undefined {
+  if (recipe.images?.vector?.url) return recipe.images.vector.url;
+  if (recipe.images?.raster?.url) return recipe.images.raster.url;
+  return undefined;
+}
+
+function isImageGenerating(
+  recipe: Recipe,
+): boolean {
+  return (
+    recipe.images?.vector?.status === "generating" ||
+    recipe.images?.raster?.status === "generating"
+  );
 }

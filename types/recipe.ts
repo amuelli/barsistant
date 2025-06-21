@@ -38,15 +38,20 @@ export interface Recipe {
     url?: string;
     image?: string; // The image URL extracted from the original source (website, blog, etc.)
   };
-  image?: string; // The AI-generated cocktail image (S3 URL, preferred for display)
+  images?: {
+    raster?: {
+      url?: string;
+      status: "none" | "generating" | "done" | "failed";
+      error?: string;
+    };
+    vector?: {
+      url?: string;
+      status: "none" | "generating" | "done" | "failed";
+      error?: string;
+    };
+  };
   tags: string[];
   rating?: number; // Average user rating
-  calories?: number;
-  alcoholContent?: {
-    percentage: number;
-    standardDrinks: number;
-  };
-  allergens?: string[];
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
 }

@@ -49,20 +49,19 @@ The system provides these key functions for name-based ingredient handling:
          name: "Bourbon Whiskey",
          quantity: 2,
          unit: "oz",
-         type: "spirit",
-         abv: 40,
+         optional: false,
        },
        {
          name: "Simple Syrup",
          quantity: 0.25,
          unit: "oz",
-         type: "syrup",
+         optional: false,
        },
        {
          name: "Angostura Bitters",
          quantity: 2,
          unit: "dash",
-         type: "bitter",
+         optional: false,
        },
      ],
      preparation: [
@@ -71,7 +70,7 @@ The system provides these key functions for name-based ingredient handling:
        "Garnish with orange peel",
      ],
      garnish: ["orange peel"],
-     glassware: "rocks glass",
+     glassware: "rocks",
      tags: ["classic", "whiskey"],
    });
    ```
@@ -86,19 +85,19 @@ The system provides these key functions for name-based ingredient handling:
          name: "Rye Whiskey",
          quantity: 2,
          unit: "oz",
-         type: "spirit",
+         optional: false,
        },
        {
          name: "Simple Syrup",
          quantity: 0.25,
          unit: "oz",
-         type: "syrup",
+         optional: false,
        },
        {
          name: "Angostura Bitters",
          quantity: 2,
          unit: "dash",
-         type: "bitter",
+         optional: false,
        },
      ],
    });
@@ -113,7 +112,6 @@ The system provides these key functions for name-based ingredient handling:
      type: "liqueur",
      description: "Herbal liqueur made by Carthusian monks",
      abv: 40,
-     commonMeasurements: ["oz", "ml"],
    });
    ```
 

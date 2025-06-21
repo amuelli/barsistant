@@ -1,12 +1,16 @@
 import OpenAI from "jsr:@openai/openai";
+import type { Recipe } from "../../types/recipe.ts";
 
 export async function generateCocktailImage(
-  recipeName: string,
-  ingredients: string[],
-  cocktailImageUrl?: string,
+  recipe: Recipe,
 ): Promise<Uint8Array | undefined> {
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) return undefined;
+
+  const recipeName = recipe.name;
+  const cocktailImageUrl = recipe.source?.image;
+  const garnish = recipe.garnish;
+  const glassware = recipe.glassware;
 
   let cocktailImageBuffer: ArrayBuffer | undefined = undefined;
   let imageType = "image/png";
@@ -28,11 +32,19 @@ export async function generateCocktailImage(
   }
 
   const prompt =
-    `minimalist, flat-style vector illustration of a cocktail drink (do not include any text or lettering in the image) called '${recipeName}', made with ${
-      ingredients.join(", ")
-    },${
-      cocktailImageUrl ? " based on the photo provided," : ""
-    } the style should match modern cocktail icons, with clean black outlines, simplified shapes, and subtle use of flat colors. Include a garnish like a cherry, lime, or umbrella if present in the original.`;
+    `Simple, minimalist vector illustration of a ${recipeName} cocktail in a ${glassware} glass${
+      garnish && garnish.length > 0 ? ` with ${garnish.join(", ")}` : ""
+    }.
+    Draw the ${glassware} glass using simple black strokes, but include dimension by showing an oval opening at the top rather than a straight line. Add minimal shading or a second stroke to suggest depth. Fill the drink area with a color representing the cocktail. ${
+      garnish && garnish.length > 0
+        ? `Include ${
+          garnish.join(", ")
+        } as simple elements with slight dimensionality. `
+        : ""
+    }
+    If the reference image shows ice cubes, represent them with subtle geometric shapes in lighter tones within the drink.
+    
+    If a reference image is provided, match the cocktail's color, basic presentation, and any visible ice. Use a clean icon style with black outlines and minimal colors. No text or labels. The illustration should have subtle dimension while still being simple enough to work as an icon, clearly recognizable as a ${recipeName} in a ${glassware} glass with an oval opening.`;
 
   const openai = new OpenAI({ apiKey });
   try {
