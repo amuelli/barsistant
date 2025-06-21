@@ -58,9 +58,13 @@ async function initKv(): Promise<Kv> {
   let lastError: unknown = null;
   let retryCount = 0;
 
+  // Support remote KV URL via environment variable
+  const kvUrl = Deno.env.get("DENO_KV_URL");
+
   while (retryCount < MAX_RETRIES) {
     try {
-      const kv = await Deno.openKv();
+      // Use remote URL if provided, otherwise default to local
+      const kv = kvUrl ? await Deno.openKv(kvUrl) : await Deno.openKv();
 
       // Test the connection with a simple operation
       await kv.get(["__health_check__"]);

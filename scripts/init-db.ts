@@ -1,3 +1,5 @@
+// Load environment variables from .env if present, before any other imports
+import "@std/dotenv/load";
 import {
   ingredients as sampleIngredients,
   recipes as sampleRecipes,
