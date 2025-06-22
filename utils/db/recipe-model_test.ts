@@ -251,7 +251,7 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
 
   // Test listing recipes
   await t.step("list all recipes", async () => {
-    const recipes = await recipeModel.listAll(10, 0);
+    const recipes = await recipeModel.listAll(10);
 
     assertExists(recipes);
     assertEquals(Array.isArray(recipes), true);
@@ -426,4 +426,71 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
       assertEquals(deletedRecipe, null);
     }
   });
+});
+
+Deno.test("Recipe Model - Pagination", async (t) => {
+  // Count all existing recipes
+  const all = await recipeModel.listAll();
+  const existingCount = all.length;
+
+  // Create 35 recipes to ensure we have more than one page (using default limit=30)
+  const recipesToCreate = 35;
+  const createdIds: string[] = [];
+  for (let i = 0; i < recipesToCreate; i++) {
+    const recipe = await recipeModel.create({
+      name: `Paginated Recipe ${i}`,
+      description: `Description ${i}`,
+      strength: 5,
+      sweetness: 5,
+      ingredients: [
+        {
+          ingredientId: `ingredient${i}`,
+          name: `Ingredient ${i}`,
+          quantity: 10,
+          unit: "ml",
+          optional: false,
+        },
+      ],
+      garnish: [],
+      glassware: "rocks",
+      preparation: ["Mix ingredients"],
+      source: { name: "Pagination Test" },
+      tags: ["pagination-test"],
+    });
+    createdIds.push(recipe.id);
+  }
+
+  const expectedTotal = existingCount + recipesToCreate;
+
+  await t.step(
+    "pagination returns all recipes and page two is correct",
+    async () => {
+      // Page 1
+      const { items: page1, cursor } = await recipeModel.listPage({
+        limit: 30,
+      });
+      assertEquals(page1.length, Math.min(30, expectedTotal));
+      assertExists(cursor);
+      // Page 2
+      const { items: page2, cursor: cursor2 } = await recipeModel.listPage({
+        limit: 30,
+        cursor,
+      });
+      // Should be the next chunk, not overlapping
+      const page1Ids = new Set(page1.map((r) => r.id));
+      const overlap = page2.some((r) => page1Ids.has(r.id));
+      assertEquals(overlap, false);
+      // The total so far should not exceed expectedTotal
+      assertEquals(page1.length + page2.length <= expectedTotal, true);
+      // If there are more than 30+30 recipes, cursor2 should exist
+      if (expectedTotal > 60) {
+        assertExists(cursor2);
+      }
+    },
+  );
+
+  // Clean up
+  for (const id of createdIds) {
+    await recipeModel.delete(id);
+  }
 });

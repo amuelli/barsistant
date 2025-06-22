@@ -10,7 +10,12 @@
 import { ulid } from "@std/ulid";
 import type { IngredientRecipeLink } from "../../types/ingredient.ts";
 import { Recipe } from "../../types/recipe.ts";
-import { executeDbOperation, kv } from "./db.ts";
+import {
+  executeDbOperation,
+  getKvIterator,
+  kv,
+  processKvIterator,
+} from "./db.ts";
 
 /**
  * Recipe creation parameters
@@ -334,31 +339,60 @@ export const recipeModel = {
   },
 
   /**
-   * List all recipes
+   * List all recipes with optional pagination.
    *
-   * @param limit Maximum number of recipes to return
-   * @param offset Number of recipes to skip
+   * @param limit Maximum number of recipes to return (optional; if not set, returns all)
    * @returns Array of recipes
    * @throws {DatabaseError} If the database operation fails
    */
-  async listAll(limit = 20, offset = 0): Promise<Recipe[]> {
+  async listAll(limit?: number): Promise<Recipe[]> {
+    // Use the paginated method to fetch all recipes if needed
+    if (limit === undefined) {
+      // Fetch all pages
+      let cursor = "";
+      let allRecipes: Recipe[] = [];
+      do {
+        const { items, cursor: nextCursor } = await recipeModel.listPage({
+          limit: 100,
+          cursor,
+        });
+        allRecipes = allRecipes.concat(items);
+        cursor = nextCursor;
+      } while (cursor !== "");
+      return allRecipes;
+    }
+
+    // Return the first x entries (limit)
     return await executeDbOperation(async () => {
       const recipes: Recipe[] = [];
-
-      let count = 0;
       for await (const entry of kv.list<Recipe>({ prefix: ["recipe"] })) {
-        if (count >= offset && recipes.length < limit) {
+        if (recipes.length < limit) {
           recipes.push(entry.value);
-        }
-        count++;
-
-        if (recipes.length >= limit) {
+        } else {
           break;
         }
       }
-
       return recipes;
     }, "Failed to list recipes");
+  },
+
+  /**
+   * List recipes with pagination support.
+   * @param limit Number of recipes to return per page
+   * @param cursor Cursor string from previous page (or empty string for first page)
+   * @returns { items: Recipe[], cursor: string }
+   */
+  async listPage({
+    limit = 30,
+    cursor = "",
+  }: {
+    limit?: number;
+    cursor?: string;
+  }) {
+    return await executeDbOperation(async () => {
+      const iterator = getKvIterator<Recipe>(kv, ["recipe"], limit, cursor);
+      return await processKvIterator<Recipe>(iterator);
+    }, "Failed to list recipes (paginated)");
   },
 
   /**
@@ -635,5 +669,3 @@ export const recipeModel = {
     }, `Failed to get recipes by ingredient ${ingredientId}`);
   },
 };
-
-// Removed: getWithFullIngredients and related legacy code.

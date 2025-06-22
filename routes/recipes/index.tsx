@@ -4,7 +4,7 @@ import { recipeModel } from "../../utils/db/recipe-model.ts";
 export const handler = define.handlers({
   async GET(ctx) {
     ctx.state.title = "Recipes";
-    const recipes = await recipeModel.listAll(30, 0);
+    const recipes = await recipeModel.listAll(30);
     return { data: recipes };
   },
 });

@@ -167,3 +167,31 @@ export async function closeDatabase(): Promise<void> {
     }
   }
 }
+
+/**
+ * Get a Deno.KvListIterator for a given prefix, limit, and cursor.
+ */
+export function getKvIterator<T>(
+  kv: Kv,
+  prefix: Deno.KvKeyPart[],
+  limit: number,
+  cursor?: string,
+): Deno.KvListIterator<T> {
+  const optionsArg = cursor ? { limit, cursor } : { limit };
+  return kv.list<T>({ prefix }, optionsArg);
+}
+
+/**
+ * Process a Deno.KvListIterator and return items and the next cursor.
+ */
+export async function processKvIterator<T>(
+  iterator: Deno.KvListIterator<T>,
+): Promise<{ cursor: string; items: T[] }> {
+  const items: T[] = [];
+  let cursor = "";
+  for await (const entry of iterator) {
+    items.push(entry.value as T);
+    cursor = iterator.cursor;
+  }
+  return { cursor, items };
+}
