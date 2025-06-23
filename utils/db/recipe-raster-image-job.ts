@@ -69,42 +69,42 @@ export async function handleGenerateRecipeRasterImageJob(
         aiImageUrl,
       );
 
-      // Enqueue a job to convert the image to SVG
-      try {
-        await enqueueJob({ type: "generate_recipe_vector_image", recipeId });
+      // Update the recipe with the PNG image URL in the new images structure using recipeModel.update
+      if (aiImageUrl) {
+        const updatedImages = {
+          raster: {
+            url: aiImageUrl,
+            status: "done" as const,
+            error: undefined,
+          },
+          vector: recipe.images?.vector,
+        };
+
+        await recipeModel.update(recipeId, { images: updatedImages });
+
         console.log(
-          `[recipe-raster-image-job] Enqueued vector conversion job for recipe ${recipeId}`,
+          `[recipe-raster-image-job] Recipe raster image updated for ${recipeId}`,
         );
-      } catch (err) {
-        console.error(
-          `[recipe-raster-image-job] Failed to enqueue vector conversion job:`,
-          err,
-        );
-        // Continue with the PNG image even if we can't enqueue the vector job
+
+        // Enqueue a job to convert the image to SVG
+        try {
+          await enqueueJob({ type: "generate_recipe_vector_image", recipeId });
+          console.log(
+            `[recipe-raster-image-job] Enqueued vector conversion job for recipe ${recipeId}`,
+          );
+        } catch (err) {
+          console.error(
+            `[recipe-raster-image-job] Failed to enqueue vector conversion job:`,
+            err,
+          );
+          // Continue with the PNG image even if we can't enqueue the vector job
+        }
       }
     } else {
       console.warn(
         `[recipe-raster-image-job] No AI image generated for recipe ${recipeId}`,
       );
       return;
-    }
-
-    // Update the recipe with the PNG image URL in the new images structure using recipeModel.update
-    if (aiImageUrl) {
-      const updatedImages = {
-        raster: {
-          url: aiImageUrl,
-          status: "done" as const,
-          error: undefined,
-        },
-        vector: recipe.images?.vector,
-      };
-
-      await recipeModel.update(recipeId, { images: updatedImages });
-
-      console.log(
-        `[recipe-raster-image-job] Recipe raster image updated for ${recipeId}`,
-      );
     }
   } catch (err) {
     console.error(
