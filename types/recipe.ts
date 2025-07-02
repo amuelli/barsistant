@@ -17,7 +17,6 @@ export interface RecipeIngredient {
   unit: MeasurementUnit;
   optional: boolean;
   notes?: string;
-  substitutes?: string[]; // IDs of substitute ingredients
 }
 
 /**

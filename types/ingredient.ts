@@ -58,7 +58,6 @@ export interface Ingredient {
   type: IngredientType;
   abv?: number; // Alcohol by volume percentage
   origin?: string; // Where the ingredient is typically sourced from
-  substitutes?: string[]; // IDs of substitute ingredients
   image?: string;
   allergens?: string[];
   createdAt: string; // ISO date string

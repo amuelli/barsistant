@@ -30,7 +30,6 @@ export type UpdateIngredientParams = Partial<CreateIngredientParams>;
 export interface SearchIngredientParams {
   query?: string;
   types?: IngredientType[];
-  withSubstitutes?: boolean;
   withAllergens?: string[];
   limit?: number;
   offset?: number;
@@ -74,7 +73,6 @@ export const ingredientModel = {
 
       // Add optional fields
       if (params.abv !== undefined) ingredient.abv = params.abv;
-      if (params.substitutes) ingredient.substitutes = params.substitutes;
       if (params.image) ingredient.image = params.image;
       if (params.allergens) ingredient.allergens = params.allergens;
 
@@ -93,21 +91,6 @@ export const ingredientModel = {
       const searchableTerms = params.name.toLowerCase().split(/\s+/);
       for (const term of searchableTerms) {
         transaction.set(["ingredient_search", term, id], true);
-      }
-
-      // If there are substitutes, create indexes for them
-      if (params.substitutes && params.substitutes.length > 0) {
-        // Index for finding ingredients that have substitutes
-        transaction.set(["ingredient_with_substitutes", id], true);
-
-        // Create bidirectional substitute relationships
-        for (const substituteId of params.substitutes) {
-          transaction.set(["ingredient_substitute", id, substituteId], true);
-          transaction.set(
-            ["ingredient_substitute_for", substituteId, id],
-            true,
-          );
-        }
       }
 
       // If there are allergens, create indexes for them
@@ -208,34 +191,6 @@ export const ingredientModel = {
         }
       }
 
-      // If substitutes changed, update substitute indexes
-      if (params.substitutes !== undefined) {
-        // Clean up old substitute relationships
-        if (existingIngredient.substitutes) {
-          for (const substituteId of existingIngredient.substitutes) {
-            transaction.delete(["ingredient_substitute", id, substituteId]);
-            transaction.delete(["ingredient_substitute_for", substituteId, id]);
-          }
-        }
-
-        // Remove the "has substitutes" flag if there are no substitutes now
-        if (!params.substitutes || params.substitutes.length === 0) {
-          transaction.delete(["ingredient_with_substitutes", id]);
-        } else {
-          // Add the "has substitutes" flag
-          transaction.set(["ingredient_with_substitutes", id], true);
-
-          // Create new substitute relationships
-          for (const substituteId of params.substitutes) {
-            transaction.set(["ingredient_substitute", id, substituteId], true);
-            transaction.set(
-              ["ingredient_substitute_for", substituteId, id],
-              true,
-            );
-          }
-        }
-      }
-
       // If allergens changed, update allergen indexes
       if (params.allergens !== undefined) {
         // Clean up old allergen relationships
@@ -297,19 +252,6 @@ export const ingredientModel = {
       );
       for (const term of searchableTerms) {
         transaction.delete(["ingredient_search", term, id]);
-      }
-
-      // Delete substitute indexes
-      if (
-        existingIngredient.substitutes &&
-        existingIngredient.substitutes.length > 0
-      ) {
-        transaction.delete(["ingredient_with_substitutes", id]);
-
-        for (const substituteId of existingIngredient.substitutes) {
-          transaction.delete(["ingredient_substitute", id, substituteId]);
-          transaction.delete(["ingredient_substitute_for", substituteId, id]);
-        }
       }
 
       // Delete allergen indexes
@@ -389,7 +331,6 @@ export const ingredientModel = {
       const {
         query,
         types,
-        withSubstitutes,
         withAllergens,
         limit = 20,
         offset = 0,
@@ -420,37 +361,6 @@ export const ingredientModel = {
           // Intersection with existing matches
           matchingIngredientIds = new Set(
             [...matchingIngredientIds].filter((id) => typeMatches.has(id)),
-          );
-        }
-
-        // Early return if no matches after filtering
-        if (matchingIngredientIds.size === 0) {
-          return [];
-        }
-      }
-
-      // Filter by ingredients with substitutes if requested
-      if (withSubstitutes) {
-        const substitutesMatches = new Set<string>();
-
-        for await (
-          const entry of kv.list<boolean>({
-            prefix: ["ingredient_with_substitutes"],
-          })
-        ) {
-          const ingredientId = entry.key[1] as string;
-          substitutesMatches.add(ingredientId);
-        }
-
-        if (isFirstFilter) {
-          matchingIngredientIds = substitutesMatches;
-          isFirstFilter = false;
-        } else {
-          // Intersection with existing matches
-          matchingIngredientIds = new Set(
-            [...matchingIngredientIds].filter((id) =>
-              substitutesMatches.has(id)
-            ),
           );
         }
 
