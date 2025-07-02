@@ -16,7 +16,7 @@ export interface RecipeIngredient {
   quantity: number;
   unit: MeasurementUnit;
   optional: boolean;
-  notes?: string;
+  notes?: string; // e.g. preferred brand
 }
 
 /**

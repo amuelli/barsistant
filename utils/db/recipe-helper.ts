@@ -22,8 +22,9 @@ import {
  * (All fields from Ingredient except id, createdAt, updatedAt, plus recipe-specific fields)
  */
 export type SimpleRecipeIngredient =
-  & Omit<Ingredient, "id" | "createdAt" | "updatedAt">
-  & Omit<RecipeIngredient, "ingredientId">;
+  & Omit<Ingredient, "id" | "createdAt" | "updatedAt" | "description">
+  & Omit<RecipeIngredient, "ingredientId">
+  & { description?: string };
 
 /**
  * Recipe creation parameters with simple ingredient names

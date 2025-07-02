@@ -33,13 +33,15 @@ export const recipes: CreateRecipeWithSimpleIngredientsParams[] = [
     ingredients: [
       {
         name: "Bourbon Whiskey",
+        notes: "preferably 45% abv",
         type: "spirit",
         quantity: 45,
         unit: "ml",
         optional: false,
       },
       {
-        name: "Rye whiskey 50% abv",
+        name: "Rye whiskey",
+        notes: "preferably 50% abv",
         type: "spirit",
         quantity: 30,
         unit: "ml",
@@ -60,7 +62,8 @@ export const recipes: CreateRecipeWithSimpleIngredientsParams[] = [
         optional: false,
       },
       {
-        name: "Saline solution 4:1",
+        name: "Saline solution",
+        notes: "4:1 water to salt ratio",
         type: "other",
         quantity: 3,
         unit: "drop",
