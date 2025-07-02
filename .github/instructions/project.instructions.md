@@ -14,6 +14,8 @@ applyTo: '**'
 - Keep UI and business logic separated
 - Store shared types in /types
 - Place API routes in /routes/api, utilities in /utils
+- when removing code, don't leave any traces or comments that it was removed,
+  just remove it completely
 
 ## Development Workflow
 
