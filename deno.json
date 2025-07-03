@@ -9,7 +9,9 @@
     "preview": "deno run -A main.ts",
     "update": "deno run -A -r https://fresh.deno.dev/update .",
     "test": "deno test --allow-all",
-    "init-db": "deno run --allow-read --allow-write --allow-net --allow-env scripts/init-db.ts"
+    "init-db": "deno run --allow-read --allow-write --allow-net --allow-env scripts/init-db.ts",
+    "fetch-eval-data": "deno run -A scripts/fetch-eval-data.ts",
+    "eval-extraction": "deno run -A scripts/eval-extraction.ts"
   },
   "lint": { "rules": { "tags": ["fresh", "recommended"] } },
   "exclude": ["**/_fresh/*"],

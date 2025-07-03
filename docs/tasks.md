@@ -28,6 +28,7 @@ solution for the Barsistant application.
 |        | AI-6    | Implement recipe verification interface                         | Medium     | AI-5, UI-3   |
 | ✅     | AI-7    | Implement recipe extraction handler                             | Medium     | AI-5, DB-3   |
 |        | AI-8    | Add feedback mechanism for extraction quality                   | Medium     | AI-5, AI-6   |
+| ✅     | AI-9    | Implement extraction evaluation system                          | Medium     | AI-4, AI-5   |
 |        | AI-9    | Add YouTube content extraction support                          | High       | AI-2, AI-4   |
 |        | AI-10   | Add recipe website extraction support                           | High       | AI-2, AI-4   |
 |        | AI-11   | Develop extraction error handling                               | Medium     | AI-5, AI-7   |
