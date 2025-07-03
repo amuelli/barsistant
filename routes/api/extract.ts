@@ -80,7 +80,7 @@ export async function handler(ctx: FreshContext) {
 
     // Prepare HTML for AI extraction
     console.log("[extract] Preparing HTML for AI extraction");
-    const optimizedContent = prepareHtmlForAI(html);
+    const optimizedContent = prepareHtmlForAI(html, body.url);
     if (!optimizedContent) {
       console.warn("[extract] Could not parse HTML content");
       return Response.json(

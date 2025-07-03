@@ -1,0 +1,64 @@
+{
+  "title": "Pegu Club Cocktail",
+  "description": "The Pegu Club Cocktail is a classic gin cocktail with a refreshing citrus profile, combining gin, lime juice, and orange liqueur with a hint of bitters. It's reminiscent of a Martini but with a unique twist.",
+  "ingredients": [
+    {
+      "name": "Gin",
+      "quantity": 70,
+      "unit": "ml",
+      "optional": false,
+      "type": "spirit",
+      "notes": "Use your favorite classic juniper gin."
+    },
+    {
+      "name": "Lime juice",
+      "quantity": 15,
+      "unit": "ml",
+      "optional": false,
+      "type": "juice",
+      "notes": "Use fresh lime juice."
+    },
+    {
+      "name": "Orange liqueur",
+      "quantity": 15,
+      "unit": "ml",
+      "optional": false,
+      "type": "liqueur",
+      "notes": "Dwersteg Orange recommended."
+    },
+    {
+      "name": "Angostura bitters",
+      "quantity": 1,
+      "unit": "dash",
+      "optional": false,
+      "type": "bitter"
+    },
+    {
+      "name": "Orange bitters",
+      "quantity": 1,
+      "unit": "dash",
+      "optional": false,
+      "type": "bitter"
+    }
+  ],
+  "instructions": [
+    "Add gin, lime juice, orange liqueur, Angostura bitters, and orange bitters to a shaker.",
+    "Shake well with ice.",
+    "Strain into a cocktail glass."
+  ],
+  "garnish": [
+    "Lime wedges"
+  ],
+  "glassware": "martini",
+  "category": [
+    "classic",
+    "gin",
+    "citrus"
+  ],
+  "source": {
+    "url": "https://trinkabenteuer.de",
+    "name": "trinkabenteuer",
+    "author": "trinkabenteuer",
+    "image": "https://i.ytimg.com/vi/989hd-zEmLI/maxresdefault.jpg?sqp=-oaymwEmCIAKENAF8quKqQMa8AEB-AH-CYAC0AWKAgwIABABGHIgSSg0MA8=rs=AOn4CLCZwRT2UFfIa8ld4pkfenesEwyoGw"
+  }
+}

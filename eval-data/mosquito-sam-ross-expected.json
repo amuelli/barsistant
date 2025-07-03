@@ -1,0 +1,67 @@
+{
+  "title": "Mosquito (by Sam Ross)",
+  "description": "The Mosquito cocktail, created by Sam Ross in 2017 at Attaboy bar in Manhattan, is a sweet and sour drink with a bittersweet and fiery ginger spice profile.",
+  "ingredients": [
+    {
+      "name": "Mezcal",
+      "quantity": 22.5,
+      "unit": "ml",
+      "optional": false,
+      "type": "spirit",
+      "notes": "Del Maguey Vida recommended"
+    },
+    {
+      "name": "Red Bitter",
+      "quantity": 22.5,
+      "unit": "ml",
+      "optional": false,
+      "type": "liqueur",
+      "notes": "Strucchi Red Bitter (Campari-style) recommended"
+    },
+    {
+      "name": "Lemon juice",
+      "quantity": 22.5,
+      "unit": "ml",
+      "optional": false,
+      "type": "juice",
+      "notes": "Freshly squeezed"
+    },
+    {
+      "name": "Ginger syrup",
+      "quantity": 22.5,
+      "unit": "ml",
+      "optional": false,
+      "type": "syrup",
+      "notes": "Equal parts ginger juice to caster sugar by weight"
+    },
+    {
+      "name": "Saline solution",
+      "quantity": 3,
+      "unit": "drop",
+      "optional": false,
+      "type": "other",
+      "notes": "4:1 ratio (20g sea salt to 80g water)"
+    }
+  ],
+  "instructions": [
+    "Select and pre-chill a Coupe glass.",
+    "Prepare garnish of skewered crystallised ginger.",
+    "Shake all ingredients with ice.",
+    "Fine strain into chilled glass.",
+    "Garnish with skewered crystallised ginger."
+  ],
+  "garnish": [
+    "Skewered crystallised ginger"
+  ],
+  "glassware": "coupe",
+  "category": [
+    "modern",
+    "sour",
+    "spicy"
+  ],
+  "source": {
+    "url": "https://www.diffordsguide.com/cocktails/recipe/32305/mosquito-by-sam-ross",
+    "name": "Difford's Guide",
+    "image": "https://cdn.diffordsguide.com/cocktail/rL1P5O/default/0/512x.webp"
+  }
+}

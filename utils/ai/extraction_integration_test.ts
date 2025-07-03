@@ -1,7 +1,10 @@
 import { assert } from "@std/assert";
 import "@std/dotenv/load";
 import { AIError } from "./ai-core.ts";
-import { extractRecipeFromContent } from "./extraction.ts";
+import {
+  extractRecipeFromContent,
+  type RecipeExtraction,
+} from "./extraction.ts";
 
 const RUN_OPENAI_TESTS = Deno.env.get("RUN_OPENAI_TESTS") === "1";
 
@@ -16,7 +19,7 @@ Deno.test({
       The Negroni is a classic Italian cocktail. Ingredients: 1 oz gin, 1 oz Campari, 1 oz sweet vermouth. Stir with ice, strain into a rocks glass, garnish with an orange peel.
     `;
     const sourceUrl = "https://example.com/negroni";
-    let result: any = null;
+    let result: RecipeExtraction | null = null;
     try {
       result = await extractRecipeFromContent(sampleContent, sourceUrl);
       console.log("AI result for Negroni:", result);
@@ -42,7 +45,7 @@ Deno.test({
     "extractRecipeFromContent returns a RecipeExtraction-like object for empty content (integration)",
   ignore: !Deno.env.get("OPENAI_API_KEY") || !RUN_OPENAI_TESTS,
   async fn() {
-    let result: any = null;
+    let result: RecipeExtraction | null = null;
     try {
       result = await extractRecipeFromContent("", "https://example.com/empty");
       console.log("AI result for empty content:", result);

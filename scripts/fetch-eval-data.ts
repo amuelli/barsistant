@@ -9,20 +9,51 @@
  */
 
 import "@std/dotenv/load";
+import { type RecipeExtraction } from "../utils/ai/extraction.ts";
+import {
+  type RecipeTestCase,
+  TEST_CASES,
+} from "../utils/ai/extraction_eval_test_cases.ts";
 import { fetchUrlContent, prepareHtmlForAI } from "../utils/url-content.ts";
 
-// URLs and IDs for recipes to use in evaluation
-const RECIPES = [
-  {
-    id: "mosquito-sam-ross",
-    name: "Mosquito by Sam Ross",
-    url:
-      "https://www.diffordsguide.com/cocktails/recipe/32305/mosquito-by-sam-ross",
-  },
-  // Add more recipes here as needed for testing
-];
+// For backward compatibility, alias TEST_CASES as RECIPES
+export { TEST_CASES as RECIPES };
 
-async function fetchAndSaveEvalData() {
+/**
+ * Template for creating an expected extraction JSON file
+ * This provides a starting point for test case expected results
+ */
+function createEmptyExtractionTemplate(): RecipeExtraction {
+  return {
+    title: "",
+    description: "",
+    ingredients: [
+      {
+        name: "",
+        quantity: 0,
+        unit: "",
+        optional: false,
+        type: "",
+        notes: "",
+      },
+    ],
+    instructions: [""],
+    garnish: [""],
+    glassware: "",
+    category: [""],
+    source: {
+      url: "",
+      name: "",
+      author: "",
+    },
+  };
+}
+
+/**
+ * Fetches and saves evaluation data for recipe extraction testing
+ * @param overrideRecipes Optional array of recipes to process instead of the default RECIPES
+ */
+export async function fetchAndSaveEvalData(overrideRecipes?: RecipeTestCase[]) {
   console.log("Fetching evaluation data for recipe extraction...");
 
   // Ensure eval-data directory exists
@@ -35,8 +66,11 @@ async function fetchAndSaveEvalData() {
     }
   }
 
+  // Use override recipes if provided
+  const recipesToProcess = overrideRecipes || TEST_CASES;
+
   // Process each recipe
-  for (const recipe of RECIPES) {
+  for (const recipe of recipesToProcess) {
     console.log(`\nFetching ${recipe.name} from ${recipe.url}...`);
 
     try {
@@ -46,7 +80,7 @@ async function fetchAndSaveEvalData() {
 
       // Process HTML with prepareHtmlForAI
       console.log("Processing HTML with prepareHtmlForAI...");
-      const optimizedContent = prepareHtmlForAI(html);
+      const optimizedContent = prepareHtmlForAI(html, recipe.url);
 
       if (!optimizedContent) {
         console.error(`Failed to prepare HTML for ${recipe.id}`);
@@ -75,23 +109,51 @@ async function fetchAndSaveEvalData() {
 
       await Deno.writeTextFile(metaFilePath, JSON.stringify(metadata, null, 2));
 
+      // Create an expected extraction template file if it doesn't exist
+      const expectedFilePath = `${evalDataDir}/${recipe.id}-expected.json`;
+      try {
+        await Deno.stat(expectedFilePath);
+        console.log(
+          `Expected extraction file already exists: ${expectedFilePath}`,
+        );
+      } catch (error) {
+        if (error instanceof Deno.errors.NotFound) {
+          console.log(
+            `Creating expected extraction template: ${expectedFilePath}`,
+          );
+          const template = createEmptyExtractionTemplate();
+          // Pre-fill some fields
+          template.title = recipe.name.replace(" by Sam Ross", "").replace(
+            " Classic",
+            "",
+          );
+          template.source.url = recipe.url;
+          template.source.name = recipe.url.includes("diffordsguide")
+            ? "Difford's Guide"
+            : "";
+
+          await Deno.writeTextFile(
+            expectedFilePath,
+            JSON.stringify(template, null, 2),
+          );
+        } else {
+          throw error;
+        }
+      }
+
       console.log(`Saved ${recipe.id} evaluation data:`);
       console.log(`  - Raw HTML: ${rawFilePath} (${html.length} bytes)`);
       console.log(
         `  - Processed HTML: ${processedFilePath} (${optimizedContent.length} bytes)`,
       );
       console.log(`  - Metadata: ${metaFilePath}`);
+      console.log(`  - Expected extraction template: ${expectedFilePath}`);
     } catch (error) {
       console.error(`Failed to process ${recipe.name}:`, error);
     }
   }
 
   console.log("\nEvaluation data fetching completed.");
-}
-
-// Run the function if this file is executed directly
-if (import.meta.main) {
-  await fetchAndSaveEvalData();
 }
 
 // Run the function if this file is executed directly

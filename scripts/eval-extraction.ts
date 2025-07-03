@@ -10,10 +10,10 @@
  */
 
 import "@std/dotenv/load";
-import { evaluateExtraction } from "../utils/ai/extraction_eval.ts";
+import { evaluateExtractions } from "../utils/ai/extraction_eval.ts";
 
 // Environment variables are loaded automatically via the import
 
 console.log("Running recipe extraction evaluation...\n");
-await evaluateExtraction();
+await evaluateExtractions();
 console.log("\nEvaluation completed.");

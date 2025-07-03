@@ -1,4 +1,4 @@
-import { assert } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import {
   extractTextFromHtml,
   fetchUrlContent,
@@ -79,7 +79,7 @@ Deno.test({
       </html>
     `;
 
-    const prepared = prepareHtmlForAI(html);
+    const prepared = prepareHtmlForAI(html, "https://example.com/recipe");
 
     assert(prepared !== null, "Should return prepared HTML");
     assert(
@@ -88,11 +88,11 @@ Deno.test({
     );
     assert(
       prepared?.includes("<h1>Classic Negroni</h1>"),
-      "Should preserve main heading",
+      "Should preserve main content heading",
     );
     assert(
-      prepared?.includes("1 oz gin"),
-      "Should preserve ingredient content",
+      prepared?.includes("<li>1 oz gin</li>"),
+      "Should preserve ingredient list",
     );
     assert(
       prepared?.includes("Stir with ice"),
@@ -135,20 +135,24 @@ Deno.test({
       </html>
     `;
 
-    const prepared = prepareHtmlForAI(html);
+    const prepared = prepareHtmlForAI(html, "https://example.com/manhattan");
 
     assert(prepared !== null, "Should return prepared HTML");
     assert(
-      !prepared?.includes("<structured-data>"),
-      "Should not extract structured data",
+      prepared?.includes("<title>Manhattan Recipe</title>"),
+      "Should preserve page title",
     );
     assert(
       prepared?.includes("<h1>Manhattan</h1>"),
-      "Should preserve article heading",
+      "Should preserve main content",
     );
     assert(
       prepared?.includes("<p>A classic whiskey cocktail.</p>"),
       "Should preserve article content",
+    );
+    assert(
+      !prepared?.includes("@type"),
+      "Should remove structured data script",
     );
   },
 });
@@ -157,7 +161,7 @@ Deno.test({
   name: "prepareHtmlForAI returns null for invalid HTML",
   fn() {
     const prepared = prepareHtmlForAI("");
-    assert(prepared === null, "Should return null for empty input");
+    assertEquals(prepared, null);
   },
 });
 
@@ -177,7 +181,7 @@ Deno.test({
       </html>
     `;
 
-    const prepared = prepareHtmlForAI(html);
+    const prepared = prepareHtmlForAI(html, "https://example.com/page");
 
     assert(prepared !== null, "Should return prepared HTML");
     assert(
@@ -185,5 +189,68 @@ Deno.test({
       "Should preserve content even without recipe markup",
     );
     assert(!prepared?.includes("console.log"), "Should remove scripts");
+  },
+});
+
+// Mock tests that would require real network requests
+// These would need proper mocking in a real test environment
+Deno.test({
+  name: "fetchUrlContent correctly requests and processes a URL",
+  ignore: true, // Skip this test since it requires network
+  async fn() {
+    const { html, contentType } = await fetchUrlContent(
+      "https://example.com/",
+    );
+    assert(html.length > 0);
+    assert(contentType.includes("text/html"));
+  },
+});
+
+Deno.test({
+  name: "prepareHtmlForAI properly extracts YouTube recipe data",
+  fn() {
+    const youtubeHtml = `
+      <html>
+      <head><title>YouTube Recipe</title></head>
+      <body>
+        <script nonce="123456">
+        var ytInitialPlayerResponse = {
+          "microformat": {
+            "playerMicroformatRenderer": {
+              "title": {
+                "simpleText": "Classic Pegu Club Cocktail Recipe"
+              },
+              "description": {
+                "simpleText": "Recipe for Pegu Club Cocktail\\n• 70 ml Gin\\n• 15 ml fresh lime juice\\n• 15 ml Orange Liqueur\\n• 1 dash Angostura bitters\\n• 1 dash Orange bitters"
+              },
+              "ownerChannelName": "Cocktail Channel",
+              "uploadDate": "2022-07-05"
+            }
+          }
+        };
+        </script>
+        <div id="player">Video Player</div>
+      </body>
+      </html>
+    `;
+
+    const prepared = prepareHtmlForAI(
+      youtubeHtml,
+      "https://www.youtube.com/watch?v=123456",
+    );
+
+    assert(prepared !== null, "Should return prepared HTML");
+    assert(
+      prepared?.includes("Classic Pegu Club Cocktail Recipe"),
+      "Should extract video title",
+    );
+    assert(
+      prepared?.includes("70 ml Gin"),
+      "Should extract recipe ingredients from description",
+    );
+    assert(
+      prepared?.includes("Cocktail Channel"),
+      "Should extract channel name",
+    );
   },
 });
