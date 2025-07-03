@@ -26,7 +26,7 @@
     "@std/ulid": "jsr:@std/ulid@^1.0.0",
     "@bradenmacdonald/s3-lite-client": "jsr:@bradenmacdonald/s3-lite-client@^0.9.1",
     "daisyui": "npm:daisyui@^5.0.43",
-    "fresh": "jsr:@fresh/core@^2.0.0-alpha.34",
+    "fresh": "jsr:@fresh/core@^2.0.0-alpha.37",
     "preact": "npm:preact@^10.26.6",
     "tailwindcss": "npm:tailwindcss@^4.1.7",
     "ai": "npm:ai@^4.3.16",
