@@ -1,5 +1,6 @@
 import { ulid } from "@std/ulid";
 import { z } from "zod";
+import { extractColorPalette } from "../ai/color-extraction.ts";
 import { generateCocktailImage } from "../ai/image-generation.ts";
 import { uploadImageToS3 } from "../storage/s3.ts";
 import { enqueueJob } from "./queue-handler.ts";
@@ -69,13 +70,27 @@ export async function handleGenerateRecipeRasterImageJob(
         aiImageUrl,
       );
 
-      // Update the recipe with the PNG image URL in the new images structure using recipeModel.update
+      // Extract color palette from the image
+      const colorPalette = await extractColorPalette(aiImageBuffer);
+      if (colorPalette) {
+        console.log(
+          `[recipe-raster-image-job] Color palette extracted:`,
+          colorPalette,
+        );
+      } else {
+        console.warn(
+          `[recipe-raster-image-job] Failed to extract color palette`,
+        );
+      }
+
+      // Update the recipe with the PNG image URL and color palette in the new images structure
       if (aiImageUrl) {
         const updatedImages = {
           raster: {
             url: aiImageUrl,
             status: "done" as const,
             error: undefined,
+            colorPalette: colorPalette,
           },
           vector: recipe.images?.vector,
         };

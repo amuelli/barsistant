@@ -25,6 +25,7 @@
     "@fresh/update": "jsr:@fresh/update@^2.0.0-alpha.37",
     "daisyui": "npm:daisyui@^5.0.43",
     "fresh": "jsr:@fresh/core@^2.0.0-alpha.37",
+    "node-vibrant": "npm:node-vibrant@^4.0.3",
     "preact": "npm:preact@^10.26.9",
     "tailwindcss": "npm:tailwindcss@^4.1.7",
     "ai": "npm:ai@^4.3.16",

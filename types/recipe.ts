@@ -8,6 +8,18 @@
 import { MeasurementUnit } from "./ingredient.ts";
 
 /**
+ * Color palette extracted from an image
+ */
+export interface ColorPalette {
+  vibrant?: string;
+  darkVibrant?: string;
+  lightVibrant?: string;
+  muted?: string;
+  darkMuted?: string;
+  lightMuted?: string;
+}
+
+/**
  * Represents a single ingredient within a recipe with its amount information
  */
 export interface RecipeIngredient {
@@ -42,6 +54,7 @@ export interface Recipe {
       url?: string;
       status: "none" | "generating" | "done" | "failed";
       error?: string;
+      colorPalette?: ColorPalette; // Color palette extracted from the raster image
     };
     vector?: {
       url?: string;

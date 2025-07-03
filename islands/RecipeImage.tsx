@@ -1,5 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { Recipe } from "../types/recipe.ts";
+import { getBackgroundColor } from "../utils/color-utils.tsx";
 
 interface RecipeImageProps {
   recipe: Recipe;
@@ -29,11 +30,18 @@ export default function RecipeImage(
 
   return getImageUrl(recipe)
     ? (
-      <img
-        src={getImageUrl(recipe)}
-        alt={recipe.name}
-        class="w-full h-96 object-contain rounded-lg shadow-lg bg-base-300"
-      />
+      <div class="w-full h-96 relative rounded-lg shadow-lg">
+        <div
+          style={{ backgroundColor: getBackgroundColor(recipe) }}
+          class="absolute inset-0 opacity-30 rounded-lg"
+        >
+        </div>
+        <img
+          src={getImageUrl(recipe)}
+          alt={recipe.name}
+          class="w-full h-96 object-contain relative z-10 rounded-lg"
+        />
+      </div>
     )
     : isImageGenerating(recipe)
     ? (

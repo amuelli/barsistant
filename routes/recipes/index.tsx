@@ -1,4 +1,5 @@
 import { define } from "../../utils.ts";
+import { getBackgroundColor } from "../../utils/color-utils.tsx";
 import { recipeModel } from "../../utils/db/recipe-model.ts";
 
 export const handler = define.handlers({
@@ -53,19 +54,33 @@ export default define.page<typeof handler>(
               <figure>
                 {recipe.images?.vector?.url
                   ? (
-                    <img
-                      src={recipe.images.vector.url}
-                      alt={recipe.name}
-                      class="h-48 w-full object-contain bg-base-300"
-                    />
+                    <div class="h-48 w-full relative">
+                      <div
+                        style={{ backgroundColor: getBackgroundColor(recipe) }}
+                        class="absolute inset-0 opacity-30"
+                      >
+                      </div>
+                      <img
+                        src={recipe.images.vector.url}
+                        alt={recipe.name}
+                        class="h-48 w-full object-contain relative z-10"
+                      />
+                    </div>
                   )
                   : recipe.images?.raster?.url
                   ? (
-                    <img
-                      src={recipe.images.raster.url}
-                      alt={recipe.name}
-                      class="h-48 w-full object-contain bg-base-300"
-                    />
+                    <div class="h-48 w-full relative">
+                      <div
+                        style={{ backgroundColor: getBackgroundColor(recipe) }}
+                        class="absolute inset-0 opacity-30"
+                      >
+                      </div>
+                      <img
+                        src={recipe.images.raster.url}
+                        alt={recipe.name}
+                        class="h-48 w-full object-contain relative z-10"
+                      />
+                    </div>
                   )
                   : (
                     <div class="bg-base-300 h-48 w-full flex items-center justify-center text-gray-400">
