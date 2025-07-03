@@ -8,6 +8,14 @@ Extract detailed, structured information from the provided cocktail recipe text.
 Focus on cocktail name, ingredients with precise measurements, and preparation steps.
 Use standard cocktail measurement units (oz, ml, dash, etc.) and ensure quantities are numeric when possible.
 For ingredients, determine the type (e.g., spirit, liqueur, mixer, syrup) based on context.
+
+IMPORTANT FOR INGREDIENT NAMES:
+- Use generic ingredient names rather than specific brands (e.g., "Bourbon" not "Maker's Mark")
+- Move brand recommendations, vintage specifications, or special variety details to the 'notes' field
+- For example: "Maker's Mark Bourbon" should be split into name="Bourbon" and notes="Maker's Mark recommended"
+- Another example: "Del Maguey Vida Mezcal" should be split into name="Mezcal" and notes="Del Maguey Vida recommended"
+- This ensures better ingredient matching and recipe organization while preserving important details
+
 Organize instructions into clear, sequential steps.
 If a clear image of the cocktail is present on the website, extract its direct image URL and include it as the 'image' field. Prefer the main cocktail photo, not logos or unrelated images. If not available, omit the field.
 Return data in the specified JSON structure without any additional commentary.

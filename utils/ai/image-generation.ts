@@ -1,4 +1,4 @@
-import OpenAI from "jsr:@openai/openai";
+import OpenAI from "@openai/openai";
 import type { Recipe } from "../../types/recipe.ts";
 
 export async function generateCocktailImage(

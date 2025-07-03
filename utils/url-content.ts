@@ -1,7 +1,7 @@
 // Utility for fetching and parsing URL content (AI-2, AI-3)
 // Uses Deno's fetch and @b-fuze/deno-dom for HTML processing
 
-import { DOMParser, Element, HTMLDocument } from "@b-fuze/deno-dom";
+import { DOMParser, HTMLDocument } from "@b-fuze/deno-dom";
 
 /**
  * Fetches the content of a URL and returns the raw HTML/text and content type.
@@ -40,17 +40,6 @@ export function extractTextFromHtml(html: string): string | null {
   return body.textContent?.replace(/\s+/g, " ").trim() || null;
 }
 
-// Common selectors for recipe content on various websites
-const RECIPE_SELECTORS = [
-  "article",
-  "main",
-  "div[class*='recipe']",
-  "div[class*='content']",
-  "div[id*='recipe']",
-  "div[id*='content']",
-  "div[itemtype*='Recipe']",
-];
-
 // Element selectors that typically contain recipe noise/boilerplate
 const NOISE_SELECTORS = [
   "header:not(article header, main header)",
@@ -70,52 +59,11 @@ const NOISE_SELECTORS = [
 ];
 
 /**
- * Extracts structured recipe data (JSON-LD) from the HTML if available.
- *
- * @param doc The HTML Document object
- * @returns JSON-LD recipe data as a string or null if not found
- */
-function extractStructuredRecipeData(doc: HTMLDocument): string | null {
-  try {
-    const jsonldScripts = Array.from(doc.querySelectorAll(
-      "script[type='application/ld+json']",
-    ));
-
-    for (const script of jsonldScripts) {
-      const content = script.textContent;
-      if (!content) continue;
-
-      try {
-        const jsonData = JSON.parse(content);
-
-        // Look for Recipe type in various JSON-LD structures
-        if (
-          jsonData["@type"] === "Recipe" ||
-          (jsonData["@graph"] &&
-            jsonData["@graph"].some((item: { [key: string]: unknown }) =>
-              item["@type"] === "Recipe"
-            ))
-        ) {
-          return content;
-        }
-      } catch (_e) {
-        // Ignore JSON parse errors and continue checking other scripts
-        continue;
-      }
-    }
-  } catch (e) {
-    console.error("Error extracting structured recipe data:", e);
-  }
-
-  return null;
-}
-
-/**
  * Prepares HTML for AI recipe extraction by cleaning and optimizing the content.
- * Preserves semantic structure while removing noise, and includes structured data if available.
+ * Preserves semantic structure while removing noise elements like ads, navigation, and scripts.
  *
  * @param html The raw HTML string
- * @returns Processed HTML optimized for AI recipe extraction, or null if parsing fails
+ * @returns Processed HTML with noise elements removed, or null if parsing fails
  */
 export function prepareHtmlForAI(html: string): string | null {
   // Handle empty input explicitly
@@ -130,54 +78,20 @@ export function prepareHtmlForAI(html: string): string | null {
     // Extract page title
     const title = clone.querySelector("title")?.textContent || "";
 
-    // Extract recipe metadata if available
-    const structuredData = extractStructuredRecipeData(clone);
-
     // Remove noise elements
     NOISE_SELECTORS.forEach((selector) => {
       clone.querySelectorAll(selector).forEach((el) => el.remove());
     });
 
-    // Get the main recipe content
-    let mainContent: Element | null = null;
-
-    // Try to find main recipe content by checking recipe-specific selectors
-    for (const selector of RECIPE_SELECTORS) {
-      const elements = clone.querySelectorAll(selector);
-      if (elements.length > 0) {
-        // If multiple elements match, take the largest one (likely the main content)
-        let largestEl = elements[0];
-        let maxLength = elements[0].textContent?.length || 0;
-
-        for (const el of Array.from(elements)) {
-          const length = el.textContent?.length || 0;
-          if (length > maxLength) {
-            maxLength = length;
-            largestEl = el;
-          }
-        }
-
-        mainContent = largestEl;
-        break;
-      }
-    }
-
-    // If no recipe-specific content found, use the body
-    if (!mainContent) {
-      mainContent = clone.querySelector("body");
-      if (!mainContent) return null;
-    }
+    // Get the body content
+    const bodyContent = clone.querySelector("body");
+    if (!bodyContent) return null;
 
     // Build optimized content for AI processing
     let result = `<title>${title}</title>\n\n`;
 
-    // Add structured data if found
-    if (structuredData) {
-      result += `<structured-data>${structuredData}</structured-data>\n\n`;
-    }
-
-    // Add the main content
-    result += mainContent.outerHTML;
+    // Add the body content
+    result += bodyContent.outerHTML;
 
     return result;
   } catch (e) {

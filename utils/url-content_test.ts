@@ -108,7 +108,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "prepareHtmlForAI extracts structured data when available",
+  name: "prepareHtmlForAI ignores structured data but preserves content",
   fn() {
     const html = `
       <!DOCTYPE html><html><head><title>Manhattan Recipe</title>
@@ -139,16 +139,16 @@ Deno.test({
 
     assert(prepared !== null, "Should return prepared HTML");
     assert(
-      prepared?.includes("<structured-data>"),
-      "Should extract structured data",
+      !prepared?.includes("<structured-data>"),
+      "Should not extract structured data",
     );
     assert(
-      prepared?.includes("Manhattan Cocktail"),
-      "Should include structured recipe name",
+      prepared?.includes("<h1>Manhattan</h1>"),
+      "Should preserve article heading",
     );
     assert(
-      prepared?.includes("2 oz rye whiskey"),
-      "Should include structured ingredients",
+      prepared?.includes("<p>A classic whiskey cocktail.</p>"),
+      "Should preserve article content",
     );
   },
 });
