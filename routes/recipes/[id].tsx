@@ -62,6 +62,11 @@ export default define.page<typeof handler>(
                     {ingredient.optional && (
                       <span class="text-sm text-gray-500 ml-2">(optional)</span>
                     )}
+                    {ingredient.notes && (
+                      <span class="text-sm text-gray-600 ml-2">
+                        - {ingredient.notes}
+                      </span>
+                    )}
                   </div>
                   <div class="text-right">
                     {ingredient.quantity} {ingredient.unit}
