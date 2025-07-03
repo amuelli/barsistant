@@ -73,15 +73,23 @@ The application will be available at `http://localhost:8000`.
 
 ### Running Tests
 
-Run the test suite with:
+Always run tests using the configured task to ensure proper permissions and
+flags:
 
 ```bash
 deno task test
 ```
 
+To run a specific test file or directory:
+
+```bash
+deno task test path/to/test/file.ts
+```
+
 > Note: Deno KV is currently an unstable API, so the `--unstable-kv` flag is
 > required to run the application and tests. This has been configured in the
-> [deno.json](deno.json) task definitions.
+> [deno.json](deno.json) task definitions along with other necessary
+> permissions.
 
 ## Environment Variables
 

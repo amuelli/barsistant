@@ -24,6 +24,10 @@ applyTo: '**'
 3. Add error handling and inline documentation
 4. Integrate with existing code and test thoroughly
 5. Use Browser MCP for UI verification, write unit tests for backend/logic
+   - Always run tests using `deno task test` rather than directly with
+     `deno test`
+   - This ensures consistent test execution with the correct permissions and
+     environment
 6. Update docs as needed (README.md, docs/tasks.md, etc.)
 7. After user confirms completion, mark the task as done in docs/tasks.md and
    commit with a descriptive message
