@@ -22,12 +22,12 @@ export default function App(
         <div class="min-h-screen flex flex-col">
           {/* Regular content */}
           <div class="flex flex-col bg-base-100 flex-grow">
-            {/* Navbar */}
-            <div class="navbar bg-base-100 w-full">
+            {/* Navbar - Hidden on mobile, visible on lg screens */}
+            <div class="hidden lg:flex navbar bg-base-100 w-full">
               <a class="btn btn-ghost text-xl px-2" href="/">
                 Barsistant
               </a>
-              <div class="hidden flex-1 lg:flex justify-center">
+              <div class="flex-1 flex justify-center">
                 <ul class="menu menu-horizontal px-1">
                   <li>
                     <a href="/">Home</a>
@@ -41,8 +41,9 @@ export default function App(
                 </ul>
               </div>
             </div>
+
             {/* Main content */}
-            <main class="flex-grow pb-16 lg:pb-0">
+            <main class="flex-grow pb-16 lg:pb-0 md:pt-2 lg:pt-0">
               <Component />
             </main>
             {/* Footer */}

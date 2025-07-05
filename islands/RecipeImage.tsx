@@ -4,10 +4,25 @@ import { getGradientBackground } from "../utils/color-utils.tsx";
 
 interface RecipeImageProps {
   recipe: Recipe;
+  className?: string;
+  imageClassName?: string;
+  maxHeight?: string;
+  showRegenerateButton?: boolean;
+  showGradientBackground?: boolean;
+  gradientOpacity?: number;
 }
 
 export default function RecipeImage(
-  { recipe: initialRecipe }: RecipeImageProps,
+  {
+    recipe: initialRecipe,
+    className = "w-full max-h-[250px] md:max-h-[300px]",
+    imageClassName =
+      "w-full max-h-[250px] md:max-h-[300px] object-contain relative rounded-lg",
+    maxHeight,
+    showRegenerateButton = true,
+    showGradientBackground = true,
+    gradientOpacity = 0.2,
+  }: RecipeImageProps,
 ) {
   const [recipe, setRecipe] = useState(initialRecipe);
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -63,53 +78,88 @@ export default function RecipeImage(
     }
   };
 
+  // Apply custom max height if provided
+  // This style will override the class-based height constraints if specified
+  const containerStyle = maxHeight ? { maxHeight } : {};
+
+  // Generate gradient background if enabled
+  const gradientBackground = showGradientBackground
+    ? getGradientBackground(recipe)
+    : undefined;
+
   return isImageGenerating(recipe) || isRegenerating
     ? (
-      <div class="w-full h-96 flex flex-col items-center justify-center rounded-lg bg-base-300 animate-pulse">
+      <div
+        class={`flex flex-col items-center justify-center rounded-lg bg-base-300 animate-pulse ${className}`}
+        style={{
+          ...containerStyle,
+          minHeight: "150px", // Add minimum height to prevent shrinking
+        }}
+      >
         <span class="text-gray-500">Generating image…</span>
       </div>
     )
     : getImageUrl(recipe)
     ? (
-      <div class="w-full h-96 relative rounded-lg group">
-        <div
-          style={{ background: getGradientBackground(recipe) }}
-          class="absolute inset-0 opacity-15 rounded-lg"
-        >
-        </div>
+      <div
+        class={`relative rounded-lg group ${className} overflow-hidden`}
+        style={containerStyle}
+      >
+        {showGradientBackground && (
+          <div
+            class="absolute inset-0"
+            style={{
+              background: gradientBackground,
+              opacity: gradientOpacity,
+            }}
+          >
+          </div>
+        )}
         <img
           src={getImageUrl(recipe)}
           alt={recipe.name}
-          class="w-full h-96 object-contain relative rounded-lg"
+          class={`${imageClassName} relative`}
+          style={containerStyle}
         />
-        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            type="button"
-            onClick={handleRegenerateImage}
-            disabled={isImageGenerating(recipe) || isRegenerating}
-            class="btn btn-primary bg-opacity-80 hover:bg-opacity-100"
-          >
-            {isImageGenerating(recipe) ? "Generating..." : "Regenerate Image"}
-          </button>
-        </div>
+        {showRegenerateButton && (
+          <div class="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              type="button"
+              onClick={handleRegenerateImage}
+              disabled={isImageGenerating(recipe) || isRegenerating}
+              class="btn btn-primary bg-opacity-80 hover:bg-opacity-100"
+            >
+              {isImageGenerating(recipe) ? "Generating..." : "Regenerate Image"}
+            </button>
+          </div>
+        )}
       </div>
     )
     : (
-      <div class="w-full h-96 flex flex-col items-center justify-center rounded-lg bg-base-300">
+      <div
+        class={`flex flex-col items-center justify-center rounded-lg bg-base-300 ${className}`}
+        style={{
+          ...containerStyle,
+          minHeight: "150px", // Add minimum height to prevent shrinking
+        }}
+      >
         <span class="text-gray-400 mb-4">No image available</span>
-        <button
-          type="button"
-          onClick={handleRegenerateImage}
-          disabled={isRegenerating}
-          class="btn btn-primary"
-        >
-          {isRegenerating ? "Requesting..." : "Generate Image"}
-        </button>
+        {showRegenerateButton && (
+          <button
+            type="button"
+            onClick={handleRegenerateImage}
+            disabled={isRegenerating}
+            class="btn btn-primary btn-sm md:btn-md"
+          >
+            {isRegenerating ? "Requesting..." : "Generate Image"}
+          </button>
+        )}
       </div>
     );
 }
 
-function getImageUrl(
+// Export these utility functions so they can be reused elsewhere
+export function getImageUrl(
   recipe: Recipe,
 ): string | undefined {
   if (recipe.images?.vector?.url) return recipe.images.vector.url;
@@ -117,7 +167,7 @@ function getImageUrl(
   return undefined;
 }
 
-function isImageGenerating(
+export function isImageGenerating(
   recipe: Recipe,
 ): boolean {
   return (

@@ -1,6 +1,5 @@
-import { Recipe } from "../../types/recipe.ts";
+import RecipeImage from "../../islands/RecipeImage.tsx";
 import { define } from "../../utils.ts";
-import { getGradientBackground } from "../../utils/color-utils.tsx";
 import { recipeModel } from "../../utils/db/recipe-model.ts";
 
 export const handler = define.handlers({
@@ -53,26 +52,16 @@ export default define.page<typeof handler>(
               tabIndex={0}
             >
               <figure>
-                {getImageUrl(recipe)
-                  ? (
-                    <div class="h-48 w-full relative">
-                      <div
-                        style={{ background: getGradientBackground(recipe) }}
-                        class="absolute inset-0 opacity-15"
-                      >
-                      </div>
-                      <img
-                        src={getImageUrl(recipe)}
-                        alt={recipe.name}
-                        class="h-48 w-full object-contain relative"
-                      />
-                    </div>
-                  )
-                  : (
-                    <div class="bg-base-300 h-48 w-full flex items-center justify-center text-gray-400">
-                      No image
-                    </div>
-                  )}
+                <div class="w-full">
+                  <RecipeImage
+                    recipe={recipe}
+                    className="w-full h-48"
+                    imageClassName="w-full h-48 object-contain relative"
+                    maxHeight="192px" /* 48 * 4px = 192px */
+                    showRegenerateButton={false}
+                    gradientOpacity={0.15}
+                  />
+                </div>
               </figure>
               <div class="card-body">
                 <h2 class="card-title">{recipe.name}</h2>
@@ -96,11 +85,3 @@ export default define.page<typeof handler>(
     );
   },
 );
-
-function getImageUrl(
-  recipe: Recipe,
-): string | undefined {
-  if (recipe.images?.vector?.url) return recipe.images.vector.url;
-  if (recipe.images?.raster?.url) return recipe.images.raster.url;
-  return undefined;
-}
