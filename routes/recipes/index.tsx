@@ -63,7 +63,7 @@ export default define.page<typeof handler>(
                       <img
                         src={recipe.images.vector.url}
                         alt={recipe.name}
-                        class="h-48 w-full object-contain relative z-10"
+                        class="h-48 w-full object-contain relative"
                       />
                     </div>
                   )
@@ -78,7 +78,7 @@ export default define.page<typeof handler>(
                       <img
                         src={recipe.images.raster.url}
                         alt={recipe.name}
-                        class="h-48 w-full object-contain relative z-10"
+                        class="h-48 w-full object-contain relative"
                       />
                     </div>
                   )

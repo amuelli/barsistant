@@ -15,7 +15,7 @@ export default function Home() {
             Your smart cocktail recipe assistant with AI-powered recipe
             extraction capabilities.
           </p>
-          <div class="flex gap-4 justify-center">
+          <div class="hidden lg:flex gap-4 justify-center">
             <a href="/recipes" class="btn btn-primary">
               Browse Recipes
             </a>

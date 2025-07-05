@@ -39,7 +39,7 @@ export default function RecipeImage(
         <img
           src={getImageUrl(recipe)}
           alt={recipe.name}
-          class="w-full h-96 object-contain relative z-10 rounded-lg"
+          class="w-full h-96 object-contain relative rounded-lg"
         />
       </div>
     )

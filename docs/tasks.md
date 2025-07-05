@@ -118,6 +118,27 @@ solution for the Barsistant application.
 - Write unit tests for recraft utility and handler
 - Document recraft.ai config in README
 
+### DEPLOY-4 Implementation Details
+
+- Create a migrations system in `utils/db/migrations/`
+- Track applied migrations in Deno KV with keys like
+  `["db_meta", "migrations", migrationName]`
+- On application startup, check for and apply pending migrations automatically
+- Implement a migration runner that:
+  - Discovers all migration files in the migrations directory
+  - Determines which migrations have not yet been applied
+  - Executes pending migrations in the correct order (based on timestamp or
+    sequence number)
+  - Records successful migrations in the database
+- Create a migration template generator for new migrations
+- Add safeguards to prevent destructive migrations in production without
+  confirmation
+- Implement a rollback mechanism for failed migrations
+- Add logging for migration activities
+- Write unit tests for the migration system
+- Document migration process in development docs
+- Update CI/CD pipeline to handle migrations during deployment
+
 ## User Interface Tasks
 
 | Status | Task ID | Description                             | Complexity | Dependencies     |
@@ -195,6 +216,7 @@ solution for the Barsistant application.
 | ✅     | DEPLOY-1  | Set up Deno Deploy configuration          | Low        | None             |
 | ✅     | DEPLOY-2  | Configure Deno Deploy for production      | Low        | DEPLOY-1         |
 | ✅     | DEPLOY-3  | Set up GitHub Actions for deployments     | Medium     | DEPLOY-1         |
+|        | DEPLOY-4  | Implement automatic database migrations   | Medium     | DB-1             |
 |        | DEPLOY-5  | Implement feature flag system             | Medium     | None             |
 |        | DEPLOY-6  | Configure app monitoring with Deno Deploy | Low        | DEPLOY-2         |
 |        | DEPLOY-7  | Set up error tracking and alerting        | Medium     | DEPLOY-6         |
