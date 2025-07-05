@@ -47,7 +47,7 @@ export default function App(
               <Component />
             </main>
             {/* Footer */}
-            <footer class="footer p-10 bg-neutral text-neutral-content">
+            <footer class="footer p-10 pb-24 lg:pb-10 bg-neutral text-neutral-content">
               <aside>
                 <p>
                   Barsistant
