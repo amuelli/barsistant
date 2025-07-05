@@ -1,4 +1,5 @@
 import { FreshContext } from "fresh";
+import { enqueueJob } from "../../../utils/db/queue-handler.ts";
 import { recipeModel } from "../../../utils/db/recipe-model.ts";
 
 export async function handler(ctx: FreshContext) {
@@ -13,6 +14,8 @@ export async function handler(ctx: FreshContext) {
       return await handlePut(id, ctx.req);
     case "DELETE":
       return await handleDelete(id);
+    case "POST":
+      return await handlePost(id, ctx.req);
     default:
       return new Response(`Method ${ctx.req.method} not allowed`, {
         status: 405,
@@ -70,6 +73,64 @@ async function handlePut(id: string, req: Request) {
       : "Unknown error";
 
     return new Response(`Failed to update recipe: ${errorMessage}`, {
+      status: 400,
+      statusText: "Bad Request",
+    });
+  }
+}
+
+async function handlePost(id: string, req: Request) {
+  try {
+    // Check if the recipe exists
+    const recipe = await recipeModel.getById(id);
+    if (!recipe) {
+      return new Response("recipe not found", {
+        status: 404,
+        statusText: "Not Found",
+      });
+    }
+
+    // Parse request to determine what action to perform
+    const body = await req.json();
+
+    // Handle regenerating image
+    if (body.action === "regenerateImage") {
+      // Update the recipe's image status to 'generating'
+      await recipeModel.update(id, {
+        images: {
+          raster: {
+            url: recipe.images?.raster?.url,
+            status: "generating",
+            error: undefined,
+          },
+          vector: recipe.images?.vector,
+        },
+      });
+
+      // Enqueue a job to generate a new image
+      await enqueueJob({
+        type: "generate_recipe_raster_image",
+        recipeId: id,
+      });
+
+      return Response.json({
+        message: "Image regeneration started",
+        recipeId: id,
+        status: "generating",
+      });
+    }
+
+    // If action is not recognized
+    return new Response(`Unknown action: ${body.action}`, {
+      status: 400,
+      statusText: "Bad Request",
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
+
+    return new Response(`Failed to process recipe action: ${errorMessage}`, {
       status: 400,
       statusText: "Bad Request",
     });
