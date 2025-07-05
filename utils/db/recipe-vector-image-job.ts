@@ -57,9 +57,7 @@ export async function handleGenerateRecipeVectorImageJob(
       images: {
         raster: recipe.images?.raster,
         vector: {
-          url: recipe.images?.vector?.url,
-          status: "generating" as const,
-          error: undefined,
+          status: "generating",
         },
       },
     });

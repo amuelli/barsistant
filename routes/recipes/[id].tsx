@@ -29,16 +29,6 @@ export default define.page<typeof handler>(
                 <span key={tag} class="badge badge-primary">{tag}</span>
               ))}
             </div>
-            <div class="stats shadow mb-6">
-              <div class="stat">
-                <div class="stat-title">Strength</div>
-                <div class="stat-value text-2xl">🥃 {recipe.strength}/10</div>
-              </div>
-              <div class="stat">
-                <div class="stat-title">Sweetness</div>
-                <div class="stat-value text-2xl">🍯 {recipe.sweetness}/10</div>
-              </div>
-            </div>
           </div>
 
           {/* Recipe Image */}

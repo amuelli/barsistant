@@ -95,18 +95,6 @@ async function handlePost(id: string, req: Request) {
 
     // Handle regenerating image
     if (body.action === "regenerateImage") {
-      // Update the recipe's image status to 'generating'
-      await recipeModel.update(id, {
-        images: {
-          raster: {
-            url: recipe.images?.raster?.url,
-            status: "generating",
-            error: undefined,
-          },
-          vector: recipe.images?.vector,
-        },
-      });
-
       // Enqueue a job to generate a new image
       await enqueueJob({
         type: "generate_recipe_raster_image",
@@ -114,9 +102,8 @@ async function handlePost(id: string, req: Request) {
       });
 
       return Response.json({
-        message: "Image regeneration started",
+        message: "raster image regeneration job enqueued",
         recipeId: id,
-        status: "generating",
       });
     }
 

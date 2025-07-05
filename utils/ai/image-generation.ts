@@ -35,14 +35,13 @@ export async function generateCocktailImage(
     `Simple, minimalist vector illustration of a ${recipeName} cocktail in a ${glassware} glass${
       garnish && garnish.length > 0 ? ` with ${garnish.join(", ")}` : ""
     }.
-    Draw the ${glassware} glass using simple black strokes, but include dimension by showing an oval opening at the top rather than a straight line. Add minimal shading or a second stroke to suggest depth. Fill the drink area with a color representing the cocktail. ${
+    Draw the ${glassware} glass using simple fully black strokes, but include dimension by showing an oval opening at the top rather than a straight line. Add minimal shading or a second stroke to suggest depth. Fill the drink area with a color representing the cocktail. ${
       garnish && garnish.length > 0
         ? `Include ${
           garnish.join(", ")
         } as simple elements with slight dimensionality. `
         : ""
     }
-    If the reference image shows ice cubes, represent them with subtle geometric shapes in lighter tones within the drink.
     
     If a reference image is provided, match the cocktail's color, basic presentation, and any visible ice. Use a clean icon style with black outlines and minimal colors. No text or labels. The illustration should have subtle dimension while still being simple enough to work as an icon, clearly recognizable as a ${recipeName} in a ${glassware} glass with an oval opening.`;
 

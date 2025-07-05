@@ -1,13 +1,14 @@
 import { Recipe } from "../types/recipe.ts";
 
 /**
- * Get the background color from a recipe's color palette
+ * Get a gradient background CSS value from a recipe's color palette
  *
  * @param recipe The recipe object containing color palette data
- * @returns The color to use for the background
+ * @returns CSS linear gradient value using colors from the recipe's palette or fallbacks
  */
-export function getBackgroundColor(recipe: Recipe): string {
-  return recipe.images?.raster?.colorPalette?.lightVibrant ||
-    recipe.images?.raster?.colorPalette?.muted ||
-    "#ccc"; // Fallback color
+export function getGradientBackground(recipe: Recipe): string {
+  const lightColor = recipe.images?.raster?.colorPalette?.lightVibrant ||
+    "#f0f0f0";
+  const darkColor = recipe.images?.raster?.colorPalette?.vibrant || "#cccccc";
+  return `linear-gradient(to bottom, ${lightColor}, ${darkColor})`;
 }

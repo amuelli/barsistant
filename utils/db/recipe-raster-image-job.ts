@@ -44,11 +44,8 @@ export async function handleGenerateRecipeRasterImageJob(
     await recipeModel.update(recipeId, {
       images: {
         raster: {
-          url: recipe.images?.raster?.url,
-          status: "generating" as const,
-          error: undefined,
+          status: "generating",
         },
-        vector: recipe.images?.vector,
       },
     });
 

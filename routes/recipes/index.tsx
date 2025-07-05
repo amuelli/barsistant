@@ -1,5 +1,6 @@
+import { Recipe } from "../../types/recipe.ts";
 import { define } from "../../utils.ts";
-import { getBackgroundColor } from "../../utils/color-utils.tsx";
+import { getGradientBackground } from "../../utils/color-utils.tsx";
 import { recipeModel } from "../../utils/db/recipe-model.ts";
 
 export const handler = define.handlers({
@@ -48,35 +49,20 @@ export default define.page<typeof handler>(
             <a
               key={recipe.id}
               href={`/recipes/${recipe.id}`}
-              class="card bg-base-100 shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer block"
+              class="card bg-base-100 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer block"
               tabIndex={0}
             >
               <figure>
-                {recipe.images?.vector?.url
+                {getImageUrl(recipe)
                   ? (
                     <div class="h-48 w-full relative">
                       <div
-                        style={{ backgroundColor: getBackgroundColor(recipe) }}
-                        class="absolute inset-0 opacity-30"
+                        style={{ background: getGradientBackground(recipe) }}
+                        class="absolute inset-0 opacity-15"
                       >
                       </div>
                       <img
-                        src={recipe.images.vector.url}
-                        alt={recipe.name}
-                        class="h-48 w-full object-contain relative"
-                      />
-                    </div>
-                  )
-                  : recipe.images?.raster?.url
-                  ? (
-                    <div class="h-48 w-full relative">
-                      <div
-                        style={{ backgroundColor: getBackgroundColor(recipe) }}
-                        class="absolute inset-0 opacity-30"
-                      >
-                      </div>
-                      <img
-                        src={recipe.images.raster.url}
+                        src={getImageUrl(recipe)}
                         alt={recipe.name}
                         class="h-48 w-full object-contain relative"
                       />
@@ -110,3 +96,11 @@ export default define.page<typeof handler>(
     );
   },
 );
+
+function getImageUrl(
+  recipe: Recipe,
+): string | undefined {
+  if (recipe.images?.vector?.url) return recipe.images.vector.url;
+  if (recipe.images?.raster?.url) return recipe.images.raster.url;
+  return undefined;
+}
