@@ -720,3 +720,17 @@ export const ingredients: IngredientCreationData[] = [
     origin: "Various",
   },
 ];
+
+export const recipeUrls: string[] = [
+  "https://www.diffordsguide.com/cocktails/recipe/35175/improved-blood-orange-margarita",
+  "https://www.diffordsguide.com/cocktails/recipe/263/blue-lady",
+  "https://www.youtube.com/watch?v=4PdsfDsYuYo",
+  "https://www.diffordsguide.com/cocktails/recipe/35013/tom-and-jerez",
+  "https://www.diffordsguide.com/cocktails/recipe/29165/cosmic-alaska",
+  "https://www.diffordsguide.com/cocktails/recipe/35970/mezcalicus",
+  "https://www.diffordsguide.com/cocktails/recipe/35630/astor-painless-anaesthetic",
+  "https://www.diffordsguide.com/cocktails/recipe/3813/madurised-old-fashioned-godfather",
+  "https://angosturabitters.com/cocktail/daiquiri/",
+  "https://www.mixelcocktails.com/r/manhattan",
+  "https://www.mixelcocktails.com/r/dry_martini_",
+];

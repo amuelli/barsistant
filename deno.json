@@ -9,6 +9,7 @@
     "init-db": "deno run --allow-read --allow-write --allow-net --allow-env scripts/init-db.ts",
     "fetch-eval-data": "deno run -A scripts/fetch-eval-data.ts",
     "eval-extraction": "deno run -A scripts/eval-extraction.ts",
+    "extract-recipes": "deno run --allow-net --allow-write scripts/extract-recipes.ts",
     "migration:create": "deno run -A scripts/generate-migration.ts",
     "migration:status": "deno run -A scripts/migrations.ts status",
     "migration:run": "deno run -A scripts/migrations.ts run"
