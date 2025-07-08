@@ -27,6 +27,9 @@ inventory tracking, favorites, and recipe discovery.
 - UI is intuitive and mobile-friendly
 - System uptime ≥99%
 - All user data is securely stored and encrypted
+- All code is thoroughly tested with automated tests
+- Test coverage for critical functionality is ≥85%
+- All tests must pass before any feature is considered complete
 
 ## Key Features (Implemented or In Progress)
 
@@ -58,6 +61,17 @@ inventory tracking, favorites, and recipe discovery.
 - Support 1,000+ concurrent users
 - DB response <100ms for recipe queries
 - Optimized images for fast loading
+
+## Quality Assurance & Testing
+
+- All features must have automated tests
+- Backend logic requires unit and integration tests
+- UI changes require visual verification and basic functional tests
+- New database models require CRUD operation tests
+- Tests must use proper permissions via `deno task test`
+- No feature can be considered complete without passing tests
+- Tests should verify both success and error paths
+- Regression tests are required for bug fixes
 
 ## Reference & Documentation
 

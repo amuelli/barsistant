@@ -216,7 +216,7 @@ solution for the Barsistant application.
 | ✅     | DEPLOY-1  | Set up Deno Deploy configuration          | Low        | None             |
 | ✅     | DEPLOY-2  | Configure Deno Deploy for production      | Low        | DEPLOY-1         |
 | ✅     | DEPLOY-3  | Set up GitHub Actions for deployments     | Medium     | DEPLOY-1         |
-|        | DEPLOY-4  | Implement automatic database migrations   | Medium     | DB-1             |
+| ✅     | DEPLOY-4  | Implement automatic database migrations   | Medium     | DB-1             |
 |        | DEPLOY-5  | Implement feature flag system             | Medium     | None             |
 |        | DEPLOY-6  | Configure app monitoring with Deno Deploy | Low        | DEPLOY-2         |
 |        | DEPLOY-7  | Set up error tracking and alerting        | Medium     | DEPLOY-6         |

@@ -36,9 +36,16 @@ Make sure to install Deno: https://deno.land/manual/getting_started/installation
 
 ### Environment Setup
 
-Create a `.env` file in the root directory with the following variables:
+Copy the provided `.env.example` file to `.env` in the root directory and fill
+in your values:
 
+```bash
+cp .env.example .env
 ```
+
+Then edit the `.env` file with your specific configuration:
+
+```dotenv
 # AI Provider settings
 AI_PROVIDER=openai
 OPENAI_API_KEY=your_openai_api_key_here
@@ -53,6 +60,12 @@ S3_ACCESS_KEY_ID=your_access_key
 S3_SECRET_ACCESS_KEY=your_secret_key
 S3_BUCKET=your_bucket_name
 S3_REGION=us-east-1
+
+# Database Migrations (optional settings)
+# DISABLE_MIGRATIONS=false
+# AUTO_MIGRATE=true
+# ROLLBACK_ON_ERROR=true
+# APPROVED_DANGEROUS_MIGRATIONS=migration_name1,migration_name2
 ```
 
 ### Running the Application
@@ -70,6 +83,32 @@ deno task start
 ```
 
 The application will be available at `http://localhost:8000`.
+
+### Database Migrations
+
+Barsistant includes a database migration system for managing changes to the
+database schema and data. The migrations will automatically run on application
+startup (configurable).
+
+To create a new migration:
+
+```bash
+deno task migration:create migration_name "Description of the migration"
+```
+
+To check migration status:
+
+```bash
+deno task migration:status
+```
+
+To run pending migrations:
+
+```bash
+deno task migration:run
+```
+
+For more details, see [Database Migration System](docs/migrations.md).
 
 ### Running Tests
 
@@ -94,7 +133,8 @@ deno task test path/to/test/file.ts
 ## Environment Variables
 
 Barsistant requires a `.env` file in the project root for provider-agnostic AI
-integration. See `.env.example` for a template.
+integration. The `.env.example` file provides a template with all required and
+optional variables.
 
 - `AI_PROVIDER`: The AI provider to use (e.g. `openai`, `anthropic`).
 - `OPENAI_API_KEY`: The API key for the selected provider. This is required for
@@ -103,23 +143,30 @@ integration. See `.env.example` for a template.
   `gpt-4o`, `gpt-4`, `claude-3-opus-20240229`). Defaults to `gpt-4o` for OpenAI
   if not set.
 
-No setup script is required—just copy `.env.example` to `.env` and fill in your
-values before running the app or tests.
+To get started quickly:
+
+```bash
+cp .env.example .env
+```
+
+Then edit the `.env` file with your specific values before running the app or
+tests.
 
 ## S3 Image Upload Configuration
 
 To enable AI-generated cocktail image uploads, set the following environment
 variables:
 
-- `S3_ENDPOINT`: The S3-compatible endpoint URL (e.g., https://s3.amazonaws.com
-  or your MinIO/Supabase endpoint)
+- `S3_ENDPOINT`: The S3-compatible endpoint URL (e.g.,
+  `https://s3.amazonaws.com` or your MinIO/Supabase endpoint)
 - `S3_ACCESS_KEY_ID`: Your S3 access key ID
 - `S3_SECRET_ACCESS_KEY`: Your S3 secret access key
 - `S3_BUCKET`: The bucket name to store images
 - `S3_REGION`: (Optional) The S3 region (default: us-east-1)
 
-For local development, copy `.env.example` to `.env` and fill in your values.
-For production, set these variables in your deployment environment.
+These variables are already included in the `.env.example` template. For local
+development, fill them in your `.env` file. For production, set these variables
+in your deployment environment.
 
 ## Project Structure
 
@@ -208,6 +255,7 @@ The project uses Fresh with Tailwind CSS v4 and DaisyUI v5:
 1. Fresh's Tailwind plugin is configured via `@pakornv/fresh-plugin-tailwindcss`
 2. DaisyUI themes are configured directly in
    [`static/styles.css`](static/styles.css):
+
    ```css
    @import "tailwindcss";
 

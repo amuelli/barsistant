@@ -22,15 +22,24 @@ applyTo: '**'
 1. Work on one task at a time (see docs/tasks.md)
 2. Plan before coding; start with types, then implement core logic
 3. Add error handling and inline documentation
-4. Integrate with existing code and test thoroughly
-5. Use Browser MCP for UI verification, write unit tests for backend/logic
-   - Always run tests using `deno task test` rather than directly with
-     `deno test`
-   - This ensures consistent test execution with the correct permissions and
-     environment
+4. Integrate with existing code
+5. Write and run tests (MANDATORY)
+   - Write unit tests for all backend/logic components
+   - Use Browser MCP for UI verification when applicable
+   - ALWAYS run the full test suite using `deno task test` before considering a
+     task complete
+   - Fix any failing tests before proceeding
+   - This is a critical step and cannot be skipped under any circumstances
+   - Tests must pass with the correct permissions and environment settings
 6. Update docs as needed (README.md, docs/tasks.md, etc.)
-7. After user confirms completion, mark the task as done in docs/tasks.md and
-   commit with a descriptive message
+7. Perform a final verification checklist:
+   - ✓ All code is implemented
+   - ✓ All tests are passing (`deno task test`)
+   - ✓ All lint checks are passing (`deno task check`)
+   - ✓ Documentation is updated
+   - ✓ No TypeScript errors or warnings
+8. Only after completing steps 1-7 and receiving user confirmation, mark the
+   task as done in docs/tasks.md and commit with a descriptive message
 
 - Keep task descriptions in docs/tasks.md short and concise. If more detail is
   needed, add it to project.instructions.md or another appropriate documentation
@@ -43,6 +52,22 @@ applyTo: '**'
 - Use provider-agnostic AI SDK for extraction (see utils/ai-provider.ts)
 - UI: Use Tailwind CSS and DaisyUI (see static/styles.css, tailwind.config.ts)
 - Ensure accessibility and responsive design
+
+## Testing and Quality Assurance Requirements
+
+- Write comprehensive tests for all new functionality
+- Test coverage should include:
+  - Unit tests for utility functions and core logic
+  - Integration tests for database operations
+  - Basic UI tests for components
+- Follow Test-Driven Development (TDD) principles when appropriate
+- Use mock data and test fixtures to isolate test cases
+- Verify edge cases and error handling paths
+- Run the following commands before considering any implementation complete:
+  - `deno task test` - Verify all tests are passing
+  - `deno task check` - Verify all lint checks are passing
+- DO NOT mark a task as complete until ALL tests AND lint checks pass
+- Address any warnings, not just errors, from both tests and linting
 
 ## Error Handling & Security
 
@@ -70,7 +95,7 @@ applyTo: '**'
   needed.
 - Example:
 
-  ```
+  ```text
   feat(AI-3): implement ai provider
 
   - Add provider-agnostic AI SDK integration
