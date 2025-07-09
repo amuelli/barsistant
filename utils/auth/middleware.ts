@@ -1,6 +1,6 @@
+import { User } from "../../types/user.ts";
 import { getUserSession, updateSessionActivity } from "./session.ts";
 import { findUserById } from "./user.ts";
-import { User } from "../../types/user.ts";
 
 export interface AuthenticatedRequest extends Request {
   user?: User;
@@ -13,7 +13,9 @@ export interface AuthenticatedRequest extends Request {
 export function getSessionIdFromRequest(request: Request): string | null {
   const cookies = request.headers.get("cookie") || "";
   const sessionMatch = cookies.match(/session=([^;]+)/);
-  return sessionMatch ? sessionMatch[1] : null;
+  const sessionId = sessionMatch ? sessionMatch[1] : null;
+
+  return sessionId;
 }
 
 /**
@@ -145,7 +147,7 @@ export function createSessionResponse(
 
   headers.set(
     "Set-Cookie",
-    `session=${sessionId}; HttpOnly${secureFlag}; SameSite=Strict; Max-Age=${
+    `session=${sessionId}; HttpOnly${secureFlag}; SameSite=Lax; Max-Age=${
       30 * 24 * 60 * 60
     }; Path=/`,
   );

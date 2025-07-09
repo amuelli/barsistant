@@ -1,6 +1,6 @@
 import { useContext } from "preact/hooks";
-import { AuthContext } from "../utils/auth/context.ts";
 import { User } from "../types/user.ts";
+import { AuthContext } from "../utils/auth/context.ts";
 
 interface AuthNavProps {
   user?: User | null;

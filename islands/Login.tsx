@@ -90,12 +90,19 @@ export default function Login() {
             <div class="form-control mt-6">
               <button
                 type="submit"
-                class={`btn btn-primary w-full ${
-                  loading.value ? "loading" : ""
-                }`}
+                class="btn btn-primary w-full"
                 disabled={loading.value}
               >
-                {loading.value ? "Sending..." : "Send Magic Link"}
+                {loading.value
+                  ? (
+                    <>
+                      <span class="loading loading-spinner"></span>
+                      Sending...
+                    </>
+                  )
+                  : (
+                    "Send Magic Link"
+                  )}
               </button>
             </div>
           </form>
