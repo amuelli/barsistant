@@ -23,11 +23,7 @@ export interface User {
  */
 export interface UserPreferences {
   theme: "light" | "dark" | "system";
-  favoriteSpirits: string[]; // IDs of favorite spirits
-  dislikedIngredients: string[]; // IDs of disliked ingredients
   preferredMeasurementUnit: "metric" | "imperial" | "both";
-  showAlcoholContent: boolean;
-  showCalories: boolean;
 }
 
 /**

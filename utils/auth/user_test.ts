@@ -1,4 +1,6 @@
 import { assertEquals, assertNotEquals } from "@std/assert";
+import { User } from "../../types/user.ts";
+import { kv } from "../db/db.ts";
 import {
   createDefaultUserPreferences,
   createUser,
@@ -8,8 +10,6 @@ import {
   updateUserLastLogin,
   updateUserPreferences,
 } from "./user.ts";
-import { kv } from "../db/db.ts";
-import { User } from "../../types/user.ts";
 
 Deno.test("generateUserId", async (t) => {
   await t.step("should generate valid UUID", () => {
@@ -31,11 +31,7 @@ Deno.test("createDefaultUserPreferences", async (t) => {
     const preferences = createDefaultUserPreferences();
 
     assertEquals(preferences.theme, "system");
-    assertEquals(preferences.favoriteSpirits.length, 0);
-    assertEquals(preferences.dislikedIngredients.length, 0);
     assertEquals(preferences.preferredMeasurementUnit, "imperial");
-    assertEquals(preferences.showAlcoholContent, true);
-    assertEquals(preferences.showCalories, false);
   });
 });
 
@@ -212,14 +208,11 @@ Deno.test("updateUserPreferences", async (t) => {
   await t.step("should update user preferences", async () => {
     const newPreferences = {
       theme: "dark" as const,
-      showCalories: true,
     };
 
     const updatedUser = await updateUserPreferences(userId, newPreferences);
 
     assertEquals(updatedUser.preferences.theme, "dark");
-    assertEquals(updatedUser.preferences.showCalories, true);
-    assertEquals(updatedUser.preferences.showAlcoholContent, true); // Should preserve existing
   });
 
   await t.step("should throw error for non-existent user", async () => {

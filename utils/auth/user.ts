@@ -1,5 +1,5 @@
-import { kv } from "../db/db.ts";
 import { User, UserPreferences } from "../../types/user.ts";
+import { kv } from "../db/db.ts";
 
 /**
  * Generate a unique user ID
@@ -14,11 +14,7 @@ export function generateUserId(): string {
 export function createDefaultUserPreferences(): UserPreferences {
   return {
     theme: "system",
-    favoriteSpirits: [],
-    dislikedIngredients: [],
     preferredMeasurementUnit: "imperial",
-    showAlcoholContent: true,
-    showCalories: false,
   };
 }
 

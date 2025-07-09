@@ -60,7 +60,7 @@ export default function AuthNav({ user: propUser }: AuthNavProps = {}) {
         tabIndex={0}
         class="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52"
       >
-        <li>
+        <li class="menu-title">
           <span class="text-sm text-base-content/70">
             {user?.email}
           </span>
@@ -86,8 +86,8 @@ export default function AuthNav({ user: propUser }: AuthNavProps = {}) {
             Profile
           </a>
         </li>
-        <li>
-          <a href="/favorites">
+        <li class="disabled">
+          <span class="flex items-center gap-2">
             <svg
               class="w-4 h-4"
               fill="none"
@@ -101,11 +101,11 @@ export default function AuthNav({ user: propUser }: AuthNavProps = {}) {
                 d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
               />
             </svg>
-            Favorites
-          </a>
+            Favorites (coming soon)
+          </span>
         </li>
-        <li>
-          <a href="/inventory">
+        <li class="disabled">
+          <span class="flex items-center gap-2">
             <svg
               class="w-4 h-4"
               fill="none"
@@ -119,8 +119,8 @@ export default function AuthNav({ user: propUser }: AuthNavProps = {}) {
                 d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"
               />
             </svg>
-            Inventory
-          </a>
+            Inventory (coming soon)
+          </span>
         </li>
         <li>
           <hr class="my-1" />
@@ -133,7 +133,7 @@ export default function AuthNav({ user: propUser }: AuthNavProps = {}) {
               e.stopPropagation();
               await logout();
             }}
-            class="text-error"
+            class="text-error flex items-center gap-2"
           >
             <svg
               class="w-4 h-4"

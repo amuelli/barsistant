@@ -1,6 +1,6 @@
 import { User } from "../../types/user.ts";
 import { getUserSession, updateSessionActivity } from "./session.ts";
-import { findUserById } from "./user.ts";
+import { findUserById, updateUserLastLogin } from "./user.ts";
 
 export interface AuthenticatedRequest extends Request {
   user?: User;
@@ -88,7 +88,13 @@ export async function requireAuth(
       });
     }
 
-    return { user, sessionId };
+    // Update lastLoginAt on every successful authentication
+    await updateUserLastLogin(user.id);
+
+    return {
+      user: { ...user, lastLoginAt: new Date().toISOString() },
+      sessionId,
+    };
   } catch (error) {
     console.error("Error in requireAuth middleware:", error);
     return new Response(JSON.stringify({ error: "Authentication error" }), {

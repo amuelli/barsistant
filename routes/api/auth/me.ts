@@ -1,4 +1,5 @@
 import { FreshContext } from "fresh";
+import { UserPreferences } from "../../../types/user.ts";
 import { getUserSession } from "../../../utils/auth/session.ts";
 import { findUserById } from "../../../utils/auth/user.ts";
 
@@ -8,14 +9,7 @@ interface MeResponse {
     id: string;
     email: string;
     displayName: string;
-    preferences: {
-      theme: string;
-      favoriteSpirits: string[];
-      dislikedIngredients: string[];
-      preferredMeasurementUnit: string;
-      showAlcoholContent: boolean;
-      showCalories: boolean;
-    };
+    preferences: UserPreferences;
     createdAt: string;
     lastLoginAt?: string;
   };

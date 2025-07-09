@@ -1,7 +1,15 @@
+import { User, UserPreferences } from "../types/user.ts";
 import { define } from "../utils.ts";
-import { requireAuth } from "../utils/auth/middleware.ts";
+import { createLogoutResponse, requireAuth } from "../utils/auth/middleware.ts";
+import { deleteUserSession } from "../utils/auth/session.ts";
+import { updateUserPreferences } from "../utils/auth/user.ts";
 
-export const handler = define.handlers({
+interface ProfileData {
+  user: User;
+  editPreferences?: boolean;
+}
+
+export const handler = define.handlers<ProfileData>({
   async GET(ctx) {
     ctx.state.title = "Profile";
 
@@ -15,7 +23,83 @@ export const handler = define.handlers({
     }
 
     const { user } = authResult;
-    return { data: { user } };
+    const url = new URL(ctx.req.url);
+    const editPreferences = url.searchParams.get("editPreferences") === "true";
+
+    return { data: { user, editPreferences } };
+  },
+
+  async POST(ctx) {
+    const formData = await ctx.req.formData();
+    const action = formData.get("_action");
+
+    // Require authentication for all POST actions
+    const authResult = await requireAuth(ctx.req);
+    if (authResult instanceof Response) {
+      return new Response(null, {
+        status: 302,
+        headers: { "Location": "/auth/login" },
+      });
+    }
+    const { user } = authResult;
+
+    if (action === "signOut") {
+      // Get session ID from cookie
+      const cookies = ctx.req.headers.get("cookie") || "";
+      const sessionMatch = cookies.match(/session=([^;]+)/);
+      const sessionId = sessionMatch ? sessionMatch[1] : null;
+
+      if (sessionId) {
+        // Delete the session from database
+        await deleteUserSession(sessionId);
+      }
+
+      // Return a logout response that clears the session cookie
+      return createLogoutResponse(null, {
+        status: 302,
+        headers: { "Location": "/auth/login" },
+      });
+    } else if (action === "editPreferences") {
+      // Redirect to the same page with edit mode enabled
+      return new Response(null, {
+        status: 302,
+        headers: { "Location": "/profile?editPreferences=true" },
+      });
+    } else if (action === "updatePreferences") {
+      // Update user preferences
+      const theme = formData.get("theme") as "light" | "dark" | "system";
+      const preferredMeasurementUnit = formData.get("measurementUnit") as
+        | "metric"
+        | "imperial"
+        | "both";
+
+      // Create partial preferences object
+      const updatedPreferences: Partial<UserPreferences> = {
+        theme,
+        preferredMeasurementUnit,
+      };
+
+      // Update user preferences
+      await updateUserPreferences(user.id, updatedPreferences);
+
+      // Redirect back to profile page in view mode
+      return new Response(null, {
+        status: 302,
+        headers: { "Location": "/profile" },
+      });
+    } else if (action === "cancelEdit") {
+      // Redirect back to profile page in view mode
+      return new Response(null, {
+        status: 302,
+        headers: { "Location": "/profile" },
+      });
+    }
+
+    // For other actions, redirect back to profile
+    return new Response(null, {
+      status: 302,
+      headers: { "Location": "/profile" },
+    });
   },
 });
 
@@ -80,84 +164,136 @@ export default define.page<typeof handler>(({ data }) => {
           <div class="card-body">
             <h2 class="card-title mb-4">Preferences</h2>
 
-            <div class="space-y-4">
-              <div>
-                <label class="label">
-                  <span class="label-text font-medium">Theme</span>
-                </label>
-                <div class="text-base-content/80">{user.preferences.theme}</div>
-              </div>
+            {data.editPreferences
+              ? (
+                <form method="post" class="space-y-4">
+                  <input
+                    type="hidden"
+                    name="_action"
+                    value="updatePreferences"
+                  />
 
-              <div>
-                <label class="label">
-                  <span class="label-text font-medium">Measurement Unit</span>
-                </label>
-                <div class="text-base-content/80">
-                  {user.preferences.preferredMeasurementUnit}
-                </div>
-              </div>
-
-              <div>
-                <label class="label">
-                  <span class="label-text font-medium">
-                    Show Alcohol Content
-                  </span>
-                </label>
-                <div class="text-base-content/80">
-                  {user.preferences.showAlcoholContent ? "Yes" : "No"}
-                </div>
-              </div>
-
-              <div>
-                <label class="label">
-                  <span class="label-text font-medium">Show Calories</span>
-                </label>
-                <div class="text-base-content/80">
-                  {user.preferences.showCalories ? "Yes" : "No"}
-                </div>
-              </div>
-
-              {user.preferences.favoriteSpirits.length > 0 && (
-                <div>
-                  <label class="label">
-                    <span class="label-text font-medium">Favorite Spirits</span>
-                  </label>
-                  <div class="flex flex-wrap gap-2">
-                    {user.preferences.favoriteSpirits.map((spirit) => (
-                      <span key={spirit} class="badge badge-primary">
-                        {spirit}
-                      </span>
-                    ))}
+                  <div>
+                    <label class="label">
+                      <span class="label-text font-medium">Theme</span>
+                    </label>
+                    <select name="theme" class="select select-bordered w-full">
+                      <option
+                        value="light"
+                        selected={user.preferences.theme === "light"}
+                      >
+                        Light
+                      </option>
+                      <option
+                        value="dark"
+                        selected={user.preferences.theme === "dark"}
+                      >
+                        Dark
+                      </option>
+                      <option
+                        value="system"
+                        selected={user.preferences.theme === "system"}
+                      >
+                        System
+                      </option>
+                    </select>
                   </div>
-                </div>
-              )}
 
-              {user.preferences.dislikedIngredients.length > 0 && (
-                <div>
-                  <label class="label">
-                    <span class="label-text font-medium">
-                      Disliked Ingredients
-                    </span>
-                  </label>
-                  <div class="flex flex-wrap gap-2">
-                    {user.preferences.dislikedIngredients.map((ingredient) => (
-                      <span key={ingredient} class="badge badge-error">
-                        {ingredient}
+                  <div>
+                    <label class="label">
+                      <span class="label-text font-medium">
+                        Measurement Unit
                       </span>
-                    ))}
+                    </label>
+                    <select
+                      name="measurementUnit"
+                      class="select select-bordered w-full"
+                    >
+                      <option
+                        value="metric"
+                        selected={user.preferences.preferredMeasurementUnit ===
+                          "metric"}
+                      >
+                        Metric
+                      </option>
+                      <option
+                        value="imperial"
+                        selected={user.preferences.preferredMeasurementUnit ===
+                          "imperial"}
+                      >
+                        Imperial
+                      </option>
+                      <option
+                        value="both"
+                        selected={user.preferences.preferredMeasurementUnit ===
+                          "both"}
+                      >
+                        Both
+                      </option>
+                    </select>
                   </div>
-                </div>
-              )}
-            </div>
 
-            <div class="card-actions justify-end mt-6">
-              <button type="button" class="btn btn-primary">
-                Edit Preferences
-              </button>
-            </div>
+                  <div class="card-actions justify-end mt-6 space-x-2">
+                    <button
+                      type="submit"
+                      name="_action"
+                      value="cancelEdit"
+                      class="btn btn-outline"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      class="btn btn-primary"
+                    >
+                      Save Preferences
+                    </button>
+                  </div>
+                </form>
+              )
+              : (
+                <>
+                  <div class="space-y-4">
+                    <div>
+                      <label class="label">
+                        <span class="label-text font-medium">Theme</span>
+                      </label>
+                      <div class="text-base-content/80">
+                        {user.preferences.theme.charAt(0).toUpperCase() +
+                          user.preferences.theme.slice(1)}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="label">
+                        <span class="label-text font-medium">
+                          Measurement Unit
+                        </span>
+                      </label>
+                      <div class="text-base-content/80">
+                        {user.preferences.preferredMeasurementUnit.charAt(0)
+                          .toUpperCase() +
+                          user.preferences.preferredMeasurementUnit.slice(1)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="card-actions justify-end mt-6">
+                    <form method="post">
+                      <button
+                        type="submit"
+                        name="_action"
+                        value="editPreferences"
+                        class="btn btn-primary"
+                      >
+                        Edit Preferences
+                      </button>
+                    </form>
+                  </div>
+                </>
+              )}
           </div>
         </div>
-
         {/* Account Actions Card */}
         <div class="card bg-base-100 shadow-xl">
           <div class="card-body">
@@ -166,14 +302,21 @@ export default define.page<typeof handler>(({ data }) => {
             <div class="space-y-3">
               <div class="flex justify-between items-center">
                 <div>
-                  <h3 class="font-medium">Export Data</h3>
+                  <h3 class="font-medium">Sign Out</h3>
                   <p class="text-sm text-base-content/70">
-                    Download your account data
+                    Log out of your account
                   </p>
                 </div>
-                <button type="button" class="btn btn-outline btn-sm">
-                  Export
-                </button>
+                <form method="post">
+                  <button
+                    type="submit"
+                    name="_action"
+                    value="signOut"
+                    class="btn btn-outline btn-primary btn-sm"
+                  >
+                    Sign Out
+                  </button>
+                </form>
               </div>
 
               <div class="divider"></div>
