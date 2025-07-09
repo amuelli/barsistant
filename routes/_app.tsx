@@ -1,8 +1,27 @@
 import { PageProps } from "fresh";
+import AuthNav from "../islands/AuthNav.tsx";
+import AuthProvider from "../islands/AuthProvider.tsx";
 import { State } from "../utils.ts";
 
 export default function App(
   { Component, state, url }: PageProps<unknown, State>,
+) {
+  // User is now available from middleware via state
+  const user = state.user;
+
+  return (
+    <AuthProvider initialUser={user}>
+      <AppContent Component={Component} state={state} url={url} />
+    </AuthProvider>
+  );
+}
+
+function AppContent(
+  { Component, state, url }: {
+    Component: preact.ComponentType<unknown>;
+    state: State;
+    url: URL;
+  },
 ) {
   return (
     <html lang="en">
@@ -39,6 +58,9 @@ export default function App(
                     <a href="/extract">Extract Recipe</a>
                   </li>
                 </ul>
+              </div>
+              <div class="flex-none">
+                <AuthNav user={state.user} />
               </div>
             </div>
 
@@ -129,6 +151,40 @@ export default function App(
               </svg>
               <span class="dock-label">Extract</span>
             </a>
+            {state.user
+              ? (
+                <a
+                  href="/profile"
+                  class={url.pathname === "/profile" ? "dock-active" : ""}
+                >
+                  <div class="w-5 h-5 rounded-full bg-primary text-primary-content flex items-center justify-center text-xs">
+                    {state.user.displayName?.charAt(0)?.toUpperCase() || "U"}
+                  </div>
+                  <span class="dock-label">Profile</span>
+                </a>
+              )
+              : (
+                <a
+                  href="/auth/login"
+                  class={url.pathname === "/auth/login" ? "dock-active" : ""}
+                >
+                  <svg
+                    class="size-[1.2em]"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                    />
+                  </svg>
+                  <span class="dock-label">Sign In</span>
+                </a>
+              )}
           </div>
         </div>
       </body>

@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(deno task:*)",
+      "Bash(deno fmt:*)",
+      "Bash(mv:*)",
+      "Bash(deno check:*)",
+      "WebFetch(domain:fresh.deno.dev)",
+      "Bash(deno run:*)",
+      "Bash(grep:*)",
+      "WebFetch(domain:daisyui.com)",
+      "Bash(deno lint:*)"
+    ],
+    "deny": []
+  }
+}

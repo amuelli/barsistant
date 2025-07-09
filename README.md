@@ -10,6 +10,7 @@ cocktail recipes with AI-powered recipe extraction capabilities.
   YouTube videos, blogs)
 - **AI Image Generation**: Create beautiful cocktail images with OpenAI and
   vector (SVG) images with recraft.ai
+- **Magic Link Authentication**: Secure passwordless authentication via email
 - **Ingredient Tracking**: Manage your home bar inventory
 - **Recipe Discovery**: Find cocktails based on available ingredients
 - **Personalization**: Save favorites and add personal notes to recipes
@@ -49,6 +50,11 @@ Then edit the `.env` file with your specific configuration:
 # AI Provider settings
 AI_PROVIDER=openai
 OPENAI_API_KEY=your_openai_api_key_here
+
+# Authentication & Email Configuration
+RESEND_API_KEY=your_resend_api_key_here
+FROM_EMAIL=noreply@yourdomain.com  # optional
+FROM_NAME=Your App Name            # optional
 
 # Optional: Recraft.ai integration for vector images
 RECRAFT_API_TOKEN=your_recraft_api_token_here
@@ -151,6 +157,35 @@ cp .env.example .env
 
 Then edit the `.env` file with your specific values before running the app or
 tests.
+
+## Authentication Configuration
+
+Barsistant uses magic link authentication powered by Resend for email delivery.
+To enable authentication:
+
+### Required Environment Variables:
+
+- `RESEND_API_KEY`: Your Resend API key for sending magic link emails
+
+### Optional Environment Variables:
+
+- `FROM_EMAIL`: Email address for sending magic links (default:
+  `hello@barsistant.com`)
+- `FROM_NAME`: Display name for emails (default: `Barsistant`)
+
+### Setting up Resend:
+
+1. Sign up for a free account at [resend.com](https://resend.com)
+2. Create an API key in your Resend dashboard
+3. Add the API key to your `.env` file as `RESEND_API_KEY`
+4. (Optional) Configure a custom domain for professional emails
+
+### Authentication Features:
+
+- **Passwordless Login**: Users sign in via magic links sent to their email
+- **Rate Limiting**: Protection against spam and abuse
+- **Session Management**: Secure session handling with HttpOnly cookies
+- **Security**: CSRF protection, bot detection, and secure headers
 
 ## S3 Image Upload Configuration
 
