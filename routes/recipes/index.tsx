@@ -5,44 +5,35 @@ import { recipeModel } from "../../utils/db/recipe-model.ts";
 export const handler = define.handlers({
   async GET(ctx) {
     ctx.state.title = "Recipes";
-    const recipes = await recipeModel.listAll(30);
-    return { data: recipes };
+    const url = ctx.url;
+    const query = url.searchParams.get("query") || "";
+    let recipes;
+    if (query) {
+      recipes = await recipeModel.search({ query, limit: 100 });
+    } else {
+      recipes = await recipeModel.listAll(30);
+    }
+    return { data: { recipes, query } };
   },
 });
 
 export default define.page<typeof handler>(
-  ({ data: recipes }) => {
+  ({ data }) => {
+    const { recipes, query } = data;
     return (
       <div class="container mx-auto p-4">
         <h1 class="text-4xl font-bold mb-6">Cocktail Recipes</h1>
-
-        <div class="flex mb-6">
+        <form method="GET" class="flex mb-6">
           <input
             type="text"
+            name="query"
             placeholder="Search recipes..."
             class="input input-bordered w-full max-w-xs mr-2"
+            value={query}
+            aria-label="Search recipes"
           />
-          <div class="dropdown">
-            <div tabIndex={0} role="button" class="btn">
-              Filter
-            </div>
-            <ul
-              tabIndex={0}
-              class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
-            >
-              <li>
-                <a>All Recipes</a>
-              </li>
-              <li>
-                <a>Whiskey</a>
-              </li>
-              <li>
-                <a>Gin</a>
-              </li>
-            </ul>
-          </div>
-        </div>
-
+          <button type="submit" class="btn">Search</button>
+        </form>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {recipes.map((recipe) => (
             <a
@@ -57,7 +48,7 @@ export default define.page<typeof handler>(
                     recipe={recipe}
                     className="w-full h-48"
                     imageClassName="w-full h-48 object-contain relative"
-                    maxHeight="192px" /* 48 * 4px = 192px */
+                    maxHeight="192px"
                     showRegenerateButton={false}
                     gradientOpacity={0.15}
                   />
