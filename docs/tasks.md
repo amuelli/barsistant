@@ -161,21 +161,21 @@ solution for the Barsistant application.
 
 ## User Management Tasks
 
-| Status | Task ID | Description                              | Complexity | Dependencies   |
-| ------ | ------- | ---------------------------------------- | ---------- | -------------- |
-| ✅     | USER-1  | Implement magic link authentication      | Medium     | DB-1           |
-| ✅     | USER-2  | Create user profile model and storage    | Medium     | DB-1, USER-1   |
-| ✅     | USER-3  | Implement user preferences storage       | Medium     | USER-2         |
-| ✅     | USER-4  | Create session management with Deno KV   | Medium     | USER-1         |
-| ✅     | USER-5  | Implement authentication middleware      | Medium     | USER-1, USER-4 |
-| ✅     | USER-6  | Create login and email verification UI   | Medium     | UI-1, USER-1   |
-| ✅     | USER-7  | Set up email sending service             | Medium     | None           |
-| ✅     | USER-8  | Implement session expiration and renewal | Low        | USER-4         |
-| ✅     | USER-9  | Add rate limiting for auth requests      | Low        | USER-1         |
-| ✅     | USER-10 | Create user profile settings UI          | Medium     | UI-7, USER-2   |
-| ✅     | USER-11 | Implement admin mode with recipe management | Medium  | USER-1, USER-2, DB-3 |
-|        | USER-12 | Implement user recipe collections        | Medium     | USER-2, DB-3   |
-|        | USER-13 | Create recipe notes functionality        | Medium     | USER-2, DB-3   |
+| Status | Task ID | Description                                 | Complexity | Dependencies         |
+| ------ | ------- | ------------------------------------------- | ---------- | -------------------- |
+| ✅     | USER-1  | Implement magic link authentication         | Medium     | DB-1                 |
+| ✅     | USER-2  | Create user profile model and storage       | Medium     | DB-1, USER-1         |
+| ✅     | USER-3  | Implement user preferences storage          | Medium     | USER-2               |
+| ✅     | USER-4  | Create session management with Deno KV      | Medium     | USER-1               |
+| ✅     | USER-5  | Implement authentication middleware         | Medium     | USER-1, USER-4       |
+| ✅     | USER-6  | Create login and email verification UI      | Medium     | UI-1, USER-1         |
+| ✅     | USER-7  | Set up email sending service                | Medium     | None                 |
+| ✅     | USER-8  | Implement session expiration and renewal    | Low        | USER-4               |
+| ✅     | USER-9  | Add rate limiting for auth requests         | Low        | USER-1               |
+| ✅     | USER-10 | Create user profile settings UI             | Medium     | UI-7, USER-2         |
+| ✅     | USER-11 | Implement admin mode with recipe management | Medium     | USER-1, USER-2, DB-3 |
+|        | USER-12 | Implement user recipe collections           | Medium     | USER-2, DB-3         |
+|        | USER-13 | Create recipe notes functionality           | Medium     | USER-2, DB-3         |
 
 ## Inventory Management Tasks
 

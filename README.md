@@ -207,7 +207,8 @@ administration. Admin access is controlled by a single environment variable.
 
 2. Sign in with the specified email using the normal magic link authentication
 
-3. Once signed in, admin users will see an "Admin" link in their user dropdown and mobile navigation dock
+3. Once signed in, admin users will see an "Admin" link in their user dropdown
+   and mobile navigation dock
 
 ### Admin Features:
 
