@@ -289,7 +289,7 @@ export const recipeModel = {
   },
 
   /**
-   * Delete a recipe by ID
+   * Delete a recipe by ID and all related user data
    *
    * @param id Recipe ID
    * @returns True if successfully deleted, false if recipe not found
@@ -326,6 +326,22 @@ export const recipeModel = {
 
       // Delete sweetness index
       transaction.delete(["sweetness_recipes", existingRecipe.sweetness, id]);
+
+      // Delete all user favorites for this recipe
+      for await (const entry of kv.list({ prefix: ["user_favorites"] })) {
+        const key = entry.key as [string, string, string];
+        if (key.length === 3 && key[2] === id) {
+          transaction.delete(key);
+        }
+      }
+
+      // Delete all user notes for this recipe
+      for await (const entry of kv.list({ prefix: ["user_notes"] })) {
+        const key = entry.key as [string, string, string];
+        if (key.length === 3 && key[2] === id) {
+          transaction.delete(key);
+        }
+      }
 
       // Commit transaction
       const result = await transaction.commit();

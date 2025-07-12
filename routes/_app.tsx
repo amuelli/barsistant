@@ -1,6 +1,7 @@
 import { PageProps } from "fresh";
 import AuthNav from "../islands/AuthNav.tsx";
 import AuthProvider from "../islands/AuthProvider.tsx";
+import { checkAdminFromUser } from "../utils/auth/admin.ts";
 import { State } from "../utils.ts";
 
 export default function App(
@@ -8,19 +9,26 @@ export default function App(
 ) {
   // User is now available from middleware via state
   const user = state.user;
+  const isAdmin = checkAdminFromUser(user);
 
   return (
     <AuthProvider initialUser={user}>
-      <AppContent Component={Component} state={state} url={url} />
+      <AppContent
+        Component={Component}
+        state={state}
+        url={url}
+        isAdmin={isAdmin}
+      />
     </AuthProvider>
   );
 }
 
 function AppContent(
-  { Component, state, url }: {
+  { Component, state, url, isAdmin }: {
     Component: preact.ComponentType<unknown>;
     state: State;
     url: URL;
+    isAdmin: boolean;
   },
 ) {
   return (
@@ -60,7 +68,7 @@ function AppContent(
                 </ul>
               </div>
               <div class="flex-none">
-                <AuthNav user={state.user} />
+                <AuthNav user={state.user} isAdmin={isAdmin} />
               </div>
             </div>
 

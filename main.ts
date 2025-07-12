@@ -1,4 +1,3 @@
-import "@std/dotenv/load";
 import { App, fsRoutes, staticFiles } from "fresh";
 import { type State } from "./utils.ts";
 import { runMigrationsOnStartup } from "./utils/db/migration-runner.ts";

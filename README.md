@@ -11,6 +11,7 @@ cocktail recipes with AI-powered recipe extraction capabilities.
 - **AI Image Generation**: Create beautiful cocktail images with OpenAI and
   vector (SVG) images with recraft.ai
 - **Magic Link Authentication**: Secure passwordless authentication via email
+- **Admin Mode**: Admin interface for recipe management and system administration
 - **Ingredient Tracking**: Manage your home bar inventory
 - **Recipe Discovery**: Find cocktails based on available ingredients
 - **Personalization**: Save favorites and add personal notes to recipes
@@ -55,6 +56,9 @@ OPENAI_API_KEY=your_openai_api_key_here
 RESEND_API_KEY=your_resend_api_key_here
 FROM_EMAIL=noreply@yourdomain.com  # optional
 FROM_NAME=Your App Name            # optional
+
+# Admin Configuration (optional)
+ADMIN_EMAIL=admin@yourdomain.com   # Email address for admin access
 
 # Optional: Recraft.ai integration for vector images
 RECRAFT_API_TOKEN=your_recraft_api_token_here
@@ -186,6 +190,39 @@ To enable authentication:
 - **Rate Limiting**: Protection against spam and abuse
 - **Session Management**: Secure session handling with HttpOnly cookies
 - **Security**: CSRF protection, bot detection, and secure headers
+
+## Admin Configuration
+
+Barsistant includes an admin mode for recipe management and system administration. Admin access is controlled by a single environment variable.
+
+### Setting up Admin Access:
+
+1. Set the `ADMIN_EMAIL` environment variable to the email address that should have admin privileges:
+   ```bash
+   ADMIN_EMAIL=admin@yourdomain.com
+   ```
+
+2. Sign in with the specified email using the normal magic link authentication
+
+3. Once signed in, admin users will see an "Admin" link in their user dropdown
+
+### Admin Features:
+
+- **Recipe Management**: View, search, and delete recipes
+- **Comprehensive Data Cleanup**: Recipe deletion removes all associated user favorites and notes
+- **Search and Pagination**: Efficiently manage large numbers of recipes
+- **Audit Logging**: All admin actions are logged for security
+
+### Admin Routes:
+
+- `/admin` - Admin dashboard
+- `/admin/recipes` - Recipe management interface
+
+### Security:
+
+- Admin access is restricted to the single email specified in `ADMIN_EMAIL`
+- All admin routes require both authentication and admin verification
+- Atomic database operations ensure data consistency during deletions
 
 ## S3 Image Upload Configuration
 
