@@ -1,6 +1,7 @@
 import { FreshContext } from "fresh";
 import { enqueueJob } from "../../../utils/db/queue-handler.ts";
 import { recipeModel } from "../../../utils/db/recipe-model.ts";
+import { requireAdmin } from "../../../utils/auth/admin.ts";
 
 export async function handler(ctx: FreshContext) {
   const id = ctx.params.id;
@@ -95,6 +96,12 @@ async function handlePost(id: string, req: Request) {
 
     // Handle regenerating image
     if (body.action === "regenerateImage") {
+      // Check admin authorization for regenerate action
+      const adminCheck = await requireAdmin(req);
+      if (adminCheck instanceof Response) {
+        return adminCheck; // Return the error response
+      }
+
       // Enqueue a job to generate a new image
       await enqueueJob({
         type: "generate_recipe_raster_image",

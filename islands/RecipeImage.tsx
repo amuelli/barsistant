@@ -10,6 +10,7 @@ interface RecipeImageProps {
   showRegenerateButton?: boolean;
   showGradientBackground?: boolean;
   gradientOpacity?: number;
+  isAdmin?: boolean;
 }
 
 export default function RecipeImage(
@@ -22,6 +23,7 @@ export default function RecipeImage(
     showRegenerateButton = true,
     showGradientBackground = true,
     gradientOpacity = 0.2,
+    isAdmin = false,
   }: RecipeImageProps,
 ) {
   const [recipe, setRecipe] = useState(initialRecipe);
@@ -121,7 +123,7 @@ export default function RecipeImage(
           class={`${imageClassName} relative`}
           style={containerStyle}
         />
-        {showRegenerateButton && (
+        {showRegenerateButton && isAdmin && (
           <div class="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               type="button"
@@ -144,7 +146,7 @@ export default function RecipeImage(
         }}
       >
         <span class="text-gray-400 mb-4">No image available</span>
-        {showRegenerateButton && (
+        {showRegenerateButton && isAdmin && (
           <button
             type="button"
             onClick={handleRegenerateImage}

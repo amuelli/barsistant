@@ -2,6 +2,7 @@ import { HttpError } from "fresh";
 import RecipeImage from "../../islands/RecipeImage.tsx";
 import { define } from "../../utils.ts";
 import { recipeModel } from "../../utils/db/recipe-model.ts";
+import { checkAdminFromUser } from "../../utils/auth/admin.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -16,7 +17,8 @@ export const handler = define.handlers({
 });
 
 export default define.page<typeof handler>(
-  ({ data: recipe }) => {
+  ({ data: recipe, state }) => {
+    const isAdmin = checkAdminFromUser(state.user);
     return (
       <div class="container mx-auto p-3 md:p-4 pb-8 md:pb-12">
         {/* Hero Image Section with Gradient Background */}
@@ -27,6 +29,7 @@ export default define.page<typeof handler>(
               className="w-full max-h-[250px] md:max-h-[300px]"
               imageClassName="w-full max-h-[250px] md:max-h-[300px] object-contain relative rounded-lg"
               gradientOpacity={0.2}
+              isAdmin={isAdmin}
             />
           </div>
         </div>
