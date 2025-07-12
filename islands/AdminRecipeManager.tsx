@@ -157,9 +157,9 @@ export default function AdminRecipeManager() {
     <div>
       {/* Search and Controls */}
       <div class="card bg-base-200 shadow-lg mb-6">
-        <div class="card-body">
-          <div class="flex flex-col sm:flex-row gap-4">
-            <div class="form-control flex-1">
+        <div class="card-body p-4">
+          <div class="flex flex-col gap-4">
+            <div class="form-control">
               <input
                 type="text"
                 value={searchTerm}
@@ -170,46 +170,48 @@ export default function AdminRecipeManager() {
                 class="input input-bordered w-full"
               />
             </div>
-            <button
-              type="button"
-              onClick={handleSearch}
-              class="btn btn-primary"
-            >
-              <svg
-                class="w-4 h-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <div class="flex flex-col sm:flex-row gap-2">
+              <button
+                type="button"
+                onClick={handleSearch}
+                class="btn btn-primary flex-1 sm:flex-none"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-              Search
-            </button>
-            <button
-              type="button"
-              onClick={handleRefresh}
-              class="btn btn-outline"
-            >
-              <svg
-                class="w-4 h-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                <svg
+                  class="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+                Search
+              </button>
+              <button
+                type="button"
+                onClick={handleRefresh}
+                class="btn btn-outline flex-1 sm:flex-none"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-              Refresh
-            </button>
+                <svg
+                  class="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                Refresh
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -245,7 +247,104 @@ export default function AdminRecipeManager() {
             )
             : (
               <>
-                <div class="overflow-x-auto">
+                {/* Mobile Card Layout - visible on small screens */}
+                <div class="lg:hidden space-y-4">
+                  {recipes.map((recipe) => (
+                    <div key={recipe.id} class="card bg-base-200 shadow">
+                      <div class="card-body p-4">
+                        <div class="flex justify-between items-start mb-3">
+                          <div class="flex-1 min-w-0">
+                            <h3 class="font-semibold text-base leading-tight">
+                              {recipe.name}
+                            </h3>
+                            {recipe.description && (
+                              <p class="text-sm text-base-content/70 mt-1 line-clamp-2">
+                                {recipe.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <span class="font-medium text-base-content/80">
+                              Source:
+                            </span>
+                            <div class="text-base-content/70">
+                              {recipe.source?.name || "Unknown"}
+                            </div>
+                            {recipe.source?.url && (
+                              <div class="text-xs text-base-content/50 truncate">
+                                {truncateText(recipe.source.url, 30)}
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <span class="font-medium text-base-content/80">
+                              Created:
+                            </span>
+                            <div class="text-base-content/70">
+                              {formatDate(recipe.createdAt)}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="flex gap-2 mt-4">
+                          <a
+                            href={`/recipes/${recipe.id}`}
+                            class="btn btn-outline btn-sm flex-1"
+                            target="_blank"
+                          >
+                            <svg
+                              class="w-4 h-4 mr-1"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
+                            View
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDeleteClick(recipe)}
+                            class="btn btn-error btn-sm flex-1"
+                          >
+                            <svg
+                              class="w-4 h-4 mr-1"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop Table Layout - visible on large screens */}
+                <div class="hidden lg:block overflow-x-auto">
                   <table class="table table-zebra w-full">
                     <thead>
                       <tr>
@@ -306,25 +405,51 @@ export default function AdminRecipeManager() {
                 </div>
 
                 {/* Pagination */}
-                <div class="flex justify-between items-center mt-4">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-3 mt-6">
                   <button
                     type="button"
                     onClick={handlePreviousPage}
-                    class="btn btn-outline btn-sm"
+                    class="btn btn-outline btn-sm w-full sm:w-auto order-2 sm:order-1"
                     disabled={!currentCursor}
                   >
+                    <svg
+                      class="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 19l-7-7 7-7"
+                      />
+                    </svg>
                     Previous
                   </button>
-                  <span class="text-sm text-base-content/70">
-                    {/* Showing X recipes */}
+                  <span class="text-sm text-base-content/70 order-1 sm:order-2">
+                    {recipes.length} recipes
                   </span>
                   <button
                     type="button"
                     onClick={handleNextPage}
-                    class="btn btn-outline btn-sm"
+                    class="btn btn-outline btn-sm w-full sm:w-auto order-3"
                     disabled={!hasMore}
                   >
                     Next
+                    <svg
+                      class="w-4 h-4 ml-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
                   </button>
                 </div>
               </>

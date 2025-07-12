@@ -11,7 +11,8 @@ cocktail recipes with AI-powered recipe extraction capabilities.
 - **AI Image Generation**: Create beautiful cocktail images with OpenAI and
   vector (SVG) images with recraft.ai
 - **Magic Link Authentication**: Secure passwordless authentication via email
-- **Admin Mode**: Admin interface for recipe management and system administration
+- **Admin Mode**: Admin interface for recipe management and system
+  administration
 - **Ingredient Tracking**: Manage your home bar inventory
 - **Recipe Discovery**: Find cocktails based on available ingredients
 - **Personalization**: Save favorites and add personal notes to recipes
@@ -193,23 +194,27 @@ To enable authentication:
 
 ## Admin Configuration
 
-Barsistant includes an admin mode for recipe management and system administration. Admin access is controlled by a single environment variable.
+Barsistant includes an admin mode for recipe management and system
+administration. Admin access is controlled by a single environment variable.
 
 ### Setting up Admin Access:
 
-1. Set the `ADMIN_EMAIL` environment variable to the email address that should have admin privileges:
+1. Set the `ADMIN_EMAIL` environment variable to the email address that should
+   have admin privileges:
    ```bash
    ADMIN_EMAIL=admin@yourdomain.com
    ```
 
 2. Sign in with the specified email using the normal magic link authentication
 
-3. Once signed in, admin users will see an "Admin" link in their user dropdown
+3. Once signed in, admin users will see an "Admin" link in their user dropdown and mobile navigation dock
 
 ### Admin Features:
 
 - **Recipe Management**: View, search, and delete recipes
-- **Comprehensive Data Cleanup**: Recipe deletion removes all associated user favorites and notes
+- **Mobile-Responsive Interface**: Card-based layout on mobile, table on desktop
+- **Comprehensive Data Cleanup**: Recipe deletion removes all associated user
+  favorites and notes
 - **Search and Pagination**: Efficiently manage large numbers of recipes
 - **Audit Logging**: All admin actions are logged for security
 

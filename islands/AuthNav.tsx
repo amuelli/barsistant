@@ -92,7 +92,7 @@ export default function AuthNav(
         </li>
         {isAdmin && (
           <li>
-            <a href="/admin" class="text-warning">
+            <a href="/admin">
               <svg
                 class="w-4 h-4"
                 fill="none"
