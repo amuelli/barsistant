@@ -1,6 +1,6 @@
-# Barsistant - AI Assistant Context
+# CLAUDE.md
 
-This file provides context for AI assistants working on the Barsistant project.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 🔗 Core Instructions
 
@@ -15,6 +15,36 @@ These files contain the **primary** development guidelines. This CLAUDE.md file 
 ## 🏗️ Project Overview
 
 Barsistant is a smart cocktail recipe assistant built with Fresh (Deno) and TypeScript. It helps users discover, create, and manage cocktail recipes with AI-powered features including magic link authentication, recipe extraction from URLs, and AI-generated recipe images.
+
+## 🛠️ Development Commands
+
+### Essential Commands
+```bash
+# Development
+deno task start          # Start dev server with hot reload
+deno task build          # Build for production
+deno task preview        # Preview production build
+
+# Quality Assurance (MANDATORY before completion)
+deno task test           # Run all tests with proper permissions
+deno task check          # Run formatter, linter, type checker (use instead of separate commands)
+
+# Database Operations
+deno task init-db        # Initialize database
+deno task migration:create # Create new migration
+deno task migration:run  # Apply pending migrations
+deno task migration:status # Check migration status
+
+# AI/Recipe Tools
+deno task extract-recipes    # Extract recipes from URLs
+deno task eval-extraction    # Evaluate extraction quality
+```
+
+### Single Test Execution
+To run a specific test file, use the full deno test command with proper permissions:
+```bash
+deno test --allow-all path/to/test_file.ts
+```
 
 ## 🔐 Authentication System (Passwordless)
 
@@ -33,6 +63,37 @@ The app uses **magic link authentication** exclusively:
 3. User clicks link → `/routes/auth/verify.tsx` (server-side validation)
 4. Session created → cookie set → redirect to app
 
+## 🗄️ Database Architecture (Deno KV)
+
+### Key Patterns
+Follow these established patterns from `utils/db/db.ts`:
+
+```typescript
+// Primary entities
+["recipe", recipeId] → Recipe
+["ingredient", ingredientId] → Ingredient
+["user", userId] → User
+
+// Relationships
+["recipe_ingredient", recipeId, ingredientId] → RecipeIngredient
+["user_favorites", userId, recipeId] → UserFavorite
+["user_inventory", userId, ingredientId] → UserInventoryItem
+
+// Authentication
+["auth_tokens", token] → MagicLinkToken
+["user_sessions", sessionId] → UserSession
+["user_emails", email] → userId
+
+// Secondary indexes
+["ingredient_recipes", ingredientId, recipeId] → RecipeReference
+["tag_recipes", tag, recipeId] → RecipeReference
+```
+
+### Database Models Location
+- Core models: `utils/db/` directory
+- All database operations must use utilities from this directory
+- Migration system: `utils/db/migrations/`
+
 ## 🛠️ Architecture Patterns
 
 ### State Management
@@ -41,11 +102,27 @@ The app uses **magic link authentication** exclusively:
 - **Server-side state**: User authentication state comes from `/_middleware.ts`
 - **Client-side signals**: Use Preact signals for UI state in islands
 
-### Key Components
+### AI Integration
 
-- **AuthNav** (`/islands/AuthNav.tsx`): Shows sign-in button or user dropdown
-- **Mobile dock**: Bottom navigation with authentication-aware buttons
-- **Profile page**: User information and preferences management
+**Provider-agnostic AI SDK**: Supports OpenAI, Anthropic
+- Recipe extraction: `utils/ai/extraction.ts`
+- Image generation: `utils/ai/image-generation.ts` (DALL-E)
+- Vector images: `utils/ai/recraft.ts` (SVG generation)
+- Non-blocking processing via Deno KV queues
+
+### Fresh Framework Specifics
+
+- **Routes**: `/routes/` directory contains pages and API endpoints
+- **Islands**: `/islands/` directory for client-side interactive components
+- **Middleware**: Global auth middleware in `/_middleware.ts`
+- **Static assets**: `/static/` directory
+
+### UI System
+
+- **DaisyUI Components**: Consistent component library with custom "barsistant" theme
+- **Tailwind CSS v4**: Modern styling with OKLCH colors
+- **Mobile-first**: Responsive design with dock navigation
+- All buttons must have `type="button"` attribute
 
 ## 📁 Important Files & Patterns
 
@@ -56,24 +133,32 @@ The app uses **magic link authentication** exclusively:
 - `/utils/auth/session.ts` - Session management with Deno KV
 - `/utils/auth/user.ts` - User CRUD operations
 
+### Key Components
+
+- **AuthNav** (`/islands/AuthNav.tsx`): Shows sign-in button or user dropdown
+- **Mobile dock**: Bottom navigation with authentication-aware buttons
+- **RecipeExtractor** (`/islands/RecipeExtractor.tsx`): AI-powered recipe extraction interface
+- **RecipeImage** (`/islands/RecipeImage.tsx`): Smart image display with fallbacks
+
 ### Email Configuration
 
 - `/utils/email/service.ts` - Resend integration (default: `hello@barsistant.com`)
 - `/utils/email/templates.ts` - Magic link and welcome email templates
 
-### UI Patterns
+### Storage Integration
 
-- Use DaisyUI components for consistency
-- All buttons must have `type="button"` attribute
-- Follow existing patterns in RecipeExtractor for API requests
+- S3-compatible storage: `utils/storage/` directory
+- AI-generated images stored with public URLs
+- Background processing via Deno KV queues
 
 ## 🔧 Development Workflow
 
 1. **Read the instruction files** (linked above)
-2. **Run tests**: `deno task test` (MANDATORY before completion)
-3. **Check code quality**: `deno task check` (formatter, linter, type checker)
-4. **Follow conventions** from project.instructions.md
-5. **Test thoroughly** - authentication flows, mobile experience, error cases
+2. **Follow established patterns**: Check existing code for conventions
+3. **Run tests**: `deno task test` (MANDATORY before completion)
+4. **Check code quality**: `deno task check` (formatter, linter, type checker)
+5. **Database operations**: Use utilities from `utils/db/`
+6. **Test thoroughly** - authentication flows, mobile experience, error cases
 
 ## 🚨 Critical Reminders
 
@@ -81,16 +166,20 @@ The app uses **magic link authentication** exclusively:
 - **Props not Context**: Pass user state via props in Fresh
 - **Test everything**: All tests must pass before completion
 - **Mobile-first**: Consider dock navigation and responsive design
-- **Security**: Magic links, HTTP-only cookies, no password fields
+- **Database patterns**: Follow established KV key patterns for consistency
+- **AI processing**: Use background queues for non-blocking operations
+- **Type safety**: Comprehensive TypeScript types in `/types/` directory
 
-## 📝 Recent Authentication Work
+## 📦 Technology Stack
 
-- ✅ Magic link authentication fully implemented
-- ✅ Server-side session management with cookies
-- ✅ AuthNav component with proper state handling
-- ✅ Mobile dock navigation with auth-aware buttons  
-- ✅ Profile page with user information display
-- ✅ Email sender updated to `hello@barsistant.com`
+- **Runtime**: Deno with TypeScript
+- **Framework**: Fresh 2.0 (Deno web framework) with Preact
+- **Database**: Deno KV (built-in key-value store)
+- **UI**: Tailwind CSS v4 + DaisyUI v5
+- **AI**: Provider-agnostic AI SDK (OpenAI, Anthropic)
+- **Email**: Resend service
+- **Storage**: S3-compatible storage
+- **Dependencies**: JSR (JavaScript Registry) for modern imports
 
 ## 🔗 Quick Reference
 
