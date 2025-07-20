@@ -14,6 +14,7 @@ import {
 import { enqueueJob } from "../../utils/db/queue-handler.ts";
 import { createRecipeWithSimpleIngredients } from "../../utils/db/recipe-helper.ts";
 import { fetchUrlContent, prepareHtmlForAI } from "../../utils/url-content.ts";
+import { requireAuth } from "../../utils/auth/middleware.ts";
 
 // Interface for extract API request body
 interface ExtractRequestBody {
@@ -25,6 +26,15 @@ export async function handler(ctx: FreshContext) {
     method: ctx.req.method,
     contentType: ctx.req.headers.get("content-type"),
   });
+
+  // Require authentication for recipe extraction
+  const authResult = await requireAuth(ctx.req);
+  if (authResult instanceof Response) {
+    return authResult;
+  }
+
+  const { user } = authResult;
+  console.log("[extract] Authenticated user:", user.email);
 
   try {
     // Parse request body - handle both JSON and form data
