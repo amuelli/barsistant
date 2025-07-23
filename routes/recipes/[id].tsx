@@ -1,6 +1,7 @@
 import { HttpError } from "fresh";
 import RecipeImage from "../../islands/RecipeImage.tsx";
 import RecipeFavorites from "../../islands/RecipeFavorites.tsx";
+import RecipePrivacyToggle from "../../islands/RecipePrivacyToggle.tsx";
 import { define } from "../../utils.ts";
 import { recipeModel } from "../../utils/db/recipe-model.ts";
 import { userCollectionModel } from "../../utils/db/user-collection-model.ts";
@@ -40,7 +41,7 @@ export const handler = define.handlers({
 
 export default define.page<typeof handler>(
   ({ data, state }) => {
-    const { recipe, inCollection, isOwner: _isOwner, user } = data;
+    const { recipe, inCollection, isOwner, user } = data;
     const isAdmin = checkAdminFromUser(state.user);
     return (
       <div class="container mx-auto p-3 md:p-4 pb-8 md:pb-12">
@@ -64,32 +65,42 @@ export default define.page<typeof handler>(
               {recipe.name}
             </h1>
 
-            {/* Privacy indicator */}
-            {recipe.visibility === "private" && (
-              <div class="tooltip" data-tip="Private recipe">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6 text-warning"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  />
-                </svg>
-              </div>
-            )}
+            {/* Privacy indicator - static for non-owners, interactive for owners */}
+            {isOwner && user
+              ? (
+                <RecipePrivacyToggle
+                  recipe={recipe}
+                  user={user}
+                  isOwner={isOwner}
+                />
+              )
+              : (
+                recipe.visibility === "private" && (
+                  <div class="tooltip" data-tip="Private recipe">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-6 w-6 text-warning"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    </svg>
+                  </div>
+                )
+              )}
 
             {/* Collection status (read-only indicator for owners) */}
             {user && inCollection && recipe.createdBy === user.id && (
               <div class="tooltip" data-tip="Your recipe">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6 text-success"
+                  class="h-6 w-6 text-error"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
