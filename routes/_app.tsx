@@ -60,7 +60,9 @@ function AppContent(
                     <a href="/">Home</a>
                   </li>
                   <li>
-                    <a href="/recipes">Recipes</a>
+                    <a href="/recipes">
+                      {state.user ? "My Recipes" : "Recipes"}
+                    </a>
                   </li>
                   <li>
                     <a href="/extract">Extract Recipe</a>
@@ -91,7 +93,7 @@ function AppContent(
                   Home
                 </a>
                 <a class="link link-hover" href="/recipes">
-                  Recipes
+                  {state.user ? "My Recipes" : "Recipes"}
                 </a>
                 <a class="link link-hover" href="/extract">
                   Extract Recipe
@@ -137,7 +139,9 @@ function AppContent(
                   d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
                 />
               </svg>
-              <span class="dock-label">Recipes</span>
+              <span class="dock-label">
+                {state.user ? "My Recipes" : "Recipes"}
+              </span>
             </a>
             <a
               href="/extract"

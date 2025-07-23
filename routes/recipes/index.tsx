@@ -1,28 +1,52 @@
 import RecipeImage from "../../islands/RecipeImage.tsx";
 import { define } from "../../utils.ts";
 import { recipeModel } from "../../utils/db/recipe-model.ts";
+import { userCollectionModel } from "../../utils/db/user-collection-model.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {
-    ctx.state.title = "Recipes";
+    const user = ctx.state.user; // From auth middleware
+    ctx.state.title = user ? "My Recipes" : "Recipes";
     const url = ctx.url;
     const query = url.searchParams.get("query") || "";
+
     let recipes;
     if (query) {
-      recipes = await recipeModel.search({ query, limit: 100 });
+      // For search, show all public recipes + user's own recipes
+      if (user) {
+        // TODO: Implement user-aware search that includes user's private recipes
+        recipes = await recipeModel.search({ query, limit: 100 });
+      } else {
+        // Unauthenticated users only see public recipes in search
+        recipes = await recipeModel.search({ query, limit: 100 });
+      }
     } else {
-      recipes = await recipeModel.listAll(30);
+      if (user) {
+        // Authenticated: Show user's collection (owned + saved recipes)
+        recipes = await userCollectionModel.getUserCollection(user.id, 30);
+      } else {
+        // Unauthenticated: Show only public recipes
+        recipes = await recipeModel.getPublicRecipes(30);
+      }
     }
-    return { data: { recipes, query } };
+
+    return { data: { recipes, query, user } };
   },
 });
 
 export default define.page<typeof handler>(
   ({ data }) => {
-    const { recipes, query } = data;
+    const { recipes, query, user } = data;
+    const pageTitle = user ? "My Recipe Collection" : "Public Recipes";
+
     return (
       <div class="container mx-auto p-4">
-        <h1 class="text-4xl font-bold mb-6">Cocktail Recipes</h1>
+        <h1 class="text-4xl font-bold mb-6">{pageTitle}</h1>
+        {user && (
+          <p class="text-base-content/70 mb-4">
+            Your personal collection of created and saved recipes
+          </p>
+        )}
         <form method="GET" class="flex mb-6">
           <input
             type="text"
