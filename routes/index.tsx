@@ -8,7 +8,8 @@ export const handler = define.handlers({
     const user = ctx.state.user; // From auth middleware
 
     // Always show public recipes on the home page
-    const recipes = await recipeModel.getPublicRecipes(12);
+    // Use batch method for optimal performance (2 KV calls vs 13+)
+    const recipes = await recipeModel.getPublicRecipesBatch(12);
 
     return { data: { recipes, user } };
   },

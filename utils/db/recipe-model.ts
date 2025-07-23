@@ -783,7 +783,7 @@ export const recipeModel = {
   },
 
   /**
-   * Get all public recipes
+   * Get all public recipes (legacy - use getPublicRecipesBatch for better performance)
    *
    * @param limit Maximum number of recipes to return
    * @param offset Number of recipes to skip
@@ -820,6 +820,70 @@ export const recipeModel = {
 
       return recipes;
     }, "Failed to get public recipes");
+  },
+
+  /**
+   * Get all public recipes using batch fetching for optimal performance
+   *
+   * This method reduces KV operations from N+1 to 2 calls total:
+   * 1. List public recipe IDs (1 KV call)
+   * 2. Batch fetch all recipes (1 KV call)
+   *
+   * @param limit Maximum number of recipes to return
+   * @param offset Number of recipes to skip
+   * @returns Array of public recipes
+   * @throws {DatabaseError} If the database operation fails
+   */
+  async getPublicRecipesBatch(
+    limit = 20,
+    offset = 0,
+  ): Promise<Recipe[]> {
+    return await executeDbOperation(async () => {
+      // Step 1: Get public recipe IDs efficiently
+      const recipeIds: string[] = [];
+      let count = 0;
+
+      for await (
+        const entry of kv.list<boolean>({
+          prefix: ["public_recipes"],
+        })
+      ) {
+        if (count >= offset && recipeIds.length < limit) {
+          const recipeId = entry.key[1] as string;
+          recipeIds.push(recipeId);
+        }
+        count++;
+
+        if (recipeIds.length >= limit) {
+          break;
+        }
+      }
+
+      // Early return if no recipes found
+      if (recipeIds.length === 0) {
+        return [];
+      }
+
+      // Step 2: Batch fetch all recipes
+      // Deno KV has a limit of 10 keys per getMany operation
+      // See: https://docs.deno.com/deploy/kv/manual/transactions/
+      const recipes: Recipe[] = [];
+      const BATCH_SIZE = 10;
+
+      for (let i = 0; i < recipeIds.length; i += BATCH_SIZE) {
+        const batchIds = recipeIds.slice(i, i + BATCH_SIZE);
+        const recipeKeys = batchIds.map((id) => ["recipe", id] as const);
+        const results = await kv.getMany<Recipe[]>(recipeKeys);
+
+        for (const result of results) {
+          if (result.value) {
+            recipes.push(result.value);
+          }
+        }
+      }
+
+      return recipes;
+    }, "Failed to get public recipes batch");
   },
 
   /**

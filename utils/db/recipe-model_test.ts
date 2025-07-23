@@ -494,3 +494,92 @@ Deno.test("Recipe Model - Pagination", async (t) => {
     await recipeModel.delete(id);
   }
 });
+
+Deno.test("Recipe Model - Batch Public Recipes", async (t) => {
+  // Track existing public recipes count
+  const existingPublicRecipes = await recipeModel.getPublicRecipes(100);
+  const existingPublicCount = existingPublicRecipes.length;
+
+  const createdIds: string[] = [];
+
+  await t.step("setup - create test recipes", async () => {
+    // Create mix of public and private recipes
+    for (let i = 0; i < 8; i++) {
+      const recipe = await recipeModel.create({
+        name: `Test Recipe ${i}`,
+        description: `Test recipe description ${i}`,
+        strength: 5,
+        sweetness: 5,
+        ingredients: [
+          {
+            ingredientId: `test-ingredient-${i}`,
+            name: `Test Ingredient ${i}`,
+            quantity: 50,
+            unit: "ml" as MeasurementUnit,
+            optional: false,
+          },
+        ],
+        preparation: ["Step 1", "Step 2"],
+        garnish: [],
+        glassware: "rocks",
+        source: { name: "Test", url: "https://test.com" },
+        tags: ["test"],
+        visibility: i < 5 ? "public" : "private", // First 5 public, rest private
+      });
+      createdIds.push(recipe.id);
+    }
+  });
+
+  await t.step(
+    "should fetch public recipes efficiently with batch method",
+    async () => {
+      const recipes = await recipeModel.getPublicRecipesBatch(10);
+
+      // Should return only public recipes (5 created + any existing)
+      assertEquals(recipes.length, 5 + existingPublicCount);
+
+      // All returned recipes should be public
+      for (const recipe of recipes) {
+        assertEquals(recipe.visibility, "public");
+      }
+    },
+  );
+
+  await t.step("should handle empty results correctly", async () => {
+    // Test with offset beyond available recipes
+    const recipes = await recipeModel.getPublicRecipesBatch(10, 100);
+    assertEquals(recipes.length, 0);
+  });
+
+  await t.step("should respect limit parameter", async () => {
+    const recipes = await recipeModel.getPublicRecipesBatch(3);
+    assertEquals(recipes.length, 3);
+  });
+
+  await t.step("should respect offset parameter", async () => {
+    const allRecipes = await recipeModel.getPublicRecipesBatch(10);
+    const offsetRecipes = await recipeModel.getPublicRecipesBatch(10, 2);
+
+    // Should skip first 2 recipes
+    assertEquals(offsetRecipes.length, Math.max(0, allRecipes.length - 2));
+  });
+
+  await t.step("should return same results as legacy method", async () => {
+    const batchResults = await recipeModel.getPublicRecipesBatch(10);
+    const legacyResults = await recipeModel.getPublicRecipes(10);
+
+    // Should return same number of recipes
+    assertEquals(batchResults.length, legacyResults.length);
+
+    // Should contain same recipe IDs (order may differ)
+    const batchIds = new Set(batchResults.map((r) => r.id));
+    const legacyIds = new Set(legacyResults.map((r) => r.id));
+    assertEquals(batchIds, legacyIds);
+  });
+
+  await t.step("cleanup", async () => {
+    for (const id of createdIds) {
+      await recipeModel.delete(id);
+    }
+  });
+});
