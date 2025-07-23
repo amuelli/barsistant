@@ -1,5 +1,6 @@
 import { HttpError } from "fresh";
 import RecipeImage from "../../islands/RecipeImage.tsx";
+import RecipeFavorites from "../../islands/RecipeFavorites.tsx";
 import { define } from "../../utils.ts";
 import { recipeModel } from "../../utils/db/recipe-model.ts";
 import { userCollectionModel } from "../../utils/db/user-collection-model.ts";
@@ -62,6 +63,7 @@ export default define.page<typeof handler>(
             <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold">
               {recipe.name}
             </h1>
+
             {/* Privacy indicator */}
             {recipe.visibility === "private" && (
               <div class="tooltip" data-tip="Private recipe">
@@ -81,9 +83,10 @@ export default define.page<typeof handler>(
                 </svg>
               </div>
             )}
-            {/* Collection status */}
-            {user && inCollection && (
-              <div class="tooltip" data-tip="In your collection">
+
+            {/* Collection status (read-only indicator for owners) */}
+            {user && inCollection && recipe.createdBy === user.id && (
+              <div class="tooltip" data-tip="Your recipe">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   class="h-6 w-6 text-success"
@@ -93,6 +96,15 @@ export default define.page<typeof handler>(
                   <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                 </svg>
               </div>
+            )}
+
+            {/* Interactive favorites button for public recipes */}
+            {user && (
+              <RecipeFavorites
+                recipe={recipe}
+                user={user}
+                initialInCollection={inCollection}
+              />
             )}
           </div>
           <div class="flex flex-wrap gap-2 justify-center mb-2">

@@ -17,6 +17,27 @@ applyTo: '**'
 - when removing code, don't leave any traces or comments that it was removed,
   just remove it completely
 
+### Preact Signals Guidelines
+
+**CRITICAL**: Always use `useSignal()` hook in islands/components, never
+`signal()`
+
+```typescript
+// ✅ CORRECT - Use in islands/components
+import { useSignal } from "@preact/signals";
+const state = useSignal({ value: initialValue });
+
+// ❌ WRONG - This won't trigger re-renders in components
+import { signal } from "@preact/signals";
+const state = signal({ value: initialValue });
+```
+
+- `useSignal()` - Use in Preact components/islands for reactive state
+- `signal()` - Use only for global state outside components
+- Always access signal values with `.value` in JSX: `{state.value.property}`
+- Don't compute derived values outside JSX - access `state.value` directly in
+  render
+
 ## Development Workflow
 
 1. Work on one task at a time (see docs/tasks.md)
