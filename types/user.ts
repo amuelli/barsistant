@@ -37,6 +37,22 @@ export interface UserFavorite {
 }
 
 /**
+ * Collection type for user recipes
+ */
+export type UserCollectionType = "owned" | "saved";
+
+/**
+ * Represents a recipe in a user's collection
+ */
+export interface UserCollection {
+  userId: string;
+  recipeId: string;
+  addedAt: string; // ISO date string
+  collectionType: UserCollectionType; // owned = created by user, saved = favorited public recipe
+  notes?: string;
+}
+
+/**
  * Represents a user's personal note on a recipe
  */
 export interface UserNote {

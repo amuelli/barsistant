@@ -13,6 +13,7 @@ import {
 } from "../../utils/ai/extraction.ts";
 import { enqueueJob } from "../../utils/db/queue-handler.ts";
 import { createRecipeWithSimpleIngredients } from "../../utils/db/recipe-helper.ts";
+import { userCollectionModel } from "../../utils/db/user-collection-model.ts";
 import { fetchUrlContent, prepareHtmlForAI } from "../../utils/url-content.ts";
 import { requireAuth } from "../../utils/auth/middleware.ts";
 
@@ -147,8 +148,30 @@ export async function handler(ctx: FreshContext) {
 
     // Save recipe to database using the helper function that handles ingredients automatically
     console.log("[extract] Saving recipe to database");
-    const recipe = await createRecipeWithSimpleIngredients(recipeParams);
-    console.log("[extract] Recipe saved", { id: recipe.id });
+    const recipe = await createRecipeWithSimpleIngredients({
+      ...recipeParams,
+      createdBy: user.id, // Link the recipe to the authenticated user
+      visibility: "private", // New recipes are private by default
+    });
+    console.log("[extract] Recipe saved", {
+      id: recipe.id,
+      createdBy: user.id,
+      visibility: recipe.visibility,
+    });
+
+    // Add recipe to user's collection as owned
+    try {
+      await userCollectionModel.addToCollection(
+        user.id,
+        recipe.id,
+        "owned",
+        "Created via recipe extraction",
+      );
+      console.log("[extract] Recipe added to user collection");
+    } catch (err) {
+      console.error("[extract] Failed to add recipe to user collection", err);
+      // Don't fail the entire operation if collection add fails
+    }
 
     // Enqueue background image generation job
     try {

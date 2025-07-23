@@ -84,9 +84,11 @@ async function initializeRecipes(): Promise<void> {
       }));
 
       // Create the recipe with the enhanced ingredients
+      // Note: Sample recipes are created without user association (system-provided)
       const newRecipe = await createRecipeWithSimpleIngredients({
         ...recipe,
         ingredients: simpleIngredients,
+        // createdBy is intentionally omitted for sample recipes
       });
 
       console.log(`Created recipe: ${recipe.name} with ID ${newRecipe.id}`);

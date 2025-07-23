@@ -15,6 +15,9 @@
  * - User favorites: ["user_favorites", userId, recipeId] → timestamp data
  * - User inventory: ["user_inventory", userId, ingredientId] → quantity data
  * - User recipe notes: ["user_notes", userId, recipeId] → notes data
+ * - User created recipes: ["user_recipes", userId, recipeId] → recipe reference
+ * - Public recipes: ["public_recipes", recipeId] → recipe reference
+ * - User collections: ["user_collections", userId, recipeId] → collection entry
  */
 
 // Import the Deno KV types directly from the Deno namespace
@@ -28,6 +31,9 @@ export type IngredientRecipesKey = ["ingredient_recipes", string, string];
 export type UserFavoritesKey = ["user_favorites", string, string];
 export type UserInventoryKey = ["user_inventory", string, string];
 export type UserNotesKey = ["user_notes", string, string];
+export type UserRecipesKey = ["user_recipes", string, string];
+export type PublicRecipesKey = ["public_recipes", string];
+export type UserCollectionsKey = ["user_collections", string, string];
 export type TagRecipesKey = ["tag_recipes", string, string];
 export type StrengthRecipesKey = ["strength_recipes", number, string];
 export type SweetnessRecipesKey = ["sweetness_recipes", number, string];

@@ -32,6 +32,11 @@ export interface RecipeIngredient {
 }
 
 /**
+ * Recipe visibility options
+ */
+export type RecipeVisibility = "private" | "public";
+
+/**
  * Represents a complete cocktail recipe
  */
 export interface Recipe {
@@ -64,6 +69,8 @@ export interface Recipe {
   };
   tags: string[];
   rating?: number; // Average user rating
+  createdBy?: string; // User ID of recipe creator (optional for backward compatibility)
+  visibility?: RecipeVisibility; // Recipe privacy setting (default: "private")
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
 }

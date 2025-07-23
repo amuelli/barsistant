@@ -91,6 +91,8 @@ export const recipeModel = {
         preparation: params.preparation || [],
         source: params.source,
         tags: params.tags || [],
+        createdBy: params.createdBy,
+        visibility: params.visibility ?? "private", // Default to private
         createdAt: now,
         updatedAt: now,
       };
@@ -131,6 +133,16 @@ export const recipeModel = {
       // Add tag indexes
       for (const tag of recipe.tags) {
         transaction.set(["tag_recipes", tag, id], true);
+      }
+
+      // Add user-recipe index if recipe has a creator
+      if (recipe.createdBy) {
+        transaction.set(["user_recipes", recipe.createdBy, id], true);
+      }
+
+      // Add public recipe index if recipe is public
+      if (recipe.visibility === "public") {
+        transaction.set(["public_recipes", id], true);
       }
 
       // Commit transaction
@@ -195,6 +207,9 @@ export const recipeModel = {
         id, // Ensure ID doesn't change
         updatedAt: now,
         createdAt: existingRecipe.createdAt, // Preserve creation date
+        createdBy: params.createdBy !== undefined
+          ? params.createdBy
+          : existingRecipe.createdBy, // Handle createdBy updates
       };
 
       // Start a transaction for atomic operations
@@ -277,6 +292,36 @@ export const recipeModel = {
         );
       }
 
+      // If createdBy changed, update user-recipe index
+      if (
+        params.createdBy !== undefined &&
+        params.createdBy !== existingRecipe.createdBy
+      ) {
+        // Remove old user-recipe index if it existed
+        if (existingRecipe.createdBy) {
+          transaction.delete(["user_recipes", existingRecipe.createdBy, id]);
+        }
+        // Add new user-recipe index if new creator is set
+        if (updatedRecipe.createdBy) {
+          transaction.set(["user_recipes", updatedRecipe.createdBy, id], true);
+        }
+      }
+
+      // If visibility changed, update public recipe index
+      if (
+        params.visibility !== undefined &&
+        params.visibility !== existingRecipe.visibility
+      ) {
+        // Remove from public index if was public
+        if (existingRecipe.visibility === "public") {
+          transaction.delete(["public_recipes", id]);
+        }
+        // Add to public index if now public
+        if (updatedRecipe.visibility === "public") {
+          transaction.set(["public_recipes", id], true);
+        }
+      }
+
       // Commit transaction
       const result2 = await transaction.commit();
 
@@ -326,6 +371,16 @@ export const recipeModel = {
 
       // Delete sweetness index
       transaction.delete(["sweetness_recipes", existingRecipe.sweetness, id]);
+
+      // Delete user-recipe index if recipe had a creator
+      if (existingRecipe.createdBy) {
+        transaction.delete(["user_recipes", existingRecipe.createdBy, id]);
+      }
+
+      // Delete public recipe index if recipe was public
+      if (existingRecipe.visibility === "public") {
+        transaction.delete(["public_recipes", id]);
+      }
 
       // Delete all user favorites for this recipe
       for await (const entry of kv.list({ prefix: ["user_favorites"] })) {
@@ -683,5 +738,123 @@ export const recipeModel = {
 
       return recipes;
     }, `Failed to get recipes by ingredient ${ingredientId}`);
+  },
+
+  /**
+   * Get recipes created by a specific user
+   *
+   * @param userId User ID to filter by
+   * @param limit Maximum number of recipes to return
+   * @param offset Number of recipes to skip
+   * @returns Array of recipes created by the user
+   * @throws {DatabaseError} If the database operation fails
+   */
+  async getByUser(
+    userId: string,
+    limit = 20,
+    offset = 0,
+  ): Promise<Recipe[]> {
+    return await executeDbOperation(async () => {
+      const recipes: Recipe[] = [];
+      let count = 0;
+
+      for await (
+        const entry of kv.list<boolean>({
+          prefix: ["user_recipes", userId],
+        })
+      ) {
+        if (count >= offset && recipes.length < limit) {
+          const recipeId = entry.key[2] as string;
+          const recipe = await this.getById(recipeId);
+
+          if (recipe) {
+            recipes.push(recipe);
+          }
+        }
+        count++;
+
+        if (recipes.length >= limit) {
+          break;
+        }
+      }
+
+      return recipes;
+    }, `Failed to get recipes by user ${userId}`);
+  },
+
+  /**
+   * Get all public recipes
+   *
+   * @param limit Maximum number of recipes to return
+   * @param offset Number of recipes to skip
+   * @returns Array of public recipes
+   * @throws {DatabaseError} If the database operation fails
+   */
+  async getPublicRecipes(
+    limit = 20,
+    offset = 0,
+  ): Promise<Recipe[]> {
+    return await executeDbOperation(async () => {
+      const recipes: Recipe[] = [];
+      let count = 0;
+
+      for await (
+        const entry of kv.list<boolean>({
+          prefix: ["public_recipes"],
+        })
+      ) {
+        if (count >= offset && recipes.length < limit) {
+          const recipeId = entry.key[1] as string;
+          const recipe = await this.getById(recipeId);
+
+          if (recipe) {
+            recipes.push(recipe);
+          }
+        }
+        count++;
+
+        if (recipes.length >= limit) {
+          break;
+        }
+      }
+
+      return recipes;
+    }, "Failed to get public recipes");
+  },
+
+  /**
+   * Check if a recipe is accessible to a user
+   * (public recipes or recipes owned by the user)
+   *
+   * @param recipeId Recipe ID to check
+   * @param userId User ID (null for unauthenticated users)
+   * @returns True if user can access the recipe
+   * @throws {DatabaseError} If the database operation fails
+   */
+  async canUserAccessRecipe(
+    recipeId: string,
+    userId: string | null,
+  ): Promise<boolean> {
+    return await executeDbOperation(async () => {
+      const recipe = await this.getById(recipeId);
+      if (!recipe) {
+        return false;
+      }
+
+      // Public recipes are accessible to everyone
+      if (recipe.visibility === "public") {
+        return true;
+      }
+
+      // Private recipes (or undefined visibility - default private) are only accessible to their owners
+      if (
+        (recipe.visibility === "private" || !recipe.visibility) && userId &&
+        recipe.createdBy === userId
+      ) {
+        return true;
+      }
+
+      return false;
+    }, `Failed to check recipe access for recipe ${recipeId}`);
   },
 };
