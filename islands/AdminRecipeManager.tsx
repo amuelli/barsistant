@@ -10,6 +10,7 @@ interface Recipe {
   };
   tags: string[];
   createdAt: string;
+  createdByEmail?: string;
 }
 
 interface RecipeListResponse {
@@ -289,6 +290,15 @@ export default function AdminRecipeManager() {
                           </div>
                         </div>
 
+                        <div class="mt-3 text-sm">
+                          <span class="font-medium text-base-content/80">
+                            Created by:
+                          </span>
+                          <div class="text-base-content/70">
+                            {recipe.createdByEmail || "Unknown"}
+                          </div>
+                        </div>
+
                         <div class="flex gap-2 mt-4">
                           <a
                             href={`/recipes/${recipe.id}`}
@@ -350,6 +360,7 @@ export default function AdminRecipeManager() {
                       <tr>
                         <th>Name</th>
                         <th>Source</th>
+                        <th>Created By</th>
                         <th>Created</th>
                         <th>Actions</th>
                       </tr>
@@ -374,6 +385,11 @@ export default function AdminRecipeManager() {
                                 {truncateText(recipe.source.url, 50)}
                               </div>
                             )}
+                          </td>
+                          <td>
+                            <div class="text-sm">
+                              {recipe.createdByEmail || "Unknown"}
+                            </div>
                           </td>
                           <td>
                             <div class="text-sm">

@@ -1,6 +1,7 @@
 import { FreshContext } from "fresh";
 import { requireAdmin } from "../../../../utils/auth/admin.ts";
 import { recipeModel } from "../../../../utils/db/recipe-model.ts";
+import { findUserById } from "../../../../utils/auth/user.ts";
 import { State } from "../../../../utils.ts";
 
 export async function handler(
@@ -30,10 +31,31 @@ export async function handler(
             limit: limit ? parseInt(limit) : 50,
           });
 
+          // Resolve user emails for each recipe
+          const recipesWithEmails = await Promise.all(
+            recipes.map(async (recipe) => {
+              let createdByEmail = "Unknown";
+              if (recipe.createdBy) {
+                try {
+                  const user = await findUserById(recipe.createdBy);
+                  if (user?.email) {
+                    createdByEmail = user.email;
+                  }
+                } catch (error) {
+                  console.error(
+                    `Failed to lookup user ${recipe.createdBy}:`,
+                    error,
+                  );
+                }
+              }
+              return { ...recipe, createdByEmail };
+            }),
+          );
+
           return new Response(
             JSON.stringify({
-              recipes,
-              total: recipes.length,
+              recipes: recipesWithEmails,
+              total: recipesWithEmails.length,
               hasMore: false, // Search doesn't support pagination yet
               cursor: "",
             }),
@@ -50,12 +72,33 @@ export async function handler(
           cursor: cursor,
         });
 
+        // Resolve user emails for each recipe
+        const recipesWithEmails = await Promise.all(
+          result.items.map(async (recipe) => {
+            let createdByEmail = "Unknown";
+            if (recipe.createdBy) {
+              try {
+                const user = await findUserById(recipe.createdBy);
+                if (user?.email) {
+                  createdByEmail = user.email;
+                }
+              } catch (error) {
+                console.error(
+                  `Failed to lookup user ${recipe.createdBy}:`,
+                  error,
+                );
+              }
+            }
+            return { ...recipe, createdByEmail };
+          }),
+        );
+
         return new Response(
           JSON.stringify({
-            recipes: result.items,
+            recipes: recipesWithEmails,
             hasMore: result.cursor !== "",
             cursor: result.cursor,
-            total: result.items.length,
+            total: recipesWithEmails.length,
           }),
           {
             status: 200,
