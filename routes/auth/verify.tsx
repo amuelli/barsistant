@@ -1,14 +1,14 @@
 import { define } from "../../utils.ts";
-import { createSessionResponse } from "../../utils/auth/middleware.ts";
-import { createUserSession } from "../../utils/auth/session.ts";
-import { validateMagicLinkToken } from "../../utils/auth/token.ts";
+import { createSessionResponse } from "🛠️/auth/middleware.ts";
+import { createUserSession } from "🛠️/auth/session.ts";
+import { validateMagicLinkToken } from "🛠️/auth/token.ts";
 import {
   createUser,
   findUserByEmail,
   updateUserLastLogin,
-} from "../../utils/auth/user.ts";
-import { sendEmail } from "../../utils/email/service.ts";
-import { generateWelcomeEmail } from "../../utils/email/templates.ts";
+} from "🛠️/auth/user.ts";
+import { sendEmail } from "🛠️/email/service.ts";
+import { generateWelcomeEmail } from "🛠️/email/templates.ts";
 
 interface VerifyPageData {
   success: false;

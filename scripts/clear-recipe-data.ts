@@ -11,7 +11,7 @@
  *   deno run --allow-env --allow-net --unstable-kv scripts/clear-recipe-data.ts
  */
 
-import { kv } from "../utils/db/db.ts";
+import { kv } from "🛠️/db/db.ts";
 
 async function main() {
   console.log("🧹 Clearing all recipe data from Deno KV...");

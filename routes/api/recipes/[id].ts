@@ -1,7 +1,7 @@
-import { enqueueJob } from "../../../utils/db/queue-handler.ts";
-import { recipeModel } from "../../../utils/db/recipe-model.ts";
-import { requireAdmin } from "../../../utils/auth/admin.ts";
-import { optionalAuth } from "../../../utils/auth/middleware.ts";
+import { enqueueJob } from "🛠️/db/queue-handler.ts";
+import { recipeModel } from "🛠️/db/recipe-model.ts";
+import { requireAdmin } from "🛠️/auth/admin.ts";
+import { optionalAuth } from "🛠️/auth/middleware.ts";
 import { define } from "../../../utils.ts";
 
 export const handler = define.handlers({

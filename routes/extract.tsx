@@ -1,5 +1,5 @@
 import { page } from "fresh";
-import RecipeExtractor from "../islands/RecipeExtractor.tsx";
+import RecipeExtractor from "🏝️/RecipeExtractor.tsx";
 import { define } from "../utils.ts";
 
 export const handler = define.handlers({

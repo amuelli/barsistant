@@ -1,6 +1,6 @@
 import { page } from "fresh";
 import { define } from "../../utils.ts";
-import Login from "../../islands/Login.tsx";
+import Login from "🏝️/Login.tsx";
 
 export const handler = define.handlers({
   GET(ctx) {

@@ -11,11 +11,8 @@
  */
 
 import { ulid } from "@std/ulid";
-import {
-  type CreateRecipeParams,
-  recipeModel,
-} from "../utils/db/recipe-model.ts";
-import { userCollectionModel } from "../utils/db/user-collection-model.ts";
+import { type CreateRecipeParams, recipeModel } from "🛠️/db/recipe-model.ts";
+import { userCollectionModel } from "🛠️/db/user-collection-model.ts";
 import type { Recipe } from "../types/recipe.ts";
 
 function createTestRecipe(

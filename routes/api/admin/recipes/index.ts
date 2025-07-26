@@ -1,6 +1,6 @@
-import { requireAdmin } from "../../../../utils/auth/admin.ts";
-import { recipeModel } from "../../../../utils/db/recipe-model.ts";
-import { findUserById } from "../../../../utils/auth/user.ts";
+import { requireAdmin } from "🛠️/auth/admin.ts";
+import { recipeModel } from "🛠️/db/recipe-model.ts";
+import { findUserById } from "🛠️/auth/user.ts";
 import { define } from "../../../../utils.ts";
 
 export const handler = define.handlers({

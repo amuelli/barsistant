@@ -1,11 +1,8 @@
-import { createMagicLinkToken } from "../../../utils/auth/token.ts";
-import { findUserByEmail } from "../../../utils/auth/user.ts";
-import { sendEmail } from "../../../utils/email/service.ts";
-import { generateMagicLinkEmail } from "../../../utils/email/templates.ts";
-import {
-  createIPRateLimiter,
-  rateLimit,
-} from "../../../utils/auth/rate-limit.ts";
+import { createMagicLinkToken } from "🛠️/auth/token.ts";
+import { findUserByEmail } from "🛠️/auth/user.ts";
+import { sendEmail } from "🛠️/email/service.ts";
+import { generateMagicLinkEmail } from "🛠️/email/templates.ts";
+import { createIPRateLimiter, rateLimit } from "🛠️/auth/rate-limit.ts";
 import {
   createSecureHeaders,
   getClientIP,
@@ -14,7 +11,7 @@ import {
   logSecurityEvent,
   sanitizeEmail,
   validateOrigin,
-} from "../../../utils/auth/security.ts";
+} from "🛠️/auth/security.ts";
 import { define } from "../../../utils.ts";
 
 interface RequestMagicLinkRequest {

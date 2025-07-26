@@ -1,7 +1,7 @@
 import { useSignal } from "@preact/signals";
 import { useEffect } from "preact/hooks";
 import { User } from "../types/user.ts";
-import { AuthContext } from "../utils/auth/context.ts";
+import { AuthContext } from "🛠️/auth/context.ts";
 
 interface AuthProviderProps {
   children: preact.ComponentChildren;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { Recipe } from "../types/recipe.ts";
-import { getGradientBackground } from "../utils/color-utils.tsx";
+import { getGradientBackground } from "🛠️/color-utils.tsx";
 
 interface RecipeImageProps {
   recipe: Recipe;

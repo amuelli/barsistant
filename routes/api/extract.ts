@@ -9,12 +9,12 @@ import { GlasswareType } from "../../types/recipe.ts";
 import {
   extractRecipeFromContent,
   RecipeExtraction,
-} from "../../utils/ai/extraction.ts";
-import { enqueueJob } from "../../utils/db/queue-handler.ts";
-import { createRecipeWithSimpleIngredients } from "../../utils/db/recipe-helper.ts";
-import { userCollectionModel } from "../../utils/db/user-collection-model.ts";
-import { fetchUrlContent, prepareHtmlForAI } from "../../utils/url-content.ts";
-import { requireAuth } from "../../utils/auth/middleware.ts";
+} from "🛠️/ai/extraction.ts";
+import { enqueueJob } from "🛠️/db/queue-handler.ts";
+import { createRecipeWithSimpleIngredients } from "🛠️/db/recipe-helper.ts";
+import { userCollectionModel } from "🛠️/db/user-collection-model.ts";
+import { fetchUrlContent, prepareHtmlForAI } from "🛠️/url-content.ts";
+import { requireAuth } from "🛠️/auth/middleware.ts";
 import { define } from "../../utils.ts";
 
 // Interface for extract API request body

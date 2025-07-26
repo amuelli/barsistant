@@ -1,12 +1,12 @@
-import { validateMagicLinkToken } from "../../../utils/auth/token.ts";
+import { validateMagicLinkToken } from "🛠️/auth/token.ts";
 import {
   createUser,
   findUserByEmail,
   updateUserLastLogin,
-} from "../../../utils/auth/user.ts";
-import { createUserSession } from "../../../utils/auth/session.ts";
-import { sendEmail } from "../../../utils/email/service.ts";
-import { generateWelcomeEmail } from "../../../utils/email/templates.ts";
+} from "🛠️/auth/user.ts";
+import { createUserSession } from "🛠️/auth/session.ts";
+import { sendEmail } from "🛠️/email/service.ts";
+import { generateWelcomeEmail } from "🛠️/email/templates.ts";
 import { define } from "../../../utils.ts";
 
 interface VerifyMagicLinkRequest {

@@ -9,7 +9,7 @@
  */
 
 import "https://deno.land/std@0.208.0/dotenv/load.ts";
-import { kv } from "../utils/db/db.ts";
+import { kv } from "🛠️/db/db.ts";
 
 interface DumpOptions {
   format: "json" | "table" | "raw";

@@ -1,5 +1,5 @@
 import { define } from "../../utils.ts";
-import { checkAdminFromUser } from "../../utils/auth/admin.ts";
+import { checkAdminFromUser } from "🛠️/auth/admin.ts";
 
 interface AdminData {
   isAdmin: boolean;

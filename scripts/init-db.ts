@@ -4,11 +4,9 @@ import {
   ingredients as sampleIngredients,
   recipes as sampleRecipes,
 } from "../scripts/data.ts";
-import { kv } from "../utils/db/db.ts";
-import { ingredientModel } from "../utils/db/ingredient-model.ts";
-import {
-  createRecipeWithSimpleIngredients,
-} from "../utils/db/recipe-helper.ts";
+import { kv } from "🛠️/db/db.ts";
+import { ingredientModel } from "🛠️/db/ingredient-model.ts";
+import { createRecipeWithSimpleIngredients } from "🛠️/db/recipe-helper.ts";
 
 const DB_VERSION_KEY = ["db_meta", "version"];
 const CURRENT_VERSION = 1;

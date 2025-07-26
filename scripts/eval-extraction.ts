@@ -10,7 +10,7 @@
  */
 
 import "@std/dotenv/load";
-import { evaluateExtractions } from "../utils/ai/extraction_eval.ts";
+import { evaluateExtractions } from "🛠️/ai/extraction_eval.ts";
 
 // Environment variables are loaded automatically via the import
 

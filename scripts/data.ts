@@ -9,7 +9,7 @@ import { Ingredient } from "../types/ingredient.ts";
 import type { Recipe } from "../types/recipe.ts";
 import {
   CreateRecipeWithSimpleIngredientsParams,
-} from "../utils/db/recipe-helper.ts";
+} from "🛠️/db/recipe-helper.ts";
 
 /**
  * Type for recipe creation that omits fields automatically generated during creation

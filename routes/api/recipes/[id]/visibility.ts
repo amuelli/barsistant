@@ -1,6 +1,6 @@
-import { recipeModel } from "../../../../utils/db/recipe-model.ts";
-import { requireAuth } from "../../../../utils/auth/middleware.ts";
-import { kv } from "../../../../utils/db/db.ts";
+import { recipeModel } from "🛠️/db/recipe-model.ts";
+import { requireAuth } from "🛠️/auth/middleware.ts";
+import { kv } from "🛠️/db/db.ts";
 import { define } from "../../../../utils.ts";
 
 /**

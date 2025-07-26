@@ -4,15 +4,15 @@ import {
   assertEquals,
   assertExists,
 } from "https://deno.land/std@0.208.0/assert/mod.ts";
-import { createMockRequest } from "../../../../utils/test-helpers.ts";
+import { createMockRequest } from "🛠️/test-helpers.ts";
 import type { FreshContext } from "fresh";
 import type { State } from "../../../../utils.ts";
 import { handler } from "./visibility.ts";
-import { recipeModel } from "../../../../utils/db/recipe-model.ts";
-import { createUser, deleteUser } from "../../../../utils/auth/user.ts";
-import { userCollectionModel } from "../../../../utils/db/user-collection-model.ts";
-import { createMagicLinkToken } from "../../../../utils/auth/token.ts";
-import { createUserSession } from "../../../../utils/auth/session.ts";
+import { recipeModel } from "🛠️/db/recipe-model.ts";
+import { createUser, deleteUser } from "🛠️/auth/user.ts";
+import { userCollectionModel } from "🛠️/db/user-collection-model.ts";
+import { createMagicLinkToken } from "🛠️/auth/token.ts";
+import { createUserSession } from "🛠️/auth/session.ts";
 import { Recipe } from "../../../../types/recipe.ts";
 
 Deno.test("Recipe Visibility API", async (t) => {

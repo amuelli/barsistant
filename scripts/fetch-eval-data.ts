@@ -9,12 +9,12 @@
  */
 
 import "@std/dotenv/load";
-import { type RecipeExtraction } from "../utils/ai/extraction.ts";
+import { type RecipeExtraction } from "🛠️/ai/extraction.ts";
 import {
   type RecipeTestCase,
   TEST_CASES,
-} from "../utils/ai/extraction_eval_test_cases.ts";
-import { fetchUrlContent, prepareHtmlForAI } from "../utils/url-content.ts";
+} from "🛠️/ai/extraction_eval_test_cases.ts";
+import { fetchUrlContent, prepareHtmlForAI } from "🛠️/url-content.ts";
 
 // For backward compatibility, alias TEST_CASES as RECIPES
 export { TEST_CASES as RECIPES };
