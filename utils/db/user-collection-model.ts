@@ -171,7 +171,7 @@ export const userCollectionModel = {
       ) {
         if (count >= offset && recipes.length < limit) {
           const recipeId = entry.key[2] as string;
-          const recipe = await recipeModel.getById(recipeId);
+          const recipe = await recipeModel.getById(recipeId, userId);
 
           if (recipe) {
             recipes.push(recipe);
@@ -217,7 +217,7 @@ export const userCollectionModel = {
         if (collection.collectionType === collectionType) {
           if (count >= offset && recipes.length < limit) {
             const recipeId = entry.key[2] as string;
-            const recipe = await recipeModel.getById(recipeId);
+            const recipe = await recipeModel.getById(recipeId, userId);
 
             if (recipe) {
               recipes.push(recipe);

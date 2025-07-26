@@ -84,7 +84,6 @@ export const recipeModel = {
         createdBy: params.createdBy,
         visibility: params.visibility,
         originalRecipeId: params.originalRecipeId,
-        publicRecipeId: params.publicRecipeId,
         createdAt: now,
         updatedAt: now,
       };
@@ -100,30 +99,19 @@ export const recipeModel = {
       ];
       transaction.set(userRecipeKey, recipe);
 
-      // If recipe is public, also store in public namespace with separate ULID
+      // If recipe is public, also store in public namespace with same ULID
       if (recipe.visibility === "public") {
-        const publicId = ulid(); // Separate ULID for public namespace
         const publicRecipe: Recipe = {
           ...recipe,
-          id: publicId,
+          // Keep same ID as user recipe
           originalRecipeId: id, // Track source recipe
         };
 
         // Store in public namespace: ["public_recipe", ulid] → Recipe
-        const publicRecipeKey: PublicRecipeKey = ["public_recipe", publicId];
+        const publicRecipeKey: PublicRecipeKey = ["public_recipe", id];
         transaction.set(publicRecipeKey, publicRecipe);
 
-        // Update user recipe to reference public version
-        const updatedUserRecipe: Recipe = {
-          ...recipe,
-          publicRecipeId: publicId,
-        };
-        const updatedUserRecipeKey: UserRecipeKey = [
-          "user_recipe",
-          recipe.createdBy,
-          id,
-        ];
-        transaction.set(updatedUserRecipeKey, updatedUserRecipe);
+        // No need to update user recipe since we're using the same ID
       }
 
       // Commit transaction
@@ -138,31 +126,59 @@ export const recipeModel = {
   },
 
   /**
-   * Get a recipe by ID - searches both user and public namespaces
+   * Get a recipe by ID
+   *
+   * @param id Recipe ID
+   * @param userId Optional user ID for efficient lookup in user namespace
+   * @returns The recipe or null if not found
+   * @throws {DatabaseError} If the database operation fails
+   */
+  async getById(id: string, userId?: string): Promise<Recipe | null> {
+    return await executeDbOperation(async () => {
+      if (userId) {
+        // Efficient lookup in user's namespace if userId is provided
+        const userRecipe = await this.getUserRecipeById(userId, id);
+        if (userRecipe) {
+          return userRecipe;
+        }
+        // If not found in user namespace, fallback to public namespace
+        return await this.getPublicRecipeById(id);
+      } else {
+        // When no userId provided, only check public namespace
+        return await this.getPublicRecipeById(id);
+      }
+    }, "Failed to get recipe");
+  },
+
+  /**
+   * Get any recipe by ID across all namespaces (admin use case)
+   *
+   * This method searches both user and public namespaces comprehensively.
+   * Intended for admin interfaces where full access is needed.
    *
    * @param id Recipe ID
    * @returns The recipe or null if not found
    * @throws {DatabaseError} If the database operation fails
    */
-  async getById(id: string): Promise<Recipe | null> {
+  async getByIdForAdmin(id: string): Promise<Recipe | null> {
     return await executeDbOperation(async () => {
-      // First check public recipes (most efficient)
-      const publicRecipeKey: PublicRecipeKey = ["public_recipe", id];
-      const publicResult = await kv.get<Recipe>(publicRecipeKey);
-      if (publicResult.value) {
-        return publicResult.value;
+      // First check public namespace for efficiency (most recipes might be public)
+      const publicRecipe = await this.getPublicRecipeById(id);
+      if (publicRecipe) {
+        return publicRecipe;
       }
 
-      // If not found in public, search user recipe namespaces
-      // Note: This is less efficient but necessary for the general getById method
-      for await (const entry of kv.list<Recipe>({ prefix: ["user_recipe"] })) {
+      // Search all user namespaces
+      for await (
+        const entry of kv.list<Recipe>({ prefix: ["user_recipe"] })
+      ) {
         if (entry.value && entry.value.id === id) {
           return entry.value;
         }
       }
 
       return null;
-    }, "Failed to get recipe");
+    }, "Failed to get recipe for admin");
   },
 
   /**
@@ -264,8 +280,7 @@ export const recipeModel = {
           ];
           transaction.set(newPublicRecipeKey, publicRecipe);
 
-          // Mark user recipe as having a public version
-          updatedRecipe.publicRecipeId = recipeId;
+          // Public version uses same ID as user recipe
         } else if (newVisibility === "private" && oldVisibility === "public") {
           // Making recipe private: remove from public namespace
           const existingPublicRecipeKey: PublicRecipeKey = [
@@ -274,8 +289,7 @@ export const recipeModel = {
           ];
           transaction.delete(existingPublicRecipeKey);
 
-          // Clear public recipe reference
-          updatedRecipe.publicRecipeId = undefined;
+          // Public recipe uses same ID, so no reference to clear
         }
       } else if (newVisibility === "public") {
         // Recipe is staying public, update the public version too
@@ -337,21 +351,16 @@ export const recipeModel = {
       transaction.delete(deleteUserRecipeKey);
 
       // If recipe is public, also delete from public namespace
-      if (
-        existingRecipe.visibility === "public" && existingRecipe.publicRecipeId
-      ) {
+      if (existingRecipe.visibility === "public") {
         const deletePublicRecipeKey: PublicRecipeKey = [
           "public_recipe",
-          existingRecipe.publicRecipeId,
+          recipeId,
         ];
         transaction.delete(deletePublicRecipeKey);
       }
 
-      // Delete all user favorites for this recipe (both IDs if public)
+      // Delete all user favorites for this recipe
       const recipeIdsToClean = [recipeId];
-      if (existingRecipe.publicRecipeId) {
-        recipeIdsToClean.push(existingRecipe.publicRecipeId);
-      }
 
       for (const idToClean of recipeIdsToClean) {
         for await (const entry of kv.list({ prefix: ["user_favorites"] })) {
@@ -495,8 +504,12 @@ export const recipeModel = {
     visibility: "private" | "public" = "private",
   ): Promise<Recipe> {
     return await executeDbOperation(async () => {
-      // Find the source recipe
-      const sourceRecipe = await this.getById(sourceRecipeId);
+      // Find the source recipe (use targetUserId to check if they own it, fallback to admin)
+      let sourceRecipe = await this.getById(sourceRecipeId, targetUserId);
+      if (!sourceRecipe) {
+        // If not found in user's namespace, try admin access for public recipes
+        sourceRecipe = await this.getByIdForAdmin(sourceRecipeId);
+      }
       if (!sourceRecipe) {
         throw new Error(`Source recipe ${sourceRecipeId} not found`);
       }
@@ -512,7 +525,6 @@ export const recipeModel = {
         createdBy: targetUserId,
         visibility,
         originalRecipeId: sourceRecipeId, // Track the source
-        publicRecipeId: undefined, // Clear this for the copy
         createdAt: now,
         updatedAt: now,
       };
@@ -527,29 +539,21 @@ export const recipeModel = {
       ];
       transaction.set(copyUserRecipeKey, copiedRecipe);
 
-      // If copying as public, also store in public namespace
+      // If copying as public, also store in public namespace with same ID
       if (visibility === "public") {
-        const publicId = ulid();
         const publicRecipe: Recipe = {
           ...copiedRecipe,
-          id: publicId,
+          // Keep same ID as copied recipe
           originalRecipeId: sourceRecipeId, // Still track original source
         };
 
         const copyPublicRecipeKey: PublicRecipeKey = [
           "public_recipe",
-          publicId,
+          newRecipeId,
         ];
         transaction.set(copyPublicRecipeKey, publicRecipe);
 
-        // Update user recipe to reference public version
-        copiedRecipe.publicRecipeId = publicId;
-        const updatedCopyUserRecipeKey: UserRecipeKey = [
-          "user_recipe",
-          targetUserId,
-          newRecipeId,
-        ];
-        transaction.set(updatedCopyUserRecipeKey, copiedRecipe);
+        // No need to update user recipe since we're using the same ID
       }
 
       // Commit transaction
@@ -563,6 +567,92 @@ export const recipeModel = {
   },
 
   /**
+   * List all user recipes across all users for admin interface.
+   * Uses offset-based pagination since we need to list across multiple user namespaces.
+   *
+   * @param limit Number of recipes per page (default: 30)
+   * @param cursor Offset cursor from previous page for pagination
+   * @returns { items: Recipe[], cursor: string, total: number }
+   */
+  async listUserRecipesForAdmin({
+    limit = 30,
+    cursor = "",
+  }: {
+    limit?: number;
+    cursor?: string;
+  }) {
+    return await executeDbOperation(async () => {
+      const allRecipes: Recipe[] = [];
+
+      // Collect all user recipes (sorted by ULID which gives us chronological order)
+      for await (const entry of kv.list<Recipe>({ prefix: ["user_recipe"] })) {
+        if (entry.value) {
+          allRecipes.push(entry.value);
+        }
+      }
+
+      // Sort by ID (ULID) in descending order (newest first)
+      allRecipes.sort((a, b) => b.id.localeCompare(a.id));
+
+      // Apply offset-based pagination
+      const offset = cursor ? parseInt(cursor) || 0 : 0;
+      const paginatedRecipes = allRecipes.slice(offset, offset + limit);
+
+      // Calculate next cursor
+      const hasMore = offset + limit < allRecipes.length;
+      const nextCursor = hasMore ? String(offset + limit) : "";
+
+      return {
+        items: paginatedRecipes,
+        cursor: nextCursor,
+        total: allRecipes.length,
+      };
+    }, "Failed to list user recipes for admin");
+  },
+
+  /**
+   * Search user recipes for admin interface.
+   * Only searches within user recipe namespace.
+   *
+   * @param query Search query for name, description, or tags
+   * @param limit Maximum number of results (default: 50)
+   * @returns Array of matching recipes
+   */
+  async searchUserRecipesForAdmin({
+    query,
+    limit = 50,
+  }: {
+    query: string;
+    limit?: number;
+  }): Promise<Recipe[]> {
+    return await executeDbOperation(async () => {
+      const allRecipes: Recipe[] = [];
+
+      // Collect all user recipes
+      for await (const entry of kv.list<Recipe>({ prefix: ["user_recipe"] })) {
+        if (entry.value) {
+          allRecipes.push(entry.value);
+        }
+      }
+
+      // Filter by search query
+      const queryLower = query.toLowerCase().trim();
+      const filteredRecipes = allRecipes.filter((recipe) =>
+        recipe.name.toLowerCase().includes(queryLower) ||
+        recipe.description.toLowerCase().includes(queryLower) ||
+        recipe.tags.some((tag) => tag.toLowerCase().includes(queryLower))
+      );
+
+      // Sort by ID (ULID) in descending order (newest first)
+      filteredRecipes.sort((a, b) => b.id.localeCompare(a.id));
+
+      // Apply limit
+      return filteredRecipes.slice(0, limit);
+    }, "Failed to search user recipes for admin");
+  },
+
+  /**
+   * @deprecated Use listUserRecipesForAdmin() instead
    * List recipes with pagination support for admin interface.
    * This method combines recipes from both user and public namespaces.
    * @param limit Number of recipes to return per page
@@ -592,10 +682,11 @@ export const recipeModel = {
   },
 
   /**
+   * @deprecated Use searchPublicRecipes() or searchUserAccessibleRecipes() instead
    * Search for recipes using simple in-memory name filtering
    *
-   * Simplified implementation that loads all recipes and filters by name only.
-   * This replaces the complex database-based search with indexes.
+   * WARNING: This method loads ALL recipes including private ones!
+   * Use the secure alternatives for user-facing functionality.
    *
    * @param params Search parameters (only query supported for now)
    * @returns Array of matching recipes
@@ -645,6 +736,111 @@ export const recipeModel = {
       const endIndex = startIndex + limit;
       return filteredRecipes.slice(startIndex, endIndex);
     }, "Failed to search recipes");
+  },
+
+  /**
+   * Search public recipes only (safe for unauthenticated users)
+   *
+   * @param params Search parameters
+   * @returns Array of matching public recipes
+   * @throws {DatabaseError} If the database operation fails
+   */
+  async searchPublicRecipes(params: SearchRecipeParams): Promise<Recipe[]> {
+    return await executeDbOperation(async () => {
+      const {
+        query,
+        limit = 20,
+        offset = 0,
+      } = params;
+
+      const publicRecipes: Recipe[] = [];
+
+      // Load only public recipes
+      for await (
+        const entry of kv.list<Recipe>({ prefix: ["public_recipe"] })
+      ) {
+        if (entry.value) {
+          publicRecipes.push(entry.value);
+        }
+      }
+
+      // Filter by name, description, and tags if query is provided
+      let filteredRecipes = publicRecipes;
+      if (query && query.trim()) {
+        const queryLower = query.toLowerCase().trim();
+        filteredRecipes = publicRecipes.filter((recipe) =>
+          recipe.name.toLowerCase().includes(queryLower) ||
+          recipe.description.toLowerCase().includes(queryLower) ||
+          recipe.tags.some((tag) => tag.toLowerCase().includes(queryLower))
+        );
+      }
+
+      // Apply pagination
+      const startIndex = offset;
+      const endIndex = startIndex + limit;
+      return filteredRecipes.slice(startIndex, endIndex);
+    }, "Failed to search public recipes");
+  },
+
+  /**
+   * Search recipes accessible to a specific user (public + their own private)
+   *
+   * @param userId User ID (must be provided)
+   * @param params Search parameters
+   * @returns Array of matching accessible recipes
+   * @throws {DatabaseError} If the database operation fails
+   */
+  async searchUserAccessibleRecipes(
+    userId: string,
+    params: SearchRecipeParams,
+  ): Promise<Recipe[]> {
+    return await executeDbOperation(async () => {
+      const {
+        query,
+        limit = 20,
+        offset = 0,
+      } = params;
+
+      const accessibleRecipes: Recipe[] = [];
+
+      // Load user's own recipes (both public and private)
+      for await (
+        const entry of kv.list<Recipe>({ prefix: ["user_recipe", userId] })
+      ) {
+        if (entry.value) {
+          accessibleRecipes.push(entry.value);
+        }
+      }
+
+      // Load public recipes from other users (avoid duplicates)
+      const existingIds = new Set(accessibleRecipes.map((r) => r.id));
+      for await (
+        const entry of kv.list<Recipe>({ prefix: ["public_recipe"] })
+      ) {
+        if (entry.value && !existingIds.has(entry.value.id)) {
+          // Only include if it's not the user's own recipe (already included above)
+          if (entry.value.createdBy !== userId) {
+            accessibleRecipes.push(entry.value);
+          }
+        }
+      }
+
+      // Filter by name, description, and tags if query is provided
+      let filteredRecipes = accessibleRecipes;
+      if (query && query.trim()) {
+        const queryLower = query.toLowerCase().trim();
+        filteredRecipes = accessibleRecipes.filter((recipe) =>
+          recipe.name.toLowerCase().includes(queryLower) ||
+          recipe.description.toLowerCase().includes(queryLower) ||
+          recipe.tags.some((tag) => tag.toLowerCase().includes(queryLower))
+        );
+      }
+
+      // Apply pagination
+      const startIndex = offset;
+      const endIndex = startIndex + limit;
+      return filteredRecipes.slice(startIndex, endIndex);
+    }, `Failed to search accessible recipes for user ${userId}`);
   },
 
   /**
@@ -753,20 +949,19 @@ export const recipeModel = {
     userId: string | null,
   ): Promise<boolean> {
     return await executeDbOperation(async () => {
-      const recipe = await this.getById(recipeId);
-      if (!recipe) {
-        return false;
+      // First try to get the recipe from user's namespace if userId is provided
+      let recipe: Recipe | null = null;
+      if (userId) {
+        recipe = await this.getUserRecipeById(userId, recipeId);
+        if (recipe) {
+          // Found in user's namespace, so they have access
+          return true;
+        }
       }
 
-      // Public recipes are accessible to everyone
-      if (recipe.visibility === "public") {
-        return true;
-      }
-
-      // Private recipes are only accessible to their owners
-      if (
-        recipe.visibility === "private" && userId && recipe.createdBy === userId
-      ) {
+      // If not found in user namespace or no userId, check public namespace
+      recipe = await this.getPublicRecipeById(recipeId);
+      if (recipe && recipe.visibility === "public") {
         return true;
       }
 

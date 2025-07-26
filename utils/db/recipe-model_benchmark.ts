@@ -42,7 +42,7 @@ async function setupTestData(count: number) {
 async function cleanupTestData(ids: string[]) {
   console.log("🧹 Cleaning up test data...");
   for (const id of ids) {
-    const recipe = await recipeModel.getById(id);
+    const recipe = await recipeModel.getByIdForAdmin(id);
     if (recipe) {
       await recipeModel.deleteUserRecipe(recipe.createdBy, id);
     }

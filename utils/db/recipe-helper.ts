@@ -126,7 +126,7 @@ export async function updateRecipeWithSimpleIngredients(
     // Create a new object without the ingredients property to satisfy the type checker
     const { ingredients: _ingredients, ...updateParams } = params;
     // Get recipe to get createdBy
-    const recipe = await recipeModel.getById(id);
+    const recipe = await recipeModel.getByIdForAdmin(id);
     if (!recipe) {
       throw new Error(`Recipe not found: ${id}`);
     }
@@ -179,8 +179,8 @@ export async function updateRecipeWithSimpleIngredients(
     });
   }
 
-  // Get recipe to get createdBy
-  const existingRecipe = await recipeModel.getById(id);
+  // Get recipe to get createdBy (admin access for helper function)
+  const existingRecipe = await recipeModel.getByIdForAdmin(id);
   if (!existingRecipe) {
     throw new Error(`Recipe not found: ${id}`);
   }

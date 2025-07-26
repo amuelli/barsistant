@@ -35,7 +35,7 @@ export async function handleGenerateRecipeRasterImageJob(
 ) {
   const { recipeId } = job;
   try {
-    const recipe = await recipeModel.getById(recipeId);
+    const recipe = await recipeModel.getByIdForAdmin(recipeId);
     if (!recipe) {
       throw new Error(`Recipe not found: ${recipeId}`);
     }

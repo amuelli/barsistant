@@ -39,7 +39,7 @@ export async function handleGenerateRecipeVectorImageJob(
   const { recipeId } = job;
   try {
     // Use recipeModel.getById instead of recipes.get
-    const recipe = await recipeModel.getById(recipeId);
+    const recipe = await recipeModel.getByIdForAdmin(recipeId);
     if (!recipe) {
       throw new DatabaseError(`Recipe not found: ${recipeId}`);
     }

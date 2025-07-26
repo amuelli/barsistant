@@ -70,7 +70,6 @@ export interface Recipe {
   createdBy: string; // User ID of recipe creator (required)
   visibility: RecipeVisibility; // Recipe privacy setting ("private" | "public")
   originalRecipeId?: string; // Source recipe if copied from another recipe
-  publicRecipeId?: string; // Public recipe ID if this private recipe was made public
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
 }
