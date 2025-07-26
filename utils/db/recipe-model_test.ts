@@ -343,59 +343,27 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     assertEquals(italianCocktails[0].name.includes("Negroni"), true);
   });
 
-  // Test advanced search - by multiple ingredients
-  await t.step("search by multiple ingredients - any mode", async () => {
-    // Find cocktails with either gin OR white rum
-    const recipes = await recipeModel.search({
-      ingredients: ["gin123", "white-rum123"],
-      ingredientMode: "any",
+  // Test simplified search - by name only
+  await t.step("search by name", async () => {
+    // Find cocktails with "Old" in the name
+    const oldFashionedRecipes = await recipeModel.search({
+      query: "Old",
     });
 
-    assertExists(recipes);
-    assertEquals(Array.isArray(recipes), true);
-    // Should find Negroni and Mojito
-    assertEquals(recipes.length >= 2, true);
-  });
+    assertExists(oldFashionedRecipes);
+    assertEquals(Array.isArray(oldFashionedRecipes), true);
+    assertEquals(oldFashionedRecipes.length >= 1, true);
+    assertEquals(oldFashionedRecipes[0].name.includes("Old Fashioned"), true);
 
-  // Test advanced search - by multiple ingredients with all mode
-  await t.step("search by multiple ingredients - all mode", async () => {
-    // Find cocktails with BOTH simple syrup AND bitters
-    const recipes = await recipeModel.search({
-      ingredients: ["simple-syrup123", "bitters123"],
-      ingredientMode: "all",
+    // Find cocktails with "Mojito" in the name
+    const mojitoRecipes = await recipeModel.search({
+      query: "Mojito",
     });
 
-    assertExists(recipes);
-    assertEquals(Array.isArray(recipes), true);
-    // Should find only Old Fashioned
-    assertEquals(recipes.length >= 1, true);
-    assertEquals(recipes[0].name.includes("Old Fashioned"), true);
-
-    // Verify that Mojito is not in the results (has syrup but no bitters)
-    const hasMojito = recipes.some((recipe) => recipe.name.includes("Mojito"));
-    assertEquals(hasMojito, false);
-  });
-
-  // Test compound search with multiple criteria
-  await t.step("compound search with multiple criteria", async () => {
-    // Find classic cocktails
-    const recipes = await recipeModel.search({
-      tags: ["classic"],
-    });
-
-    assertExists(recipes);
-    assertEquals(recipes.length >= 2, true);
-
-    // Find refreshing summer cocktails with rum
-    const summerRecipes = await recipeModel.search({
-      tags: ["refreshing", "summer"],
-      ingredients: ["white-rum123"],
-      ingredientMode: "all",
-    });
-
-    assertExists(summerRecipes);
-    assertEquals(summerRecipes.length >= 1, true);
-    assertEquals(summerRecipes[0].name.includes("Mojito"), true);
+    assertExists(mojitoRecipes);
+    assertEquals(Array.isArray(mojitoRecipes), true);
+    assertEquals(mojitoRecipes.length >= 1, true);
+    assertEquals(mojitoRecipes[0].name.includes("Mojito"), true);
   });
 
   // Clean up - test deleting a recipe

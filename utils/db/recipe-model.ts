@@ -8,7 +8,6 @@
  */
 
 import { ulid } from "@std/ulid";
-import type { IngredientRecipeLink } from "../../types/ingredient.ts";
 import { Recipe } from "../../types/recipe.ts";
 import {
   executeDbOperation,
@@ -28,13 +27,10 @@ export type CreateRecipeParams = Omit<Recipe, "id" | "createdAt" | "updatedAt">;
 export type UpdateRecipeParams = Partial<CreateRecipeParams>;
 
 /**
- * Recipe search parameters
+ * Recipe search parameters (simplified for in-memory filtering)
  */
 export interface SearchRecipeParams {
-  query?: string;
-  tags?: string[];
-  ingredients?: string[]; // Array of ingredient IDs to filter by
-  ingredientMode?: "any" | "all"; // Whether to match any or all ingredients (default: 'any')
+  query?: string; // Name-based search only
   limit?: number;
   offset?: number;
 }
@@ -98,32 +94,6 @@ export const recipeModel = {
 
       // Add the main recipe entry
       transaction.set(["recipe", id], recipe);
-
-      // Create ingredient relationships and indexes
-      for (const ingredient of params.ingredients) {
-        // Create the recipe-ingredient relationship
-        const relationKey = ["recipe_ingredient", id, ingredient.ingredientId];
-        const relation: IngredientRecipeLink = {
-          recipeId: id,
-          ingredientId: ingredient.ingredientId,
-          quantity: ingredient.quantity,
-          unit: ingredient.unit,
-          optional: ingredient.optional,
-          notes: ingredient.notes,
-        };
-        transaction.set(relationKey, relation);
-
-        // Create the ingredient-recipe index for reverse lookups
-        const indexKey = ["ingredient_recipes", ingredient.ingredientId, id];
-        transaction.set(indexKey, true);
-      }
-
-      // Create secondary indexes
-
-      // Add tag indexes
-      for (const tag of recipe.tags) {
-        transaction.set(["tag_recipes", tag, id], true);
-      }
 
       // Add user-recipe index if recipe has a creator
       if (recipe.createdBy) {
@@ -208,58 +178,7 @@ export const recipeModel = {
       // Add the main recipe entry
       transaction.set(["recipe", id], updatedRecipe);
 
-      // If tags changed, update tag indexes
-      if (params.tags) {
-        // Remove old tag indexes
-        for (const tag of existingRecipe.tags) {
-          transaction.delete(["tag_recipes", tag, id]);
-        }
-
-        // Add new tag indexes
-        for (const tag of updatedRecipe.tags) {
-          transaction.set(["tag_recipes", tag, id], true);
-        }
-      }
-
-      // If ingredients changed, update ingredient relationships
-      if (params.ingredients) {
-        // Remove old ingredient relationships and indexes
-        for (const ingredient of existingRecipe.ingredients) {
-          transaction.delete([
-            "recipe_ingredient",
-            id,
-            ingredient.ingredientId,
-          ]);
-          transaction.delete([
-            "ingredient_recipes",
-            ingredient.ingredientId,
-            id,
-          ]);
-        }
-
-        // Add new ingredient relationships and indexes
-        for (const ingredient of params.ingredients) {
-          // Create the recipe-ingredient relationship
-          const relationKey = [
-            "recipe_ingredient",
-            id,
-            ingredient.ingredientId,
-          ];
-          const relation: IngredientRecipeLink = {
-            recipeId: id,
-            ingredientId: ingredient.ingredientId,
-            quantity: ingredient.quantity,
-            unit: ingredient.unit,
-            optional: ingredient.optional,
-            notes: ingredient.notes,
-          };
-          transaction.set(relationKey, relation);
-
-          // Create the ingredient-recipe index for reverse lookups
-          const indexKey = ["ingredient_recipes", ingredient.ingredientId, id];
-          transaction.set(indexKey, true);
-        }
-      }
+      // Note: No need to update ingredient or tag indexes since we removed complex search
 
       // If createdBy changed, update user-recipe index
       if (
@@ -324,16 +243,7 @@ export const recipeModel = {
       // Delete the main recipe entry
       transaction.delete(["recipe", id]);
 
-      // Delete tag indexes
-      for (const tag of existingRecipe.tags) {
-        transaction.delete(["tag_recipes", tag, id]);
-      }
-
-      // Delete ingredient relationships and indexes
-      for (const ingredient of existingRecipe.ingredients) {
-        transaction.delete(["recipe_ingredient", id, ingredient.ingredientId]);
-        transaction.delete(["ingredient_recipes", ingredient.ingredientId, id]);
-      }
+      // Note: No need to delete ingredient or tag indexes since we removed complex search
 
       // Delete user-recipe index if recipe had a creator
       if (existingRecipe.createdBy) {
@@ -430,9 +340,12 @@ export const recipeModel = {
   },
 
   /**
-   * Search for recipes using various filters
+   * Search for recipes using simple in-memory name filtering
    *
-   * @param params Search parameters
+   * Simplified implementation that loads all recipes and filters by name only.
+   * This replaces the complex database-based search with indexes.
+   *
+   * @param params Search parameters (only query supported for now)
    * @returns Array of matching recipes
    * @throws {DatabaseError} If the database operation fails
    */
@@ -440,173 +353,38 @@ export const recipeModel = {
     return await executeDbOperation(async () => {
       const {
         query,
-        tags,
-        ingredients,
-        ingredientMode = "any", // Default to 'any' if not specified
         limit = 20,
         offset = 0,
       } = params;
 
-      let matchingRecipeIds = new Set<string>();
-      let isFirstFilter = true;
-
-      // Filter by tags if provided
-      if (tags && tags.length > 0) {
-        const tagMatches = new Set<string>();
-
-        for (const tag of tags) {
-          for await (
-            const entry of kv.list<boolean>({ prefix: ["tag_recipes", tag] })
-          ) {
-            const recipeId = entry.key[2] as string;
-            tagMatches.add(recipeId);
-          }
-        }
-
-        if (isFirstFilter) {
-          matchingRecipeIds = tagMatches;
-          isFirstFilter = false;
-        } else {
-          // Intersection with existing matches
-          matchingRecipeIds = new Set(
-            [...matchingRecipeIds].filter((id) => tagMatches.has(id)),
-          );
-        }
-
-        // Early return if no matches after filtering
-        if (matchingRecipeIds.size === 0) {
-          return [];
+      // Load all recipes using efficient kv.list() operation
+      const allRecipes: Recipe[] = [];
+      for await (const entry of kv.list<Recipe>({ prefix: ["recipe"] })) {
+        if (entry.value) {
+          allRecipes.push(entry.value);
         }
       }
 
-      // Filter by ingredients if provided
-      if (ingredients && ingredients.length > 0) {
-        // For 'all' mode, we need to track matches per ingredient
-        if (ingredientMode === "all") {
-          // Create a map to track which recipes contain which ingredients
-          const recipeIngredientMap = new Map<string, Set<string>>();
-
-          // Collect all recipes that contain any of the specified ingredients
-          for (const ingredientId of ingredients) {
-            for await (
-              const entry of kv.list<boolean>({
-                prefix: ["ingredient_recipes", ingredientId],
-              })
-            ) {
-              const recipeId = entry.key[2] as string;
-
-              // Initialize the set if this is the first ingredient for this recipe
-              if (!recipeIngredientMap.has(recipeId)) {
-                recipeIngredientMap.set(recipeId, new Set());
-              }
-
-              // Add this ingredient to the recipe's ingredient set
-              recipeIngredientMap.get(recipeId)?.add(ingredientId);
-            }
-          }
-
-          // Filter to recipes that contain all specified ingredients
-          const allIngredientMatches = new Set<string>();
-          for (
-            const [recipeId, ingredientsInRecipe] of recipeIngredientMap
-              .entries()
-          ) {
-            if (ingredientsInRecipe.size === ingredients.length) {
-              allIngredientMatches.add(recipeId);
-            }
-          }
-
-          if (isFirstFilter) {
-            matchingRecipeIds = allIngredientMatches;
-            isFirstFilter = false;
-          } else {
-            // Intersection with existing matches
-            matchingRecipeIds = new Set(
-              [...matchingRecipeIds].filter((id) =>
-                allIngredientMatches.has(id)
-              ),
-            );
-          }
-        } else {
-          // 'any' mode (default) - match recipes with any of the specified ingredients
-          const anyIngredientMatches = new Set<string>();
-
-          for (const ingredientId of ingredients) {
-            for await (
-              const entry of kv.list<boolean>({
-                prefix: ["ingredient_recipes", ingredientId],
-              })
-            ) {
-              const recipeId = entry.key[2] as string;
-              anyIngredientMatches.add(recipeId);
-            }
-          }
-
-          if (isFirstFilter) {
-            matchingRecipeIds = anyIngredientMatches;
-            isFirstFilter = false;
-          } else {
-            // Intersection with existing matches
-            matchingRecipeIds = new Set(
-              [...matchingRecipeIds].filter((id) =>
-                anyIngredientMatches.has(id)
-              ),
-            );
-          }
-        }
-
-        // Early return if no matches after filtering
-        if (matchingRecipeIds.size === 0) {
-          return [];
-        }
+      // Filter by name, description, and tags if query is provided
+      let filteredRecipes = allRecipes;
+      if (query && query.trim()) {
+        const queryLower = query.toLowerCase().trim();
+        filteredRecipes = allRecipes.filter((recipe) =>
+          recipe.name.toLowerCase().includes(queryLower) ||
+          recipe.description.toLowerCase().includes(queryLower) ||
+          recipe.tags.some((tag) => tag.toLowerCase().includes(queryLower))
+        );
       }
 
-      // If we have no filters yet, get all recipes
-      if (isFirstFilter) {
-        for await (const entry of kv.list<Recipe>({ prefix: ["recipe"] })) {
-          const recipeId = entry.key[1] as string;
-          matchingRecipeIds.add(recipeId);
-        }
-      }
-
-      // Fetch full recipe data and apply remaining filters
-      const results: Recipe[] = [];
-      let count = 0;
-
-      for (const recipeId of matchingRecipeIds) {
-        const recipe = (await kv.get<Recipe>(["recipe", recipeId])).value;
-
-        if (!recipe) continue;
-
-        // Apply text search if provided
-        if (query) {
-          const queryLower = query.toLowerCase();
-          const matchesQuery = recipe.name.toLowerCase().includes(queryLower) ||
-            recipe.description.toLowerCase().includes(queryLower) ||
-            recipe.tags.some((tag) => tag.toLowerCase().includes(queryLower));
-
-          if (!matchesQuery) {
-            continue;
-          }
-        }
-
-        // Apply pagination
-        if (count >= offset && results.length < limit) {
-          results.push(recipe);
-        }
-        count++;
-
-        if (results.length >= limit) {
-          break;
-        }
-      }
-
-      return results;
+      // Apply pagination
+      const startIndex = offset;
+      const endIndex = startIndex + limit;
+      return filteredRecipes.slice(startIndex, endIndex);
     }, "Failed to search recipes");
   },
 
   /**
-   * Get recipes by tag
+   * Get recipes by tag using in-memory filtering
    *
    * @param tag Tag to filter by
    * @param limit Maximum number of recipes to return
@@ -616,35 +394,30 @@ export const recipeModel = {
    */
   async getByTag(tag: string, limit = 20, offset = 0): Promise<Recipe[]> {
     return await executeDbOperation(async () => {
-      const recipes: Recipe[] = [];
-      let count = 0;
-
-      for await (
-        const entry of kv.list<boolean>({ prefix: ["tag_recipes", tag] })
-      ) {
-        if (count >= offset && recipes.length < limit) {
-          const recipeId = entry.key[2] as string;
-          const recipe = await this.getById(recipeId);
-
-          if (recipe) {
-            recipes.push(recipe);
-          }
-        }
-        count++;
-
-        if (recipes.length >= limit) {
-          break;
+      // Load all recipes and filter by tag in memory
+      const allRecipes: Recipe[] = [];
+      for await (const entry of kv.list<Recipe>({ prefix: ["recipe"] })) {
+        if (entry.value) {
+          allRecipes.push(entry.value);
         }
       }
 
-      return recipes;
+      // Filter by tag
+      const filteredRecipes = allRecipes.filter((recipe) =>
+        recipe.tags.includes(tag)
+      );
+
+      // Apply pagination
+      const startIndex = offset;
+      const endIndex = startIndex + limit;
+      return filteredRecipes.slice(startIndex, endIndex);
     }, `Failed to get recipes by tag ${tag}`);
   },
 
   /**
-   * Get recipes by ingredient
+   * Get recipes by ingredient using in-memory filtering
    *
-   * @param ingredientId Ingredient name to filter by
+   * @param ingredientId Ingredient ID to filter by
    * @param limit Maximum number of recipes to return
    * @param offset Number of recipes to skip
    * @returns Array of matching recipes
@@ -656,30 +429,25 @@ export const recipeModel = {
     offset = 0,
   ): Promise<Recipe[]> {
     return await executeDbOperation(async () => {
-      const recipes: Recipe[] = [];
-      let count = 0;
-
-      for await (
-        const entry of kv.list<boolean>({
-          prefix: ["ingredient_recipes", ingredientId],
-        })
-      ) {
-        if (count >= offset && recipes.length < limit) {
-          const recipeId = entry.key[2] as string;
-          const recipe = await this.getById(recipeId);
-
-          if (recipe) {
-            recipes.push(recipe);
-          }
-        }
-        count++;
-
-        if (recipes.length >= limit) {
-          break;
+      // Load all recipes and filter by ingredient in memory
+      const allRecipes: Recipe[] = [];
+      for await (const entry of kv.list<Recipe>({ prefix: ["recipe"] })) {
+        if (entry.value) {
+          allRecipes.push(entry.value);
         }
       }
 
-      return recipes;
+      // Filter by ingredient
+      const filteredRecipes = allRecipes.filter((recipe) =>
+        recipe.ingredients.some((ingredient) =>
+          ingredient.ingredientId === ingredientId
+        )
+      );
+
+      // Apply pagination
+      const startIndex = offset;
+      const endIndex = startIndex + limit;
+      return filteredRecipes.slice(startIndex, endIndex);
     }, `Failed to get recipes by ingredient ${ingredientId}`);
   },
 
