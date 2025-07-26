@@ -9,7 +9,6 @@ import { createUserSession } from "🛠️/auth/session.ts";
 import { createMagicLinkToken } from "🛠️/auth/token.ts";
 import { createUser, deleteUser } from "🛠️/auth/user.ts";
 import { recipeModel } from "🛠️/db/recipe-model.ts";
-import { userCollectionModel } from "🛠️/db/user-collection-model.ts";
 import { State } from "🛠️/define.ts";
 import { createMockRequest } from "🛠️/test-helpers.ts";
 import { Recipe } from "../../../../types/recipe.ts";
@@ -58,13 +57,8 @@ Deno.test("Recipe Visibility API", async (t) => {
       createdBy: testUser.id,
     });
 
-    // Have other user add the recipe to their collection
-    await userCollectionModel.addToCollection(
-      otherUser.id,
-      testRecipe.id,
-      "saved",
-      "Test",
-    );
+    // Other user copies the recipe to their collection (simulate saving)
+    await recipeModel.copyRecipe(testRecipe.id, otherUser.id, "private");
   });
 
   await t.step("should require authentication", async () => {
@@ -140,12 +134,10 @@ Deno.test("Recipe Visibility API", async (t) => {
   );
 
   await t.step("should toggle from public to private", async () => {
-    // Verify recipe is in other user's collection
-    const inCollectionBefore = await userCollectionModel.isInUserCollection(
-      otherUser.id,
-      testRecipe.id,
-    );
-    assertEquals(inCollectionBefore, true);
+    // Verify other user has a copy of the recipe
+    const otherUserRecipes = await recipeModel.listUserRecipes(otherUser.id);
+    const hasCopyBefore = otherUserRecipes.some(r => r.originalRecipeId === testRecipe.id);
+    assertEquals(hasCopyBefore, true);
 
     const req = createMockRequest(
       "POST",
@@ -173,12 +165,10 @@ Deno.test("Recipe Visibility API", async (t) => {
     const updatedRecipe = await recipeModel.getByIdForAdmin(testRecipe.id);
     assertEquals(updatedRecipe?.visibility, "private");
 
-    // Verify recipe was removed from other user's collection
-    const inCollectionAfter = await userCollectionModel.isInUserCollection(
-      otherUser.id,
-      testRecipe.id,
-    );
-    assertEquals(inCollectionAfter, false);
+    // Verify other user's copy was removed when recipe became private
+    const otherUserRecipesAfter = await recipeModel.listUserRecipes(otherUser.id);
+    const hasCopyAfter = otherUserRecipesAfter.some(r => r.originalRecipeId === testRecipe.id);
+    assertEquals(hasCopyAfter, false);
   });
 
   await t.step("should toggle from private to public", async () => {
