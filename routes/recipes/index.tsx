@@ -12,13 +12,16 @@ export const handler = define.handlers({
 
     let recipes;
     if (query) {
-      // For search, show all public recipes + user's own recipes
+      // For search, use secure search methods based on user authentication
       if (user) {
-        // TODO: Implement user-aware search that includes user's private recipes
-        recipes = await recipeModel.search({ query, limit: 100 });
+        // Authenticated users can search their accessible recipes (public + own private)
+        recipes = await recipeModel.searchUserAccessibleRecipes(user.id, {
+          query,
+          limit: 100,
+        });
       } else {
         // Unauthenticated users only see public recipes in search
-        recipes = await recipeModel.search({ query, limit: 100 });
+        recipes = await recipeModel.searchPublicRecipes({ query, limit: 100 });
       }
     } else {
       if (user) {

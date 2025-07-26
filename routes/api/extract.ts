@@ -1,7 +1,6 @@
 /// <reference lib="deno.unstable" />
 
 // Extraction API endpoint for handling recipe extraction requests
-import { FreshContext } from "fresh";
 import type {
   IngredientType,
   MeasurementUnit,
@@ -16,197 +15,200 @@ import { createRecipeWithSimpleIngredients } from "../../utils/db/recipe-helper.
 import { userCollectionModel } from "../../utils/db/user-collection-model.ts";
 import { fetchUrlContent, prepareHtmlForAI } from "../../utils/url-content.ts";
 import { requireAuth } from "../../utils/auth/middleware.ts";
+import { define } from "../../utils.ts";
 
 // Interface for extract API request body
 interface ExtractRequestBody {
   url: string;
 }
 
-export async function handler(ctx: FreshContext) {
-  console.log("[extract] Incoming request", {
-    method: ctx.req.method,
-    contentType: ctx.req.headers.get("content-type"),
-  });
+export const handler = define.handlers({
+  async POST(ctx) {
+    console.log("[extract] Incoming request", {
+      method: ctx.req.method,
+      contentType: ctx.req.headers.get("content-type"),
+    });
 
-  // Require authentication for recipe extraction
-  const authResult = await requireAuth(ctx.req);
-  if (authResult instanceof Response) {
-    return authResult;
-  }
-
-  const { user } = authResult;
-  console.log("[extract] Authenticated user:", user.email);
-
-  try {
-    // Parse request body - handle both JSON and form data
-    let body: ExtractRequestBody;
-    const requestContentType = ctx.req.headers.get("content-type") || "";
-
-    if (requestContentType.includes("application/json")) {
-      body = await ctx.req.json();
-      console.log("[extract] Parsed JSON body", body);
-    } else if (
-      requestContentType.includes("application/x-www-form-urlencoded")
-    ) {
-      const formData = await ctx.req.formData();
-      body = {
-        url: formData.get("url")?.toString() || "",
-      };
-      console.log("[extract] Parsed form body", body);
-    } else {
-      console.warn("[extract] Unsupported content type", requestContentType);
-      return Response.json(
-        { success: false, error: "Unsupported content type" },
-        { status: 400 },
-      );
+    // Require authentication for recipe extraction
+    const authResult = await requireAuth(ctx.req);
+    if (authResult instanceof Response) {
+      return authResult;
     }
 
-    // Validate URL
-    if (!body.url || !body.url.trim()) {
-      console.warn("[extract] Missing or empty URL");
-      return Response.json(
-        { success: false, error: "URL is required" },
-        { status: 400 },
-      );
-    }
+    const { user } = authResult;
+    console.log("[extract] Authenticated user:", user.email);
 
-    // Fetch content from URL
-    console.log("[extract] Fetching content from URL", body.url);
-    const { html, contentType: responseContentType } = await fetchUrlContent(
-      body.url,
-    );
-    console.log("[extract] Fetched content type", responseContentType);
-
-    // Check if content is HTML
-    if (
-      !responseContentType.includes("text/html") &&
-      !responseContentType.includes("application/xhtml+xml")
-    ) {
-      console.warn("[extract] URL did not return HTML content");
-      return Response.json(
-        { success: false, error: "URL must point to a valid HTML page" },
-        { status: 400 },
-      );
-    }
-
-    // Prepare HTML for AI extraction
-    console.log("[extract] Preparing HTML for AI extraction");
-    const optimizedContent = prepareHtmlForAI(html, body.url);
-    if (!optimizedContent) {
-      console.warn("[extract] Could not parse HTML content");
-      return Response.json(
-        { success: false, error: "Could not parse HTML content" },
-        { status: 400 },
-      );
-    }
-
-    // Extract recipe using AI service
-    let extractedRecipe: RecipeExtraction;
     try {
-      // Check if API provider and key are configured
-      const aiProvider = Deno.env.get("AI_PROVIDER");
-      const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
-      const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
+      // Parse request body - handle both JSON and form data
+      let body: ExtractRequestBody;
+      const requestContentType = ctx.req.headers.get("content-type") || "";
 
-      if (!aiProvider) {
-        throw new Error(
-          "AI provider not configured. Please set the AI_PROVIDER environment variable.",
+      if (requestContentType.includes("application/json")) {
+        body = await ctx.req.json();
+        console.log("[extract] Parsed JSON body", body);
+      } else if (
+        requestContentType.includes("application/x-www-form-urlencoded")
+      ) {
+        const formData = await ctx.req.formData();
+        body = {
+          url: formData.get("url")?.toString() || "",
+        };
+        console.log("[extract] Parsed form body", body);
+      } else {
+        console.warn("[extract] Unsupported content type", requestContentType);
+        return Response.json(
+          { success: false, error: "Unsupported content type" },
+          { status: 400 },
         );
       }
-      if (aiProvider === "openai" && !openaiApiKey) {
-        throw new Error(
-          "OpenAI API key not set. Please set the OPENAI_API_KEY environment variable.",
+
+      // Validate URL
+      if (!body.url || !body.url.trim()) {
+        console.warn("[extract] Missing or empty URL");
+        return Response.json(
+          { success: false, error: "URL is required" },
+          { status: 400 },
         );
       }
-      if (aiProvider === "anthropic" && !anthropicApiKey) {
-        throw new Error(
-          "Anthropic API key not set. Please set the ANTHROPIC_API_KEY environment variable.",
-        );
-      }
-      if (!openaiApiKey && !anthropicApiKey) {
-        throw new Error(
-          "No API key configured. Please set either OPENAI_API_KEY or ANTHROPIC_API_KEY environment variable.",
-        );
-      }
-      console.log("[extract] Using AI provider:", aiProvider);
-      extractedRecipe = await extractRecipeFromContent(
-        optimizedContent,
+
+      // Fetch content from URL
+      console.log("[extract] Fetching content from URL", body.url);
+      const { html, contentType: responseContentType } = await fetchUrlContent(
         body.url,
       );
-      console.log("[extract] AI extraction complete", extractedRecipe);
-    } catch (error) {
-      console.error("[extract] AI extraction failed:", error);
-      throw error;
-    }
+      console.log("[extract] Fetched content type", responseContentType);
 
-    // Map AI extraction to recipe model, do not generate image here
-    console.log("[extract] Mapping extraction to recipe model");
-    const recipeParams = mapExtractionToRecipe(
-      extractedRecipe,
-      body.url,
-    );
+      // Check if content is HTML
+      if (
+        !responseContentType.includes("text/html") &&
+        !responseContentType.includes("application/xhtml+xml")
+      ) {
+        console.warn("[extract] URL did not return HTML content");
+        return Response.json(
+          { success: false, error: "URL must point to a valid HTML page" },
+          { status: 400 },
+        );
+      }
 
-    // Save recipe to database using the helper function that handles ingredients automatically
-    console.log("[extract] Saving recipe to database");
-    const recipe = await createRecipeWithSimpleIngredients({
-      ...recipeParams,
-      createdBy: user.id, // Link the recipe to the authenticated user
-      visibility: "private", // New recipes are private by default
-    });
-    console.log("[extract] Recipe saved", {
-      id: recipe.id,
-      createdBy: user.id,
-      visibility: recipe.visibility,
-    });
+      // Prepare HTML for AI extraction
+      console.log("[extract] Preparing HTML for AI extraction");
+      const optimizedContent = prepareHtmlForAI(html, body.url);
+      if (!optimizedContent) {
+        console.warn("[extract] Could not parse HTML content");
+        return Response.json(
+          { success: false, error: "Could not parse HTML content" },
+          { status: 400 },
+        );
+      }
 
-    // Add recipe to user's collection as owned
-    try {
-      await userCollectionModel.addToCollection(
-        user.id,
-        recipe.id,
-        "owned",
-        "Created via recipe extraction",
+      // Extract recipe using AI service
+      let extractedRecipe: RecipeExtraction;
+      try {
+        // Check if API provider and key are configured
+        const aiProvider = Deno.env.get("AI_PROVIDER");
+        const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
+        const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
+
+        if (!aiProvider) {
+          throw new Error(
+            "AI provider not configured. Please set the AI_PROVIDER environment variable.",
+          );
+        }
+        if (aiProvider === "openai" && !openaiApiKey) {
+          throw new Error(
+            "OpenAI API key not set. Please set the OPENAI_API_KEY environment variable.",
+          );
+        }
+        if (aiProvider === "anthropic" && !anthropicApiKey) {
+          throw new Error(
+            "Anthropic API key not set. Please set the ANTHROPIC_API_KEY environment variable.",
+          );
+        }
+        if (!openaiApiKey && !anthropicApiKey) {
+          throw new Error(
+            "No API key configured. Please set either OPENAI_API_KEY or ANTHROPIC_API_KEY environment variable.",
+          );
+        }
+        console.log("[extract] Using AI provider:", aiProvider);
+        extractedRecipe = await extractRecipeFromContent(
+          optimizedContent,
+          body.url,
+        );
+        console.log("[extract] AI extraction complete", extractedRecipe);
+      } catch (error) {
+        console.error("[extract] AI extraction failed:", error);
+        throw error;
+      }
+
+      // Map AI extraction to recipe model, do not generate image here
+      console.log("[extract] Mapping extraction to recipe model");
+      const recipeParams = mapExtractionToRecipe(
+        extractedRecipe,
+        body.url,
       );
-      console.log("[extract] Recipe added to user collection");
-    } catch (err) {
-      console.error("[extract] Failed to add recipe to user collection", err);
-      // Don't fail the entire operation if collection add fails
-    }
 
-    // Enqueue background image generation job
-    try {
-      await enqueueJob({
-        type: "generate_recipe_raster_image",
+      // Save recipe to database using the helper function that handles ingredients automatically
+      console.log("[extract] Saving recipe to database");
+      const recipe = await createRecipeWithSimpleIngredients({
+        ...recipeParams,
+        createdBy: user.id, // Link the recipe to the authenticated user
+        visibility: "private", // New recipes are private by default
+      });
+      console.log("[extract] Recipe saved", {
+        id: recipe.id,
+        createdBy: user.id,
+        visibility: recipe.visibility,
+      });
+
+      // Add recipe to user's collection as owned
+      try {
+        await userCollectionModel.addToCollection(
+          user.id,
+          recipe.id,
+          "owned",
+          "Created via recipe extraction",
+        );
+        console.log("[extract] Recipe added to user collection");
+      } catch (err) {
+        console.error("[extract] Failed to add recipe to user collection", err);
+        // Don't fail the entire operation if collection add fails
+      }
+
+      // Enqueue background image generation job
+      try {
+        await enqueueJob({
+          type: "generate_recipe_raster_image",
+          recipeId: recipe.id,
+        });
+        console.log(
+          "[extract] Enqueued background image generation for",
+          recipe.id,
+        );
+      } catch (err) {
+        console.error("[extract] Failed to enqueue image generation job", err);
+      }
+
+      // Return success response with the new recipe ID
+      return Response.json({
+        success: true,
         recipeId: recipe.id,
       });
-      console.log(
-        "[extract] Enqueued background image generation for",
-        recipe.id,
+    } catch (error) {
+      console.error("Extraction error:", error);
+
+      // Return appropriate error response
+      return Response.json(
+        {
+          success: false,
+          error: error instanceof Error
+            ? error.message
+            : "An unknown error occurred",
+        },
+        { status: 500 },
       );
-    } catch (err) {
-      console.error("[extract] Failed to enqueue image generation job", err);
     }
-
-    // Return success response with the new recipe ID
-    return Response.json({
-      success: true,
-      recipeId: recipe.id,
-    });
-  } catch (error) {
-    console.error("Extraction error:", error);
-
-    // Return appropriate error response
-    return Response.json(
-      {
-        success: false,
-        error: error instanceof Error
-          ? error.message
-          : "An unknown error occurred",
-      },
-      { status: 500 },
-    );
-  }
-}
+  },
+});
 
 /**
  * Maps extracted recipe data to the format expected by createRecipeWithSimpleIngredients

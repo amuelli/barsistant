@@ -9,6 +9,8 @@ export const handler = define.handlers({
   },
 });
 
-export default function LoginPage() {
-  return <Login />;
-}
+export default define.page<typeof handler>(
+  () => {
+    return <Login />;
+  },
+);

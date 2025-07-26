@@ -1,29 +1,23 @@
-import { FreshContext } from "fresh";
 import { recipeModel } from "../../../../utils/db/recipe-model.ts";
 import { userCollectionModel } from "../../../../utils/db/user-collection-model.ts";
 import { requireAuth } from "../../../../utils/auth/middleware.ts";
 import type { UserCollection } from "../../../../types/user.ts";
+import { define } from "../../../../utils.ts";
 
 /**
  * API endpoint for managing recipe collections (favorites)
  * Handles adding/removing public recipes from user collections
  */
-export async function handler(ctx: FreshContext) {
-  const recipeId = ctx.params.id;
-  if (!recipeId) {
-    return new Response("Missing recipe ID", { status: 400 });
-  }
+export const handler = define.handlers({
+  async POST(ctx) {
+    const recipeId = ctx.params.id;
+    if (!recipeId) {
+      return new Response("Missing recipe ID", { status: 400 });
+    }
 
-  // Only handle POST requests for collection operations
-  if (ctx.req.method !== "POST") {
-    return new Response(`Method ${ctx.req.method} not allowed`, {
-      status: 405,
-      headers: { Allow: "POST" },
-    });
-  }
-
-  return await handlePost(recipeId, ctx.req);
-}
+    return await handlePost(recipeId, ctx.req);
+  },
+});
 
 async function handlePost(recipeId: string, req: Request) {
   try {
@@ -35,7 +29,7 @@ async function handlePost(recipeId: string, req: Request) {
     const { user } = authResult;
 
     // Verify recipe exists
-    const recipe = await recipeModel.getById(recipeId);
+    const recipe = await recipeModel.getById(recipeId, user.id);
     if (!recipe) {
       return new Response("Recipe not found", { status: 404 });
     }

@@ -1,28 +1,22 @@
-import { FreshContext } from "fresh";
 import { recipeModel } from "../../../../utils/db/recipe-model.ts";
 import { requireAuth } from "../../../../utils/auth/middleware.ts";
 import { kv } from "../../../../utils/db/db.ts";
+import { define } from "../../../../utils.ts";
 
 /**
  * API endpoint for managing recipe visibility (public/private)
  * Only recipe owners can change visibility
  */
-export async function handler(ctx: FreshContext) {
-  const recipeId = ctx.params.id;
-  if (!recipeId) {
-    return new Response("Missing recipe ID", { status: 400 });
-  }
+export const handler = define.handlers({
+  async POST(ctx) {
+    const recipeId = ctx.params.id;
+    if (!recipeId) {
+      return new Response("Missing recipe ID", { status: 400 });
+    }
 
-  // Only handle POST requests for visibility operations
-  if (ctx.req.method !== "POST") {
-    return new Response(`Method ${ctx.req.method} not allowed`, {
-      status: 405,
-      headers: { Allow: "POST" },
-    });
-  }
-
-  return await handlePost(recipeId, ctx.req);
-}
+    return await handlePost(recipeId, ctx.req);
+  },
+});
 
 async function handlePost(recipeId: string, req: Request) {
   try {
@@ -34,7 +28,7 @@ async function handlePost(recipeId: string, req: Request) {
     const { user } = authResult;
 
     // Verify recipe exists and user owns it
-    const recipe = await recipeModel.getById(recipeId);
+    const recipe = await recipeModel.getById(recipeId, user.id);
     if (!recipe) {
       return new Response("Recipe not found", { status: 404 });
     }
@@ -99,11 +93,7 @@ async function handlePost(recipeId: string, req: Request) {
       });
 
       // Find and remove all user collections for this recipe (except owner's)
-      // This handles both the original recipe ID and public recipe ID
       const recipeIdsToClean = [recipeId];
-      if (recipe.publicRecipeId) {
-        recipeIdsToClean.push(recipe.publicRecipeId);
-      }
 
       const transaction = kv.atomic();
       for (const idToClean of recipeIdsToClean) {

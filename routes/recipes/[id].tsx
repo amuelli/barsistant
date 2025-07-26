@@ -9,12 +9,11 @@ import { checkAdminFromUser } from "../../utils/auth/admin.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {
-    const recipe = await recipeModel.getById(ctx.params.id);
+    const user = ctx.state.user;
+    const recipe = await recipeModel.getById(ctx.params.id, user?.id);
     if (!recipe) {
       throw new HttpError(404, "Recipe not found");
     }
-
-    const user = ctx.state.user;
 
     // Check if user can access this recipe
     const canAccess = await recipeModel.canUserAccessRecipe(

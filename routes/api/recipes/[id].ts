@@ -1,44 +1,66 @@
-import { FreshContext } from "fresh";
 import { enqueueJob } from "../../../utils/db/queue-handler.ts";
 import { recipeModel } from "../../../utils/db/recipe-model.ts";
 import { requireAdmin } from "../../../utils/auth/admin.ts";
+import { optionalAuth } from "../../../utils/auth/middleware.ts";
+import { define } from "../../../utils.ts";
 
-export async function handler(ctx: FreshContext) {
-  const id = ctx.params.id;
-  if (!id) throw new Error("Missing recipe id");
+export const handler = define.handlers({
+  async GET(ctx) {
+    const id = ctx.params.id;
+    if (!id) throw new Error("Missing recipe id");
+    return await handleGet(id, ctx.req);
+  },
 
-  // Handle different HTTP methods
-  switch (ctx.req.method) {
-    case "GET":
-      return await handleGet(id);
-    case "PUT":
-      return await handlePut(id, ctx.req);
-    case "DELETE":
-      return await handleDelete(id);
-    case "POST":
-      return await handlePost(id, ctx.req);
-    default:
-      return new Response(`Method ${ctx.req.method} not allowed`, {
-        status: 405,
-        statusText: "Method Not Allowed",
-      });
-  }
-}
+  async PUT(ctx) {
+    const id = ctx.params.id;
+    if (!id) throw new Error("Missing recipe id");
+    return await handlePut(id, ctx.req);
+  },
 
-async function handleGet(id: string) {
-  const recipe = await recipeModel.getById(id);
+  async DELETE(ctx) {
+    const id = ctx.params.id;
+    if (!id) throw new Error("Missing recipe id");
+    return await handleDelete(id);
+  },
+
+  async POST(ctx) {
+    const id = ctx.params.id;
+    if (!id) throw new Error("Missing recipe id");
+    return await handlePost(id, ctx.req);
+  },
+});
+
+async function handleGet(id: string, req: Request) {
+  // Check access control - use optional auth since API might be called without auth
+  const authResult = await optionalAuth(req);
+  const userId = authResult instanceof Response
+    ? null
+    : authResult?.user?.id || null;
+
+  // Get the recipe using optimized lookup with userId if available
+  const recipe = await recipeModel.getById(id, userId || undefined);
   if (!recipe) {
     return new Response("recipe not found", {
       status: 404,
       statusText: "Not Found",
     });
   }
+
+  // Check if user can access this recipe
+  const canAccess = await recipeModel.canUserAccessRecipe(id, userId);
+  if (!canAccess) {
+    return new Response("This recipe is private", {
+      status: 403,
+      statusText: "Forbidden",
+    });
+  }
+
   return Response.json(recipe);
 }
 
 async function handleDelete(id: string) {
-  // First, get the recipe to determine the owner
-  const existingRecipe = await recipeModel.getById(id);
+  // First, get the recipe to determine the owner (admin context)
+  const existingRecipe = await recipeModel.getByIdForAdmin(id);
   if (!existingRecipe) {
     return new Response("recipe not found", {
       status: 404,
@@ -65,8 +87,8 @@ async function handleDelete(id: string) {
 
 async function handlePut(id: string, req: Request) {
   try {
-    // First, verify that the recipe exists
-    const existingRecipe = await recipeModel.getById(id);
+    // First, verify that the recipe exists (admin context)
+    const existingRecipe = await recipeModel.getByIdForAdmin(id);
     if (!existingRecipe) {
       return new Response("recipe not found", {
         status: 404,
@@ -99,8 +121,8 @@ async function handlePut(id: string, req: Request) {
 
 async function handlePost(id: string, req: Request) {
   try {
-    // Check if the recipe exists
-    const recipe = await recipeModel.getById(id);
+    // Check if the recipe exists (admin context)
+    const recipe = await recipeModel.getByIdForAdmin(id);
     if (!recipe) {
       return new Response("recipe not found", {
         status: 404,
