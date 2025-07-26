@@ -1,7 +1,3 @@
-import { createMagicLinkToken } from "🛠️/auth/token.ts";
-import { findUserByEmail } from "🛠️/auth/user.ts";
-import { sendEmail } from "🛠️/email/service.ts";
-import { generateMagicLinkEmail } from "🛠️/email/templates.ts";
 import { createIPRateLimiter, rateLimit } from "🛠️/auth/rate-limit.ts";
 import {
   createSecureHeaders,
@@ -12,7 +8,11 @@ import {
   sanitizeEmail,
   validateOrigin,
 } from "🛠️/auth/security.ts";
-import { define } from "../../../utils.ts";
+import { createMagicLinkToken } from "🛠️/auth/token.ts";
+import { findUserByEmail } from "🛠️/auth/user.ts";
+import { define } from "🛠️/define.ts";
+import { sendEmail } from "🛠️/email/service.ts";
+import { generateMagicLinkEmail } from "🛠️/email/templates.ts";
 
 interface RequestMagicLinkRequest {
   email: string;

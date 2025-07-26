@@ -88,7 +88,6 @@ export const recipeModel = {
         updatedAt: now,
       };
 
-      // Store recipe using ULID-based key patterns
       const transaction = kv.atomic();
 
       // Store in user's recipe namespace: ["user_recipe", userId, ulid] → Recipe
@@ -129,11 +128,14 @@ export const recipeModel = {
    * Get a recipe by ID
    *
    * @param id Recipe ID
-   * @param userId Optional user ID for efficient lookup in user namespace
+   * @param userId Optional user ID (if provided, will check user-owned/private recipes first; otherwise only public recipes are checked)
    * @returns The recipe or null if not found
    * @throws {DatabaseError} If the database operation fails
    */
-  async getById(id: string, userId?: string): Promise<Recipe | null> {
+  async getById(
+    id: string,
+    userId: string | null = null,
+  ): Promise<Recipe | null> {
     return await executeDbOperation(async () => {
       if (userId) {
         // Efficient lookup in user's namespace if userId is provided

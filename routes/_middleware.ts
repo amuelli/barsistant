@@ -1,6 +1,6 @@
 import { FreshContext } from "fresh";
-import { State } from "../utils.ts";
 import { optionalAuth } from "🛠️/auth/middleware.ts";
+import { State } from "🛠️/define.ts";
 
 export async function handler(
   ctx: FreshContext<State>,

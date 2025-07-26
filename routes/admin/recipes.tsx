@@ -1,6 +1,6 @@
-import { define } from "../../utils.ts";
-import { checkAdminFromUser } from "🛠️/auth/admin.ts";
 import AdminRecipeManager from "🏝️/AdminRecipeManager.tsx";
+import { checkAdminFromUser } from "🛠️/auth/admin.ts";
+import { define } from "🛠️/define.ts";
 
 interface AdminRecipesData {
   isAdmin: boolean;

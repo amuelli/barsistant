@@ -1,6 +1,6 @@
-import { deleteUserSession } from "🛠️/auth/session.ts";
 import { createLogoutResponse } from "🛠️/auth/middleware.ts";
-import { define } from "../../../utils.ts";
+import { deleteUserSession } from "🛠️/auth/session.ts";
+import { define } from "🛠️/define.ts";
 
 interface LogoutResponse {
   success: boolean;

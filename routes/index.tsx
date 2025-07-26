@@ -1,6 +1,6 @@
 import RecipeImage from "🏝️/RecipeImage.tsx";
-import { define } from "../utils.ts";
 import { recipeModel } from "🛠️/db/recipe-model.ts";
+import { define } from "🛠️/define.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {

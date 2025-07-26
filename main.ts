@@ -1,7 +1,7 @@
 import { App, fsRoutes, staticFiles } from "fresh";
-import { type State } from "./utils.ts";
 import { runMigrationsOnStartup } from "🛠️/db/migration-runner.ts";
 import { startQueueHandler } from "🛠️/db/queue-handler.ts";
+import { State } from "🛠️/define.ts";
 
 export const app = new App<State>();
 

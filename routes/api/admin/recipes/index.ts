@@ -1,7 +1,7 @@
 import { requireAdmin } from "🛠️/auth/admin.ts";
-import { recipeModel } from "🛠️/db/recipe-model.ts";
 import { findUserById } from "🛠️/auth/user.ts";
-import { define } from "../../../../utils.ts";
+import { recipeModel } from "🛠️/db/recipe-model.ts";
+import { define } from "🛠️/define.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {

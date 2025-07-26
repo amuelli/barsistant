@@ -1,7 +1,7 @@
-import { UserPreferences } from "../../../types/user.ts";
 import { getUserSession } from "🛠️/auth/session.ts";
 import { findUserById } from "🛠️/auth/user.ts";
-import { define } from "../../../utils.ts";
+import { define } from "🛠️/define.ts";
+import { UserPreferences } from "../../../types/user.ts";
 
 interface MeResponse {
   success: boolean;

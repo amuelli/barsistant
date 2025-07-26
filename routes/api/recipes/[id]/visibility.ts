@@ -1,7 +1,7 @@
-import { recipeModel } from "🛠️/db/recipe-model.ts";
 import { requireAuth } from "🛠️/auth/middleware.ts";
 import { kv } from "🛠️/db/db.ts";
-import { define } from "../../../../utils.ts";
+import { recipeModel } from "🛠️/db/recipe-model.ts";
+import { define } from "../../../../utils/define.ts";
 
 /**
  * API endpoint for managing recipe visibility (public/private)
@@ -83,7 +83,6 @@ async function handlePost(recipeId: string, req: Request) {
       return new Response("Invalid action", { status: 400 });
     }
 
-    // Update recipe visibility using ULID-based structure
     // If making a public recipe private, we need to remove it from other users' collections
     let removedFromCollections = 0;
     if (recipe.visibility === "public" && newVisibility === "private") {

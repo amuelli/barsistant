@@ -1,6 +1,6 @@
 import { requireAdmin } from "🛠️/auth/admin.ts";
 import { recipeModel } from "🛠️/db/recipe-model.ts";
-import { define } from "../../../../utils.ts";
+import { define } from "🛠️/define.ts";
 
 export const handler = define.handlers({
   async DELETE(ctx) {
@@ -37,7 +37,6 @@ export const handler = define.handlers({
         );
       }
 
-      // Use ULID-based delete method
       const deleted = await recipeModel.deleteUserRecipe(
         existingRecipe.createdBy,
         recipeId,
@@ -131,6 +130,87 @@ export const handler = define.handlers({
         }),
         {
           status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+  },
+
+  async POST(ctx) {
+    try {
+      // Require admin authentication
+      const authResult = await requireAdmin(ctx.req);
+      if (authResult instanceof Response) {
+        return authResult;
+      }
+
+      const recipeId = ctx.params.id;
+      if (!recipeId) {
+        return new Response(
+          JSON.stringify({ error: "Recipe ID is required" }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      // Check if the recipe exists (admin context)
+      const recipe = await recipeModel.getByIdForAdmin(recipeId);
+      if (!recipe) {
+        return new Response(
+          JSON.stringify({ error: "Recipe not found" }),
+          {
+            status: 404,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      // Parse request to determine what action to perform
+      const body = await ctx.req.json();
+
+      // Handle regenerating image
+      if (body.action === "regenerateImage") {
+        // Enqueue a job to generate a new image
+        // (admin already authenticated above)
+        await import("🛠️/db/queue-handler.ts").then(({ enqueueJob }) =>
+          enqueueJob({
+            type: "generate_recipe_raster_image",
+            recipeId,
+          })
+        );
+
+        return new Response(
+          JSON.stringify({
+            message: "raster image regeneration job enqueued",
+            recipeId,
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      // If action is not recognized
+      return new Response(
+        JSON.stringify({ error: `Unknown action: ${body.action}` }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    } catch (error) {
+      const errorMessage = error instanceof Error
+        ? error.message
+        : "Unknown error";
+      return new Response(
+        JSON.stringify({
+          error: `Failed to process recipe action: ${errorMessage}`,
+        }),
+        {
+          status: 400,
           headers: { "Content-Type": "application/json" },
         },
       );

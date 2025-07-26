@@ -1,6 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
-import { Recipe } from "../types/recipe.ts";
 import { getGradientBackground } from "🛠️/color-utils.tsx";
+import { Recipe } from "../types/recipe.ts";
 
 interface RecipeImageProps {
   recipe: Recipe;
@@ -51,7 +51,7 @@ export default function RecipeImage(
   const handleRegenerateImage = async () => {
     try {
       setIsRegenerating(true);
-      const res = await fetch(`/api/recipes/${recipe.id}`, {
+      const res = await fetch(`/api/admin/recipes/${recipe.id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

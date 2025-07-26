@@ -1,4 +1,3 @@
-import { define } from "../../utils.ts";
 import { createSessionResponse } from "🛠️/auth/middleware.ts";
 import { createUserSession } from "🛠️/auth/session.ts";
 import { validateMagicLinkToken } from "🛠️/auth/token.ts";
@@ -7,6 +6,7 @@ import {
   findUserByEmail,
   updateUserLastLogin,
 } from "🛠️/auth/user.ts";
+import { define } from "🛠️/define.ts";
 import { sendEmail } from "🛠️/email/service.ts";
 import { generateWelcomeEmail } from "🛠️/email/templates.ts";
 

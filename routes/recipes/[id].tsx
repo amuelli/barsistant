@@ -1,11 +1,11 @@
 import { HttpError } from "fresh";
-import RecipeImage from "🏝️/RecipeImage.tsx";
 import RecipeFavorites from "🏝️/RecipeFavorites.tsx";
+import RecipeImage from "🏝️/RecipeImage.tsx";
 import RecipePrivacyToggle from "🏝️/RecipePrivacyToggle.tsx";
-import { define } from "../../utils.ts";
+import { checkAdminFromUser } from "🛠️/auth/admin.ts";
 import { recipeModel } from "🛠️/db/recipe-model.ts";
 import { userCollectionModel } from "🛠️/db/user-collection-model.ts";
-import { checkAdminFromUser } from "🛠️/auth/admin.ts";
+import { define } from "🛠️/define.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {

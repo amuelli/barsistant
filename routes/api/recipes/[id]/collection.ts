@@ -1,8 +1,8 @@
+import { requireAuth } from "🛠️/auth/middleware.ts";
 import { recipeModel } from "🛠️/db/recipe-model.ts";
 import { userCollectionModel } from "🛠️/db/user-collection-model.ts";
-import { requireAuth } from "🛠️/auth/middleware.ts";
+import { define } from "🛠️/define.ts";
 import type { UserCollection } from "../../../../types/user.ts";
-import { define } from "../../../../utils.ts";
 
 /**
  * API endpoint for managing recipe collections (favorites)

@@ -2,7 +2,7 @@ import { PageProps } from "fresh";
 import AuthNav from "🏝️/AuthNav.tsx";
 import AuthProvider from "🏝️/AuthProvider.tsx";
 import { checkAdminFromUser } from "🛠️/auth/admin.ts";
-import { State } from "../utils.ts";
+import { State } from "🛠️/define.ts";
 
 export default function App(
   { Component, state, url }: PageProps<unknown, State>,
