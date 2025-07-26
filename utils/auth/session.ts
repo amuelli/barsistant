@@ -1,5 +1,9 @@
-import { kv } from "../db/db.ts";
 import { UserSession } from "../../types/user.ts";
+import {
+  kv,
+  type UserSessionKey,
+  type UserSessionLookupKey,
+} from "../db/db.ts";
 
 /**
  * Generate a secure session ID
@@ -36,11 +40,17 @@ export async function createUserSession(
   };
 
   // Use atomic transaction to create session and user lookup
+  const userSessionKey: UserSessionKey = ["user_sessions", sessionId];
+  const userSessionLookupKey: UserSessionLookupKey = [
+    "user_session_lookup",
+    userId,
+    sessionId,
+  ];
   const atomicOp = kv.atomic()
-    .set(["user_sessions", sessionId], session, {
+    .set(userSessionKey, session, {
       expireIn: sessionDurationDays * 24 * 60 * 60 * 1000,
     })
-    .set(["user_session_lookup", userId, sessionId], true, {
+    .set(userSessionLookupKey, true, {
       expireIn: sessionDurationDays * 24 * 60 * 60 * 1000,
     });
 
@@ -59,7 +69,8 @@ export async function createUserSession(
 export async function getUserSession(
   sessionId: string,
 ): Promise<UserSession | null> {
-  const result = await kv.get<UserSession>(["user_sessions", sessionId]);
+  const userSessionKey: UserSessionKey = ["user_sessions", sessionId];
+  const result = await kv.get<UserSession>(userSessionKey);
 
   if (!result.value) {
     return null;
@@ -87,7 +98,8 @@ export async function updateSessionActivity(sessionId: string): Promise<void> {
   }
 
   session.lastActive = new Date().toISOString();
-  await kv.set(["user_sessions", sessionId], session);
+  const userSessionKey: UserSessionKey = ["user_sessions", sessionId];
+  await kv.set(userSessionKey, session);
 }
 
 /**
@@ -101,9 +113,15 @@ export async function deleteUserSession(sessionId: string): Promise<void> {
   }
 
   // Use atomic transaction to remove session and user lookup
+  const userSessionKey: UserSessionKey = ["user_sessions", sessionId];
+  const userSessionLookupKey: UserSessionLookupKey = [
+    "user_session_lookup",
+    session.userId,
+    sessionId,
+  ];
   const atomicOp = kv.atomic()
-    .delete(["user_sessions", sessionId])
-    .delete(["user_session_lookup", session.userId, sessionId]);
+    .delete(userSessionKey)
+    .delete(userSessionLookupKey);
 
   await atomicOp.commit();
 }

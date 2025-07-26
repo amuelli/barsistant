@@ -9,7 +9,14 @@
 
 import { ulid } from "@std/ulid";
 import { Ingredient, IngredientType } from "../../types/ingredient.ts";
-import { executeDbOperation, kv } from "./db.ts";
+import {
+  executeDbOperation,
+  type IngredientAllergenKey,
+  type IngredientKey,
+  type IngredientSearchKey,
+  type IngredientTypeKey,
+  kv,
+} from "./db.ts";
 
 /**
  * Ingredient creation parameters
@@ -80,23 +87,39 @@ export const ingredientModel = {
       const transaction = kv.atomic();
 
       // Add the main ingredient entry
-      transaction.set(["ingredient", id], ingredient);
+      const ingredientKey: IngredientKey = ["ingredient", id];
+      transaction.set(ingredientKey, ingredient);
 
       // Create secondary indexes
 
       // Add type index for quick lookups by ingredient type
-      transaction.set(["ingredient_type", params.type, id], true);
+      const ingredientTypeKey: IngredientTypeKey = [
+        "ingredient_type",
+        params.type,
+        id,
+      ];
+      transaction.set(ingredientTypeKey, true);
 
       // Add search terms for case-insensitive search
       const searchableTerms = params.name.toLowerCase().split(/\s+/);
       for (const term of searchableTerms) {
-        transaction.set(["ingredient_search", term, id], true);
+        const ingredientSearchKey: IngredientSearchKey = [
+          "ingredient_search",
+          term,
+          id,
+        ];
+        transaction.set(ingredientSearchKey, true);
       }
 
       // If there are allergens, create indexes for them
       if (params.allergens && params.allergens.length > 0) {
         for (const allergen of params.allergens) {
-          transaction.set(["ingredient_allergen", allergen, id], true);
+          const ingredientAllergenKey: IngredientAllergenKey = [
+            "ingredient_allergen",
+            allergen,
+            id,
+          ];
+          transaction.set(ingredientAllergenKey, true);
         }
       }
 
@@ -120,7 +143,8 @@ export const ingredientModel = {
    */
   async getById(id: string): Promise<Ingredient | null> {
     return await executeDbOperation(async () => {
-      const result = await kv.get<Ingredient>(["ingredient", id]);
+      const ingredientKey: IngredientKey = ["ingredient", id];
+      const result = await kv.get<Ingredient>(ingredientKey);
       return result.value;
     }, "Failed to get ingredient");
   },
@@ -140,7 +164,8 @@ export const ingredientModel = {
   ): Promise<Ingredient> {
     return await executeDbOperation(async () => {
       // Get existing ingredient
-      const result = await kv.get<Ingredient>(["ingredient", id]);
+      const getIngredientKey: IngredientKey = ["ingredient", id];
+      const result = await kv.get<Ingredient>(getIngredientKey);
 
       if (!result.value) {
         throw new Error(`Ingredient with ID ${id} not found`);
@@ -162,12 +187,23 @@ export const ingredientModel = {
       const transaction = kv.atomic();
 
       // Update the main ingredient entry
-      transaction.set(["ingredient", id], updatedIngredient);
+      const updateIngredientKey: IngredientKey = ["ingredient", id];
+      transaction.set(updateIngredientKey, updatedIngredient);
 
       // If type changed, update type indexes
       if (params.type && params.type !== existingIngredient.type) {
-        transaction.delete(["ingredient_type", existingIngredient.type, id]);
-        transaction.set(["ingredient_type", updatedIngredient.type, id], true);
+        const oldIngredientTypeKey: IngredientTypeKey = [
+          "ingredient_type",
+          existingIngredient.type,
+          id,
+        ];
+        const newIngredientTypeKey: IngredientTypeKey = [
+          "ingredient_type",
+          updatedIngredient.type,
+          id,
+        ];
+        transaction.delete(oldIngredientTypeKey);
+        transaction.set(newIngredientTypeKey, true);
       }
 
       // If name changed, update search terms
@@ -179,7 +215,12 @@ export const ingredientModel = {
 
         // Delete old search term indexes
         for (const term of oldSearchableTerms) {
-          transaction.delete(["ingredient_search", term, id]);
+          const oldIngredientSearchKey: IngredientSearchKey = [
+            "ingredient_search",
+            term,
+            id,
+          ];
+          transaction.delete(oldIngredientSearchKey);
         }
 
         // Add new search term indexes
@@ -187,7 +228,12 @@ export const ingredientModel = {
           /\s+/,
         );
         for (const term of newSearchableTerms) {
-          transaction.set(["ingredient_search", term, id], true);
+          const newIngredientSearchKey: IngredientSearchKey = [
+            "ingredient_search",
+            term,
+            id,
+          ];
+          transaction.set(newIngredientSearchKey, true);
         }
       }
 
@@ -196,14 +242,24 @@ export const ingredientModel = {
         // Clean up old allergen relationships
         if (existingIngredient.allergens) {
           for (const allergen of existingIngredient.allergens) {
-            transaction.delete(["ingredient_allergen", allergen, id]);
+            const oldIngredientAllergenKey: IngredientAllergenKey = [
+              "ingredient_allergen",
+              allergen,
+              id,
+            ];
+            transaction.delete(oldIngredientAllergenKey);
           }
         }
 
         // Create new allergen relationships
         if (params.allergens && params.allergens.length > 0) {
           for (const allergen of params.allergens) {
-            transaction.set(["ingredient_allergen", allergen, id], true);
+            const newIngredientAllergenKey: IngredientAllergenKey = [
+              "ingredient_allergen",
+              allergen,
+              id,
+            ];
+            transaction.set(newIngredientAllergenKey, true);
           }
         }
       }
@@ -229,7 +285,8 @@ export const ingredientModel = {
   async delete(id: string): Promise<boolean> {
     return await executeDbOperation(async () => {
       // Get existing ingredient to remove all indexes
-      const result = await kv.get<Ingredient>(["ingredient", id]);
+      const deleteCheckKey: IngredientKey = ["ingredient", id];
+      const result = await kv.get<Ingredient>(deleteCheckKey);
 
       if (!result.value) {
         return false;
@@ -241,17 +298,28 @@ export const ingredientModel = {
       const transaction = kv.atomic();
 
       // Delete the main ingredient entry
-      transaction.delete(["ingredient", id]);
+      const deleteIngredientKey: IngredientKey = ["ingredient", id];
+      transaction.delete(deleteIngredientKey);
 
       // Delete type index
-      transaction.delete(["ingredient_type", existingIngredient.type, id]);
+      const ingredientTypeKey: IngredientTypeKey = [
+        "ingredient_type",
+        existingIngredient.type,
+        id,
+      ];
+      transaction.delete(ingredientTypeKey);
 
       // Delete search term indexes
       const searchableTerms = existingIngredient.name.toLowerCase().split(
         /\s+/,
       );
       for (const term of searchableTerms) {
-        transaction.delete(["ingredient_search", term, id]);
+        const ingredientSearchKey: IngredientSearchKey = [
+          "ingredient_search",
+          term,
+          id,
+        ];
+        transaction.delete(ingredientSearchKey);
       }
 
       // Delete allergen indexes
@@ -259,7 +327,12 @@ export const ingredientModel = {
         existingIngredient.allergens && existingIngredient.allergens.length > 0
       ) {
         for (const allergen of existingIngredient.allergens) {
-          transaction.delete(["ingredient_allergen", allergen, id]);
+          const ingredientAllergenKey: IngredientAllergenKey = [
+            "ingredient_allergen",
+            allergen,
+            id,
+          ];
+          transaction.delete(ingredientAllergenKey);
         }
       }
 

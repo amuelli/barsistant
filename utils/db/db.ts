@@ -15,10 +15,6 @@
  *
  * Core entities:
  * - Ingredients: ["ingredient", ingredientId] → ingredient data
- * - User favorites: ["user_favorites", userId, recipeId] → timestamp data
- * - User inventory: ["user_inventory", userId, ingredientId] → quantity data
- * - User recipe notes: ["user_notes", userId, recipeId] → notes data
- * - User collections: ["user_collections", userId, recipeId] → collection entry
  *
  * Benefits:
  * - ULID keys enable natural chronological ordering
@@ -35,12 +31,23 @@ type Kv = Deno.Kv;
 export type UserRecipeKey = ["user_recipe", string, string]; // [prefix, userId, ulid]
 export type PublicRecipeKey = ["public_recipe", string]; // [prefix, ulid]
 
-// Core entity types
+// Ingredient index keys for efficient querying
 export type IngredientKey = ["ingredient", string];
-export type UserFavoritesKey = ["user_favorites", string, string];
-export type UserInventoryKey = ["user_inventory", string, string];
-export type UserNotesKey = ["user_notes", string, string];
-export type UserCollectionsKey = ["user_collections", string, string];
+export type IngredientTypeKey = ["ingredient_type", string, string]; // [prefix, type, ingredientId]
+export type IngredientSearchKey = ["ingredient_search", string, string]; // [prefix, term, ingredientId]
+export type IngredientAllergenKey = ["ingredient_allergen", string, string]; // [prefix, allergen, ingredientId]
+
+// Authentication system keys
+export type UserKey = ["users", string]; // [prefix, userId]
+export type UserEmailKey = ["user_emails", string]; // [prefix, email]
+export type AuthTokenKey = ["auth_tokens", string]; // [prefix, token]
+export type UserSessionKey = ["user_sessions", string]; // [prefix, sessionId]
+export type UserSessionLookupKey = ["user_session_lookup", string, string]; // [prefix, userId, sessionId]
+
+// System and utility keys
+export type RateLimitKey = ["rate_limit", string, string]; // [prefix, limitType, identifier]
+export type DbVersionKey = ["db_meta", "version"]; // [prefix, "version"]
+export type HealthCheckKey = ["__health_check__"]; // Special health check key
 
 // Error class for database operations
 export class DatabaseError extends Error {
@@ -77,7 +84,8 @@ async function initKv(): Promise<Kv> {
       const kv = kvUrl ? await Deno.openKv(kvUrl) : await Deno.openKv();
 
       // Test the connection with a simple operation
-      await kv.get(["__health_check__"]);
+      const healthCheckKey: HealthCheckKey = ["__health_check__"];
+      await kv.get(healthCheckKey);
 
       return kv;
     } catch (error) {
@@ -156,7 +164,8 @@ export async function executeDbOperation<T>(
 export async function isDatabaseHealthy(): Promise<boolean> {
   try {
     const db = await getKv();
-    await db.get(["__health_check__"]);
+    const healthCheckKey: HealthCheckKey = ["__health_check__"];
+    await db.get(healthCheckKey);
     return true;
   } catch {
     return false;

@@ -136,7 +136,9 @@ Deno.test("Recipe Visibility API", async (t) => {
   await t.step("should toggle from public to private", async () => {
     // Verify other user has a copy of the recipe
     const otherUserRecipes = await recipeModel.listUserRecipes(otherUser.id);
-    const hasCopyBefore = otherUserRecipes.some(r => r.originalRecipeId === testRecipe.id);
+    const hasCopyBefore = otherUserRecipes.some((r) =>
+      r.originalRecipeId === testRecipe.id
+    );
     assertEquals(hasCopyBefore, true);
 
     const req = createMockRequest(
@@ -166,8 +168,12 @@ Deno.test("Recipe Visibility API", async (t) => {
     assertEquals(updatedRecipe?.visibility, "private");
 
     // Verify other user's copy was removed when recipe became private
-    const otherUserRecipesAfter = await recipeModel.listUserRecipes(otherUser.id);
-    const hasCopyAfter = otherUserRecipesAfter.some(r => r.originalRecipeId === testRecipe.id);
+    const otherUserRecipesAfter = await recipeModel.listUserRecipes(
+      otherUser.id,
+    );
+    const hasCopyAfter = otherUserRecipesAfter.some((r) =>
+      r.originalRecipeId === testRecipe.id
+    );
     assertEquals(hasCopyAfter, false);
   });
 

@@ -1,4 +1,4 @@
-import { kv } from "../db/db.ts";
+import { kv, type RateLimitKey } from "../db/db.ts";
 
 interface RateLimitOptions {
   windowMs: number;
@@ -36,7 +36,7 @@ export class RateLimiter {
     this.keyGenerator = options.keyGenerator || defaultKeyGenerator;
   }
 
-  private getRateLimitKey(identifier: string): string[] {
+  private getRateLimitKey(identifier: string): RateLimitKey {
     return ["rate_limit", this.prefix, identifier];
   }
 

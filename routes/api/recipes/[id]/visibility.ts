@@ -93,13 +93,13 @@ async function handlePost(recipeId: string, req: Request) {
 
       // Find and delete all user copies of this recipe (recipes with originalRecipeId matching this recipe)
       const transaction = kv.atomic();
-      
+
       // Search through all user recipes to find copies of this recipe
       for await (const entry of kv.list({ prefix: ["user_recipe"] })) {
         const userRecipe = entry.value as any;
         const key = entry.key as ["user_recipe", string, string];
         const userId = key[1];
-        
+
         // If this is a copy of our recipe and not owned by the original creator
         if (userRecipe.originalRecipeId === recipeId && userId !== user.id) {
           transaction.delete(key);

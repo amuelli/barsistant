@@ -7,8 +7,8 @@
  * across the application, ensuring consistent security policies.
  */
 
-import { recipeModel, type SearchRecipeParams } from "🛠️/db/recipe-model.ts";
 import { checkAdminFromUser } from "🛠️/auth/admin.ts";
+import { recipeModel, type SearchRecipeParams } from "🛠️/db/recipe-model.ts";
 import { User } from "../../types/user.ts";
 
 export interface AccessContext {
@@ -284,7 +284,8 @@ export class AccessControlService {
   getListMethod(context: AccessContext) {
     if (context.user) {
       // Authenticated users get their own recipes
-      return (limit?: number) => recipeModel.listUserRecipes(context.user!.id, limit);
+      return (limit?: number) =>
+        recipeModel.listUserRecipes(context.user!.id, limit);
     } else {
       // Unauthenticated users see public recipes
       return (limit?: number) => recipeModel.listPublicRecipes(limit);

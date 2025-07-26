@@ -1,5 +1,5 @@
 import { User, UserPreferences } from "../../types/user.ts";
-import { kv } from "../db/db.ts";
+import { kv, type UserEmailKey, type UserKey } from "../db/db.ts";
 
 /**
  * Generate a unique user ID
@@ -22,14 +22,16 @@ export function createDefaultUserPreferences(): UserPreferences {
  * Find a user by email address
  */
 export async function findUserByEmail(email: string): Promise<User | null> {
-  const result = await kv.get<string>(["user_emails", email]);
+  const userEmailKey: UserEmailKey = ["user_emails", email];
+  const result = await kv.get<string>(userEmailKey);
 
   if (!result.value) {
     return null;
   }
 
   const userId = result.value;
-  const userResult = await kv.get<User>(["users", userId]);
+  const userKey: UserKey = ["users", userId];
+  const userResult = await kv.get<User>(userKey);
 
   return userResult.value || null;
 }
@@ -38,7 +40,8 @@ export async function findUserByEmail(email: string): Promise<User | null> {
  * Find a user by ID
  */
 export async function findUserById(userId: string): Promise<User | null> {
-  const result = await kv.get<User>(["users", userId]);
+  const userKey: UserKey = ["users", userId];
+  const result = await kv.get<User>(userKey);
   return result.value || null;
 }
 
@@ -62,9 +65,11 @@ export async function createUser(
   };
 
   // Use atomic transaction to ensure both user and email lookup are created together
+  const userKey: UserKey = ["users", userId];
+  const userEmailKey: UserEmailKey = ["user_emails", email];
   const atomicOp = kv.atomic()
-    .set(["users", userId], user)
-    .set(["user_emails", email], userId);
+    .set(userKey, user)
+    .set(userEmailKey, userId);
 
   const result = await atomicOp.commit();
 
@@ -88,7 +93,8 @@ export async function updateUserLastLogin(userId: string): Promise<void> {
   user.lastLoginAt = new Date().toISOString();
   user.updatedAt = new Date().toISOString();
 
-  await kv.set(["users", userId], user);
+  const userKey: UserKey = ["users", userId];
+  await kv.set(userKey, user);
 }
 
 /**
@@ -107,7 +113,8 @@ export async function updateUserPreferences(
   user.preferences = { ...user.preferences, ...preferences };
   user.updatedAt = new Date().toISOString();
 
-  await kv.set(["users", userId], user);
+  const userKey: UserKey = ["users", userId];
+  await kv.set(userKey, user);
 
   return user;
 }
@@ -123,9 +130,11 @@ export async function deleteUser(userId: string): Promise<void> {
   }
 
   // Use atomic transaction to remove user and email lookup
+  const userKey: UserKey = ["users", userId];
+  const userEmailKey: UserEmailKey = ["user_emails", user.email];
   const atomicOp = kv.atomic()
-    .delete(["users", userId])
-    .delete(["user_emails", user.email]);
+    .delete(userKey)
+    .delete(userEmailKey);
 
   const result = await atomicOp.commit();
 

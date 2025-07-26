@@ -1,5 +1,5 @@
-import { kv } from "../db/db.ts";
 import { MagicLinkToken } from "../../types/user.ts";
+import { type AuthTokenKey, kv } from "../db/db.ts";
 
 /**
  * Generate a secure random token for magic link authentication
@@ -31,7 +31,8 @@ export async function createMagicLinkToken(
     used: false,
   };
 
-  await kv.set(["auth_tokens", token], magicLinkToken, {
+  const authTokenKey: AuthTokenKey = ["auth_tokens", token];
+  await kv.set(authTokenKey, magicLinkToken, {
     expireIn: expirationMinutes * 60 * 1000,
   });
 
@@ -44,7 +45,8 @@ export async function createMagicLinkToken(
 export async function validateMagicLinkToken(
   token: string,
 ): Promise<MagicLinkToken | null> {
-  const result = await kv.get<MagicLinkToken>(["auth_tokens", token]);
+  const authTokenKey: AuthTokenKey = ["auth_tokens", token];
+  const result = await kv.get<MagicLinkToken>(authTokenKey);
 
   if (!result.value) {
     return null;
@@ -54,7 +56,7 @@ export async function validateMagicLinkToken(
 
   // Check if token is expired
   if (new Date() > new Date(magicLinkToken.expires)) {
-    await kv.delete(["auth_tokens", token]);
+    await kv.delete(authTokenKey);
     return null;
   }
 
@@ -65,7 +67,7 @@ export async function validateMagicLinkToken(
 
   // Mark token as used
   magicLinkToken.used = true;
-  await kv.set(["auth_tokens", token], magicLinkToken);
+  await kv.set(authTokenKey, magicLinkToken);
 
   return magicLinkToken;
 }
