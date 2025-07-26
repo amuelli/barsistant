@@ -32,11 +32,14 @@ async function main() {
       ["recipe"],
       ["user_recipes"],
       ["public_recipes"],
+      ["user_favorites"],
+      ["user_collections"],
+      // Legacy indexes that may still exist (cleanup from old data structure)
       ["recipe_ingredient"],
       ["ingredient_recipes"],
       ["tag_recipes"],
-      ["user_favorites"],
-      ["user_collections"],
+      ["strength_recipes"],
+      ["sweetness_recipes"],
     ];
 
     for (const prefix of prefixesToClear) {

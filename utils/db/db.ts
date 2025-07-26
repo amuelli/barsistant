@@ -7,33 +7,35 @@
  * for interacting with the database. It ensures a single connection instance
  * is used throughout the application and provides error handling.
  *
- * Key Structure Patterns:
+ * Key Structure Patterns (Simplified):
  * - Recipe primary keys: ["recipe", recipeId] → recipe data
  * - Ingredient primary keys: ["ingredient", ingredientId] → ingredient data
- * - Recipe-ingredient relationships: ["recipe_ingredient", recipeId, ingredientId] → quantity data
- * - Secondary indexes: ["ingredient_recipes", ingredientId, recipeId] → recipe reference
  * - User favorites: ["user_favorites", userId, recipeId] → timestamp data
  * - User inventory: ["user_inventory", userId, ingredientId] → quantity data
  * - User recipe notes: ["user_notes", userId, recipeId] → notes data
  * - User created recipes: ["user_recipes", userId, recipeId] → recipe reference
  * - Public recipes: ["public_recipes", recipeId] → recipe reference
  * - User collections: ["user_collections", userId, recipeId] → collection entry
+ * 
+ * Note: Complex search indexes removed for simplified in-memory filtering
  */
 
 // Import the Deno KV types directly from the Deno namespace
 type Kv = Deno.Kv;
 
-// Types for key patterns to enforce consistent usage
+// Types for key patterns to enforce consistent usage (simplified)
 export type RecipeKey = ["recipe", string];
 export type IngredientKey = ["ingredient", string];
-export type RecipeIngredientKey = ["recipe_ingredient", string, string];
-export type IngredientRecipesKey = ["ingredient_recipes", string, string];
 export type UserFavoritesKey = ["user_favorites", string, string];
 export type UserInventoryKey = ["user_inventory", string, string];
 export type UserNotesKey = ["user_notes", string, string];
 export type UserRecipesKey = ["user_recipes", string, string];
 export type PublicRecipesKey = ["public_recipes", string];
 export type UserCollectionsKey = ["user_collections", string, string];
+
+// Legacy key types (for cleanup purposes only)
+export type RecipeIngredientKey = ["recipe_ingredient", string, string];
+export type IngredientRecipesKey = ["ingredient_recipes", string, string];
 export type TagRecipesKey = ["tag_recipes", string, string];
 export type StrengthRecipesKey = ["strength_recipes", number, string];
 export type SweetnessRecipesKey = ["sweetness_recipes", number, string];
