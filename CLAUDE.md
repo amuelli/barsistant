@@ -163,6 +163,40 @@ export async function createRecipeWithIngredients(
 
   return { success: true, recipeId };
 }
+
+// Example: Using check() for conditional updates
+export async function toggleFavorite(userId: string, recipeId: string) {
+  const kv = await getKv();
+  const favoriteKey = ["user_favorites", userId, recipeId];
+
+  // Get current state
+  const current = await kv.get(favoriteKey);
+
+  // Atomic operation with check
+  const tx = kv.atomic();
+
+  if (current.value) {
+    // Remove favorite only if it still exists
+    tx.check(current) // Ensures value hasn't changed
+      .delete(favoriteKey);
+  } else {
+    // Add favorite only if it doesn't exist
+    tx.check(current) // Ensures key is still null
+      .set(favoriteKey, {
+        userId,
+        recipeId,
+        createdAt: new Date(),
+      });
+  }
+
+  const result = await tx.commit();
+  if (!result.ok) {
+    // Another operation modified the key concurrently
+    throw new Error("Concurrent modification detected");
+  }
+
+  return { success: true, isFavorite: !current.value };
+}
 ```
 
 ### Key Transaction Rules:
@@ -171,6 +205,65 @@ export async function createRecipeWithIngredients(
 - **Check transaction result** with `result.ok` before proceeding
 - **Include secondary indexes** in the same transaction
 - **Handle cleanup** in separate transactions if needed
+- **Use `check()` for conditional operations** to prevent race conditions
+
+### Sorting with Indexes
+
+Deno KV enables efficient sorting through secondary indexes. Key parts are
+ordered lexicographically with type hierarchy: `Uint8Array` > `string` >
+`number` > `bigint` > `boolean`.
+
+**Reference**:
+[Comprehensive Guide to Deno KV - Sorting with Indexes](https://deno-blog.com/A_Comprehensive_Guide_to_Deno_KV.2023-06-30#sorting-with-indexes)
+
+#### Sorting Pattern Example:
+
+```typescript
+// Create secondary index for sorting recipes by date
+await kv.atomic()
+  .set(["recipe", recipeId], recipeData)
+  .set(["recipes_by_date", createdAt.toISOString(), recipeId], { recipeId })
+  .commit();
+
+// Get the latest recipe
+const latestRecipeIter = kv.list(
+  { prefix: ["recipes_by_date"] },
+  { reverse: true, limit: 1 },
+);
+const latestEntry = (await latestRecipeIter.next()).value;
+if (latestEntry) {
+  const recipeId = latestEntry.value.recipeId;
+  const recipe = await kv.get(["recipe", recipeId]);
+  console.log("Latest recipe:", recipe.value);
+}
+
+// Get 10 most recent recipes
+const recentRecipes = [];
+for await (
+  const entry of kv.list(
+    { prefix: ["recipes_by_date"] },
+    { reverse: true, limit: 10 },
+  )
+) {
+  const recipe = await kv.get(["recipe", entry.value.recipeId]);
+  if (recipe.value) recentRecipes.push(recipe.value);
+}
+
+// Sort by multiple criteria (e.g., category then name)
+await kv.atomic()
+  .set(["recipe", recipeId], recipeData)
+  .set(["recipes_by_category", category, recipeName, recipeId], { recipeId })
+  .commit();
+```
+
+#### Best Practices for Sorting:
+
+- Design index keys with sort order in mind (leftmost parts determine primary
+  sort)
+- Include unique identifiers (like IDs) as the last key part to handle
+  duplicates
+- Use `reverse: true` in `list()` for descending order
+- Consider performance implications of multiple indexes
 
 ## 🛠️ Architecture Patterns
 

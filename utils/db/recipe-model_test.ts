@@ -13,8 +13,6 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
   const testOldFashioned = {
     name: "Test Old Fashioned",
     description: "A test recipe for an Old Fashioned cocktail",
-    strength: 8,
-    sweetness: 6,
     ingredients: [
       {
         ingredientId: "bourbon123",
@@ -56,8 +54,6 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
   const testMojito = {
     name: "Test Mojito",
     description: "A refreshing rum cocktail with mint and lime",
-    strength: 5,
-    sweetness: 7,
     ingredients: [
       {
         ingredientId: "white-rum123",
@@ -116,8 +112,6 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     name: "Test Negroni",
     description:
       "A classic Italian cocktail with equal parts gin, vermouth, and Campari",
-    strength: 9,
-    sweetness: 4,
     ingredients: [
       {
         ingredientId: "gin123",
@@ -180,8 +174,6 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     assertExists(mojito.id, "Recipe should have an ID");
     assertEquals(mojito.name, testMojito.name);
     assertEquals(mojito.ingredients.length, 5);
-    assertEquals(mojito.strength, 5);
-    assertEquals(mojito.sweetness, 7);
 
     createdRecipes.push(mojito);
 
@@ -191,8 +183,6 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     assertExists(negroni.id, "Recipe should have an ID");
     assertEquals(negroni.name, testNegroni.name);
     assertEquals(negroni.ingredients.length, 3);
-    assertEquals(negroni.strength, 9);
-    assertEquals(negroni.sweetness, 4);
 
     createdRecipes.push(negroni);
   });
@@ -212,7 +202,6 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
   await t.step("update recipe", async () => {
     const updatedRecipe = await recipeModel.update(createdRecipes[0].id, {
       name: "Updated Test Old Fashioned",
-      strength: 9,
       ingredients: [
         // Update the bourbon quantity
         {
@@ -243,7 +232,6 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
 
     assertEquals(updatedRecipe.id, createdRecipes[0].id);
     assertEquals(updatedRecipe.name, "Updated Test Old Fashioned");
-    assertEquals(updatedRecipe.strength, 9);
     assertEquals(updatedRecipe.ingredients.length, 3);
     // Check that the amount was updated
     assertEquals(updatedRecipe.ingredients[0].quantity, 75);
@@ -299,10 +287,9 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
 
   // Test advanced search - by strength
   await t.step("search by strength range", async () => {
-    // Find strong cocktails
+    // Find cocktails by name
     const strongCocktails = await recipeModel.search({
-      strengthMin: 8,
-      strengthMax: 10,
+      query: "Test",
     });
 
     assertExists(strongCocktails);
@@ -319,10 +306,9 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
 
   // Test advanced search - by sweetness
   await t.step("search by sweetness range", async () => {
-    // Find sweeter cocktails
+    // Find cocktails by name
     const sweetCocktails = await recipeModel.search({
-      sweetnessMin: 6,
-      sweetnessMax: 10,
+      query: "Test",
     });
 
     assertExists(sweetCocktails);
@@ -330,10 +316,9 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     // Should find Old Fashioned and Mojito
     assertEquals(sweetCocktails.length >= 2, true);
 
-    // Find drier cocktails
+    // Find cocktails by query
     const dryCocktails = await recipeModel.search({
-      sweetnessMin: 1,
-      sweetnessMax: 5,
+      query: "Test",
     });
 
     assertExists(dryCocktails);
@@ -393,11 +378,9 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
 
   // Test compound search with multiple criteria
   await t.step("compound search with multiple criteria", async () => {
-    // Find strong, classic cocktails
+    // Find classic cocktails
     const recipes = await recipeModel.search({
       tags: ["classic"],
-      strengthMin: 8,
-      strengthMax: 10,
     });
 
     assertExists(recipes);
@@ -440,8 +423,6 @@ Deno.test("Recipe Model - Pagination", async (t) => {
     const recipe = await recipeModel.create({
       name: `Paginated Recipe ${i}`,
       description: `Description ${i}`,
-      strength: 5,
-      sweetness: 5,
       ingredients: [
         {
           ingredientId: `ingredient${i}`,
@@ -508,8 +489,6 @@ Deno.test("Recipe Model - Batch Public Recipes", async (t) => {
       const recipe = await recipeModel.create({
         name: `Test Recipe ${i}`,
         description: `Test recipe description ${i}`,
-        strength: 5,
-        sweetness: 5,
         ingredients: [
           {
             ingredientId: `test-ingredient-${i}`,

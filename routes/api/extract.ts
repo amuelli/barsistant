@@ -256,8 +256,6 @@ function mapExtractionToRecipe(
   return {
     name: extraction.title,
     description: extraction.description,
-    strength: 5, // Default values since AI extraction doesn't provide these
-    sweetness: 5,
     ingredients,
     garnish: extraction.garnish || [],
     glassware: extraction.glassware as GlasswareType,

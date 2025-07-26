@@ -39,8 +39,6 @@ Deno.test("Recipe Visibility API", async (t) => {
     testRecipe = await recipeModel.create({
       name: "Test Recipe for Visibility",
       description: "Testing visibility toggle",
-      strength: 5,
-      sweetness: 5,
       ingredients: [
         {
           ingredientId: "test-ingredient",

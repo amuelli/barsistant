@@ -1,12 +1,15 @@
 # Claude Session Review and Instructions Improvement
 
-Analyze the failures in previous Claude sessions and recommend improvements to the CLAUDE.md file and project instructions.
+Analyze the failures in previous Claude sessions and recommend improvements to
+the CLAUDE.md file and project instructions.
 
 ## 1. Review Project Architecture and Instructions
 
 First, review the current CLAUDE.md and instruction files:
+
 - CLAUDE.md: Project overview and guidance for Claude Code
-- /.github/instructions/project.instructions.md: Development conventions and workflow
+- /.github/instructions/project.instructions.md: Development conventions and
+  workflow
 - /.github/instructions/requirements.instructions.md: Project requirements
 - /README.md: Setup and environment
 
@@ -15,6 +18,7 @@ Analyze where instructions might be ambiguous or incomplete.
 ## 2. Identify Common Failure Patterns
 
 Look for patterns in previous Claude session failures:
+
 - Where did Claude misunderstand project structure?
 - What project conventions were not followed?
 - Where were tests insufficient or skipped?
@@ -26,6 +30,7 @@ Look for patterns in previous Claude session failures:
 ## 3. Check Current Project State
 
 Assess the current state of the project:
+
 ```bash
 deno task check
 deno task test
@@ -77,6 +82,7 @@ Create a specific checklist that Claude should follow for each task:
 ## 6. Recommended Updates to CLAUDE.md
 
 Based on the analysis, recommend specific updates to CLAUDE.md with:
+
 - New sections to add
 - Existing sections to clarify
 - Examples to include
@@ -84,9 +90,11 @@ Based on the analysis, recommend specific updates to CLAUDE.md with:
 - Testing requirements to emphasize
 - Command execution patterns to follow
 
-Provide the complete recommended CLAUDE.md updates as a diff or complete replacement.
+Provide the complete recommended CLAUDE.md updates as a diff or complete
+replacement.
 
 Remember:
+
 - Be specific about what went wrong in previous sessions
 - Focus on actionable improvements to instructions
 - Provide concrete examples whenever possible

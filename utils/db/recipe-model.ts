@@ -35,10 +35,6 @@ export interface SearchRecipeParams {
   tags?: string[];
   ingredients?: string[]; // Array of ingredient IDs to filter by
   ingredientMode?: "any" | "all"; // Whether to match any or all ingredients (default: 'any')
-  strengthMin?: number;
-  strengthMax?: number;
-  sweetnessMin?: number;
-  sweetnessMax?: number;
   limit?: number;
   offset?: number;
 }
@@ -83,8 +79,6 @@ export const recipeModel = {
         id,
         name: params.name.trim(),
         description: params.description || "",
-        strength: params.strength || 0,
-        sweetness: params.sweetness || 0,
         ingredients: params.ingredients,
         garnish: params.garnish || [],
         glassware: params.glassware || "",
@@ -93,6 +87,8 @@ export const recipeModel = {
         tags: params.tags || [],
         createdBy: params.createdBy,
         visibility: params.visibility ?? "private", // Default to private
+        originalRecipeId: params.originalRecipeId,
+        publicRecipeId: params.publicRecipeId,
         createdAt: now,
         updatedAt: now,
       };
@@ -123,12 +119,6 @@ export const recipeModel = {
       }
 
       // Create secondary indexes
-
-      // Add strength index
-      transaction.set(["strength_recipes", recipe.strength, id], true);
-
-      // Add sweetness index
-      transaction.set(["sweetness_recipes", recipe.sweetness, id], true);
 
       // Add tag indexes
       for (const tag of recipe.tags) {
@@ -271,27 +261,6 @@ export const recipeModel = {
         }
       }
 
-      // If strength changed, update strength index
-      if (
-        params.strength !== undefined &&
-        params.strength !== existingRecipe.strength
-      ) {
-        transaction.delete(["strength_recipes", existingRecipe.strength, id]);
-        transaction.set(["strength_recipes", updatedRecipe.strength, id], true);
-      }
-
-      // If sweetness changed, update sweetness index
-      if (
-        params.sweetness !== undefined &&
-        params.sweetness !== existingRecipe.sweetness
-      ) {
-        transaction.delete(["sweetness_recipes", existingRecipe.sweetness, id]);
-        transaction.set(
-          ["sweetness_recipes", updatedRecipe.sweetness, id],
-          true,
-        );
-      }
-
       // If createdBy changed, update user-recipe index
       if (
         params.createdBy !== undefined &&
@@ -365,12 +334,6 @@ export const recipeModel = {
         transaction.delete(["recipe_ingredient", id, ingredient.ingredientId]);
         transaction.delete(["ingredient_recipes", ingredient.ingredientId, id]);
       }
-
-      // Delete strength index
-      transaction.delete(["strength_recipes", existingRecipe.strength, id]);
-
-      // Delete sweetness index
-      transaction.delete(["sweetness_recipes", existingRecipe.sweetness, id]);
 
       // Delete user-recipe index if recipe had a creator
       if (existingRecipe.createdBy) {
@@ -480,10 +443,6 @@ export const recipeModel = {
         tags,
         ingredients,
         ingredientMode = "any", // Default to 'any' if not specified
-        strengthMin,
-        strengthMax,
-        sweetnessMin,
-        sweetnessMax,
         limit = 20,
         offset = 0,
       } = params;
@@ -618,22 +577,6 @@ export const recipeModel = {
         const recipe = (await kv.get<Recipe>(["recipe", recipeId])).value;
 
         if (!recipe) continue;
-
-        // Apply strength filter if provided
-        if (
-          (strengthMin !== undefined && recipe.strength < strengthMin) ||
-          (strengthMax !== undefined && recipe.strength > strengthMax)
-        ) {
-          continue;
-        }
-
-        // Apply sweetness filter if provided
-        if (
-          (sweetnessMin !== undefined && recipe.sweetness < sweetnessMin) ||
-          (sweetnessMax !== undefined && recipe.sweetness > sweetnessMax)
-        ) {
-          continue;
-        }
 
         // Apply text search if provided
         if (query) {

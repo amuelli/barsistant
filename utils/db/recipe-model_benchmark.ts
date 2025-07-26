@@ -16,8 +16,6 @@ async function setupTestData(count: number) {
     const recipe = await recipeModel.create({
       name: `Benchmark Recipe ${i}`,
       description: `Test recipe for benchmarking ${i}`,
-      strength: Math.floor(Math.random() * 10) + 1,
-      sweetness: Math.floor(Math.random() * 10) + 1,
       ingredients: [
         {
           ingredientId: `benchmark-ingredient-${i}`,

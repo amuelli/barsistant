@@ -43,8 +43,6 @@ export interface Recipe {
   id: string;
   name: string;
   description: string;
-  strength: number; // Scale of 1-10
-  sweetness: number; // Scale of 1-10 (1 = very sour, 10 = very sweet)
   ingredients: RecipeIngredient[]; // Array of ingredients with their quantities
   garnish: string[];
   glassware: GlasswareType;
@@ -71,6 +69,8 @@ export interface Recipe {
   rating?: number; // Average user rating
   createdBy?: string; // User ID of recipe creator (optional for backward compatibility)
   visibility?: RecipeVisibility; // Recipe privacy setting (default: "private")
+  originalRecipeId?: string; // Source recipe if copied from another recipe
+  publicRecipeId?: string; // Public recipe ID if this private recipe was made public
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
 }

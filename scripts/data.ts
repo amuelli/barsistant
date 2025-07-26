@@ -28,8 +28,6 @@ export const recipes: CreateRecipeWithSimpleIngredientsParams[] = [
       "Discover how to make an Old Fashioned Cocktail (Difford's recipe) using Bourbon whiskey, " +
       "Rye whiskey 50% abv, brown sugar syrup, Abbott's bitters, and saline solution. " +
       "This classic cocktail is spirit-forward and perfect for sipping.",
-    strength: 5,
-    sweetness: 5,
     ingredients: [
       {
         name: "Bourbon Whiskey",
@@ -98,8 +96,6 @@ export const recipes: CreateRecipeWithSimpleIngredientsParams[] = [
     name: "Cosmic Alaska",
     description:
       "The Cosmic Alaska is a spirit-forward cocktail with a herbal profile, combining gin, vermouth, vodka, and green liqueurs. It's a short and stirred drink, perfect for those who appreciate a complex and aromatic experience.",
-    strength: 5,
-    sweetness: 5,
     ingredients: [
       {
         name: "Gin",
