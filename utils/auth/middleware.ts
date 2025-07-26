@@ -1,16 +1,11 @@
 import { User } from "../../types/user.ts";
-import { getUserSession, updateSessionActivity } from "./session.ts";
-import { findUserById, updateUserLastLogin } from "./user.ts";
-
-export interface AuthenticatedRequest extends Request {
-  user?: User;
-  sessionId?: string;
-}
+import { getUserSession } from "./session.ts";
+import { findUserById } from "./user.ts";
 
 /**
  * Extract session ID from request cookies
  */
-export function getSessionIdFromRequest(request: Request): string | null {
+function getSessionIdFromRequest(request: Request): string | null {
   const cookies = request.headers.get("cookie") || "";
   const sessionMatch = cookies.match(/session=([^;]+)/);
   const sessionId = sessionMatch ? sessionMatch[1] : null;
@@ -19,34 +14,53 @@ export function getSessionIdFromRequest(request: Request): string | null {
 }
 
 /**
- * Get user from session cookie
+ * Check if running in production environment
  */
-export async function getUserFromSession(
+function isProductionEnvironment(): boolean {
+  return !!(Deno.env.get("DENO_DEPLOYMENT_ID") ||
+    Deno.env.get("NODE_ENV") === "production");
+}
+
+/**
+ * Authentication result with detailed status information
+ */
+type AuthResult =
+  | { success: true; user: User; sessionId: string }
+  | {
+    success: false;
+    reason: "no_session" | "invalid_session" | "user_not_found" | "error";
+  };
+
+/**
+ * Shared helper to get both user and session data efficiently with detailed error information
+ */
+async function getUserAndSessionFromRequest(
   request: Request,
-): Promise<User | null> {
+): Promise<AuthResult> {
   const sessionId = getSessionIdFromRequest(request);
 
   if (!sessionId) {
-    return null;
+    return { success: false, reason: "no_session" };
   }
 
   try {
     const session = await getUserSession(sessionId);
 
     if (!session) {
-      return null;
+      return { success: false, reason: "invalid_session" };
     }
-
-    // Update session activity
-    await updateSessionActivity(sessionId);
 
     // Get user data
     const user = await findUserById(session.userId);
 
-    return user;
+    if (!user) {
+      return { success: false, reason: "user_not_found" };
+    }
+
+    return { success: true, user, sessionId };
   } catch (error) {
     console.error("Error getting user from session:", error);
-    return null;
+    return { success: false, reason: "error" };
   }
 }
 
@@ -56,52 +70,26 @@ export async function getUserFromSession(
 export async function requireAuth(
   request: Request,
 ): Promise<{ user: User; sessionId: string } | Response> {
-  const sessionId = getSessionIdFromRequest(request);
+  const result = await getUserAndSessionFromRequest(request);
 
-  if (!sessionId) {
-    return new Response(JSON.stringify({ error: "Authentication required" }), {
-      status: 401,
+  if (!result.success) {
+    const errorMessage = result.reason === "no_session"
+      ? "Authentication required"
+      : result.reason === "invalid_session"
+      ? "Invalid session"
+      : result.reason === "user_not_found"
+      ? "User not found"
+      : "Authentication error";
+
+    const statusCode = result.reason === "error" ? 500 : 401;
+
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: statusCode,
       headers: { "Content-Type": "application/json" },
     });
   }
 
-  try {
-    const session = await getUserSession(sessionId);
-
-    if (!session) {
-      return new Response(JSON.stringify({ error: "Invalid session" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    // Update session activity
-    await updateSessionActivity(sessionId);
-
-    // Get user data
-    const user = await findUserById(session.userId);
-
-    if (!user) {
-      return new Response(JSON.stringify({ error: "User not found" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    // Update lastLoginAt on every successful authentication
-    await updateUserLastLogin(user.id);
-
-    return {
-      user: { ...user, lastLoginAt: new Date().toISOString() },
-      sessionId,
-    };
-  } catch (error) {
-    console.error("Error in requireAuth middleware:", error);
-    return new Response(JSON.stringify({ error: "Authentication error" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
+  return { user: result.user, sessionId: result.sessionId };
 }
 
 /**
@@ -110,30 +98,13 @@ export async function requireAuth(
 export async function optionalAuth(
   request: Request,
 ): Promise<{ user: User | null; sessionId: string | null }> {
-  const sessionId = getSessionIdFromRequest(request);
+  const result = await getUserAndSessionFromRequest(request);
 
-  if (!sessionId) {
+  if (!result.success) {
     return { user: null, sessionId: null };
   }
 
-  try {
-    const session = await getUserSession(sessionId);
-
-    if (!session) {
-      return { user: null, sessionId: null };
-    }
-
-    // Update session activity
-    await updateSessionActivity(sessionId);
-
-    // Get user data
-    const user = await findUserById(session.userId);
-
-    return { user, sessionId };
-  } catch (error) {
-    console.error("Error in optionalAuth middleware:", error);
-    return { user: null, sessionId: null };
-  }
+  return { user: result.user, sessionId: result.sessionId };
 }
 
 /**
@@ -147,9 +118,7 @@ export function createSessionResponse(
   const headers = new Headers(responseInit?.headers);
 
   // Only use Secure flag in production (HTTPS)
-  const isProduction = Deno.env.get("DENO_DEPLOYMENT_ID") ||
-    Deno.env.get("NODE_ENV") === "production";
-  const secureFlag = isProduction ? "; Secure" : "";
+  const secureFlag = isProductionEnvironment() ? "; Secure" : "";
 
   headers.set(
     "Set-Cookie",
@@ -174,13 +143,11 @@ export function createLogoutResponse(
   const headers = new Headers(responseInit?.headers);
 
   // Only use Secure flag in production (HTTPS)
-  const isProduction = Deno.env.get("DENO_DEPLOYMENT_ID") ||
-    Deno.env.get("NODE_ENV") === "production";
-  const secureFlag = isProduction ? "; Secure" : "";
+  const secureFlag = isProductionEnvironment() ? "; Secure" : "";
 
   headers.set(
     "Set-Cookie",
-    `session=; HttpOnly${secureFlag}; SameSite=Strict; Max-Age=0; Path=/`,
+    `session=; HttpOnly${secureFlag}; SameSite=Lax; Max-Age=0; Path=/`,
   );
 
   return new Response(body, {

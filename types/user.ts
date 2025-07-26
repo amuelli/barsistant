@@ -80,5 +80,4 @@ export interface UserSession {
   email: string;
   created: string; // ISO date string
   expires: string; // ISO date string
-  lastActive: string; // ISO date string
 }

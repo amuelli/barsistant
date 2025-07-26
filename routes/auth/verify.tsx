@@ -56,6 +56,9 @@ export const handler = define.handlers({
         user = await createUser(tokenData.email);
         _isNewUser = true;
 
+        // Set lastLoginAt for new user on first login
+        await updateUserLastLogin(user.id);
+
         // Send welcome email for new users
         try {
           const welcomeEmail = generateWelcomeEmail(

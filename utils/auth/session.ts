@@ -36,7 +36,6 @@ export async function createUserSession(
     email,
     created: now.toISOString(),
     expires: expires.toISOString(),
-    lastActive: now.toISOString(),
   };
 
   // Use atomic transaction to create session and user lookup
@@ -85,21 +84,6 @@ export async function getUserSession(
   }
 
   return session;
-}
-
-/**
- * Update session last active timestamp
- */
-export async function updateSessionActivity(sessionId: string): Promise<void> {
-  const session = await getUserSession(sessionId);
-
-  if (!session) {
-    return;
-  }
-
-  session.lastActive = new Date().toISOString();
-  const userSessionKey: UserSessionKey = ["user_sessions", sessionId];
-  await kv.set(userSessionKey, session);
 }
 
 /**

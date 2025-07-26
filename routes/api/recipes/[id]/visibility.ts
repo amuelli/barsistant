@@ -2,6 +2,7 @@ import { requireAuth } from "🛠️/auth/middleware.ts";
 import { kv } from "🛠️/db/db.ts";
 import { recipeModel } from "🛠️/db/recipe-model.ts";
 import { define } from "../../../../utils/define.ts";
+import { Recipe } from "../../../../types/recipe.ts";
 
 /**
  * API endpoint for managing recipe visibility (public/private)
@@ -96,7 +97,7 @@ async function handlePost(recipeId: string, req: Request) {
 
       // Search through all user recipes to find copies of this recipe
       for await (const entry of kv.list({ prefix: ["user_recipe"] })) {
-        const userRecipe = entry.value as any;
+        const userRecipe = entry.value as Recipe;
         const key = entry.key as ["user_recipe", string, string];
         const userId = key[1];
 
