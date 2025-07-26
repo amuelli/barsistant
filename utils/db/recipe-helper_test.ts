@@ -318,8 +318,14 @@ Deno.test("Recipe Helper - JIT Ingredient Creation and Recipe Management", async
   await t.step("cleanup", async () => {
     // Delete the recipe
     if (createdRecipeId) {
-      const deleteResult = await recipeModel.delete(createdRecipeId);
-      assertEquals(deleteResult, true, "Recipe deletion should succeed");
+      const recipe = await recipeModel.getById(createdRecipeId);
+      if (recipe) {
+        const deleteResult = await recipeModel.deleteUserRecipe(
+          recipe.createdBy,
+          createdRecipeId,
+        );
+        assertEquals(deleteResult, true, "Recipe deletion should succeed");
+      }
     }
 
     // Delete all ingredients we created

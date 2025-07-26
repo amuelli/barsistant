@@ -113,7 +113,7 @@ async function main() {
   });
 
   await benchmark("Load public recipes (7 items)", async () => {
-    const recipes = await recipeModel.getPublicRecipes(10);
+    const recipes = await recipeModel.listPublicRecipes(10);
     return recipes;
   });
 

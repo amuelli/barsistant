@@ -13,7 +13,7 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
   const testOldFashioned = {
     name: "Test Old Fashioned",
     description: "A test recipe for an Old Fashioned cocktail",
-    createdBy: "test-user-123", // Required field for new ULID-based structure
+    createdBy: "test-user-123",
     visibility: "private" as const,
     ingredients: [
       {
@@ -56,7 +56,7 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
   const testMojito = {
     name: "Test Mojito",
     description: "A refreshing rum cocktail with mint and lime",
-    createdBy: "test-user-123", // Required field for new ULID-based structure
+    createdBy: "test-user-123",
     visibility: "private" as const,
     ingredients: [
       {
@@ -116,7 +116,7 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     name: "Test Negroni",
     description:
       "A classic Italian cocktail with equal parts gin, vermouth, and Campari",
-    createdBy: "test-user-123", // Required field for new ULID-based structure
+    createdBy: "test-user-123",
     visibility: "private" as const,
     ingredients: [
       {
@@ -206,35 +206,40 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
 
   // Test updating a recipe
   await t.step("update recipe", async () => {
-    const updatedRecipe = await recipeModel.update(createdRecipes[0].id, {
-      name: "Updated Test Old Fashioned",
-      ingredients: [
-        // Update the bourbon quantity
-        {
-          ingredientId: "bourbon123",
-          name: "Bourbon",
-          quantity: 75, // Increased from 60ml to 75ml
-          unit: "ml" as MeasurementUnit,
-          optional: false,
-        },
-        // Keep the simple syrup the same
-        {
-          ingredientId: "simple-syrup123",
-          name: "Simple Syrup",
-          quantity: 10,
-          unit: "ml" as MeasurementUnit,
-          optional: false,
-        },
-        // Keep the bitters the same
-        {
-          ingredientId: "bitters123",
-          name: "Aromatic Bitters",
-          quantity: 3,
-          unit: "dash" as MeasurementUnit,
-          optional: false,
-        },
-      ],
-    });
+    const recipe = createdRecipes[0];
+    const updatedRecipe = await recipeModel.updateUserRecipe(
+      recipe.createdBy,
+      recipe.id,
+      {
+        name: "Updated Test Old Fashioned",
+        ingredients: [
+          // Update the bourbon quantity
+          {
+            ingredientId: "bourbon123",
+            name: "Bourbon",
+            quantity: 75, // Increased from 60ml to 75ml
+            unit: "ml" as MeasurementUnit,
+            optional: false,
+          },
+          // Keep the simple syrup the same
+          {
+            ingredientId: "simple-syrup123",
+            name: "Simple Syrup",
+            quantity: 10,
+            unit: "ml" as MeasurementUnit,
+            optional: false,
+          },
+          // Keep the bitters the same
+          {
+            ingredientId: "bitters123",
+            name: "Aromatic Bitters",
+            quantity: 3,
+            unit: "dash" as MeasurementUnit,
+            optional: false,
+          },
+        ],
+      },
+    );
 
     assertEquals(updatedRecipe.id, createdRecipes[0].id);
     assertEquals(updatedRecipe.name, "Updated Test Old Fashioned");
@@ -332,7 +337,10 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
   await t.step("delete recipes", async () => {
     // Delete all created recipes
     for (const recipe of createdRecipes) {
-      const result = await recipeModel.delete(recipe.id);
+      const result = await recipeModel.deleteUserRecipe(
+        recipe.createdBy,
+        recipe.id,
+      );
       assertEquals(result, true);
 
       const deletedRecipe = await recipeModel.getById(recipe.id);
@@ -353,7 +361,7 @@ Deno.test("Recipe Model - Pagination", async (t) => {
     const recipe = await recipeModel.create({
       name: `Paginated Recipe ${i}`,
       description: `Description ${i}`,
-      createdBy: "test-user-pagination", // Required field for new ULID-based structure
+      createdBy: "test-user-pagination",
       visibility: "private" as const,
       ingredients: [
         {
@@ -404,13 +412,16 @@ Deno.test("Recipe Model - Pagination", async (t) => {
 
   // Clean up
   for (const id of createdIds) {
-    await recipeModel.delete(id);
+    const recipe = await recipeModel.getById(id);
+    if (recipe) {
+      await recipeModel.deleteUserRecipe(recipe.createdBy, id);
+    }
   }
 });
 
 Deno.test("Recipe Model - Batch Public Recipes", async (t) => {
   // Track existing public recipes count
-  const existingPublicRecipes = await recipeModel.getPublicRecipes(100);
+  const existingPublicRecipes = await recipeModel.listPublicRecipes(100);
   const existingPublicCount = existingPublicRecipes.length;
 
   const createdIds: string[] = [];
@@ -421,7 +432,7 @@ Deno.test("Recipe Model - Batch Public Recipes", async (t) => {
       const recipe = await recipeModel.create({
         name: `Test Recipe ${i}`,
         description: `Test recipe description ${i}`,
-        createdBy: "test-user-batch", // Required field for new ULID-based structure
+        createdBy: "test-user-batch",
         ingredients: [
           {
             ingredientId: `test-ingredient-${i}`,
@@ -445,7 +456,7 @@ Deno.test("Recipe Model - Batch Public Recipes", async (t) => {
   await t.step(
     "should fetch public recipes efficiently with batch method",
     async () => {
-      const recipes = await recipeModel.getPublicRecipesBatch(10);
+      const recipes = await recipeModel.listPublicRecipes(10);
 
       // Should return only public recipes (5 created + any existing)
       assertEquals(recipes.length, 5 + existingPublicCount);
@@ -457,41 +468,24 @@ Deno.test("Recipe Model - Batch Public Recipes", async (t) => {
     },
   );
 
-  await t.step("should handle empty results correctly", async () => {
-    // Test with offset beyond available recipes
-    const recipes = await recipeModel.getPublicRecipesBatch(10, 100);
-    assertEquals(recipes.length, 0);
+  await t.step("should handle large limit correctly", async () => {
+    // Test with large limit
+    const recipes = await recipeModel.listPublicRecipes(100);
+    assertEquals(Array.isArray(recipes), true);
+    assertEquals(recipes.length <= 8, true); // Should not exceed created recipes
   });
 
   await t.step("should respect limit parameter", async () => {
-    const recipes = await recipeModel.getPublicRecipesBatch(3);
+    const recipes = await recipeModel.listPublicRecipes(3);
     assertEquals(recipes.length, 3);
-  });
-
-  await t.step("should respect offset parameter", async () => {
-    const allRecipes = await recipeModel.getPublicRecipesBatch(10);
-    const offsetRecipes = await recipeModel.getPublicRecipesBatch(10, 2);
-
-    // Should skip first 2 recipes
-    assertEquals(offsetRecipes.length, Math.max(0, allRecipes.length - 2));
-  });
-
-  await t.step("should return same results as legacy method", async () => {
-    const batchResults = await recipeModel.getPublicRecipesBatch(10);
-    const legacyResults = await recipeModel.getPublicRecipes(10);
-
-    // Should return same number of recipes
-    assertEquals(batchResults.length, legacyResults.length);
-
-    // Should contain same recipe IDs (order may differ)
-    const batchIds = new Set(batchResults.map((r) => r.id));
-    const legacyIds = new Set(legacyResults.map((r) => r.id));
-    assertEquals(batchIds, legacyIds);
   });
 
   await t.step("cleanup", async () => {
     for (const id of createdIds) {
-      await recipeModel.delete(id);
+      const recipe = await recipeModel.getById(id);
+      if (recipe) {
+        await recipeModel.deleteUserRecipe(recipe.createdBy, id);
+      }
     }
   });
 });

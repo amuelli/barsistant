@@ -31,6 +31,7 @@
 type Kv = Deno.Kv;
 
 // ULID-based key patterns for chronological ordering
+// Note: When a recipe is made public, it uses the same ULID in both namespaces
 export type UserRecipeKey = ["user_recipe", string, string]; // [prefix, userId, ulid]
 export type PublicRecipeKey = ["public_recipe", string]; // [prefix, ulid]
 

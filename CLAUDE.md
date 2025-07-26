@@ -85,24 +85,24 @@ The app uses **magic link authentication** exclusively:
 Follow these established patterns from `utils/db/db.ts`:
 
 ```typescript
-// Primary entities
-["recipe", recipeId] → Recipe
+// Recipe storage with ULID-based keys for chronological ordering
+["user_recipe", userId, ulid] → Recipe      // User's recipes
+["public_recipe", ulid] → Recipe           // Public recipes
+
+// Core entities
 ["ingredient", ingredientId] → Ingredient
 ["user", userId] → User
 
-// Relationships
-["recipe_ingredient", recipeId, ingredientId] → RecipeIngredient
+// User data
 ["user_favorites", userId, recipeId] → UserFavorite
 ["user_inventory", userId, ingredientId] → UserInventoryItem
+["user_notes", userId, recipeId] → UserNote
+["user_collections", userId, recipeId] → UserCollection
 
 // Authentication
 ["auth_tokens", token] → MagicLinkToken
 ["user_sessions", sessionId] → UserSession
 ["user_emails", email] → userId
-
-// Secondary indexes
-["ingredient_recipes", ingredientId, recipeId] → RecipeReference
-["tag_recipes", tag, recipeId] → RecipeReference
 ```
 
 ### Database Models Location
@@ -118,41 +118,33 @@ Always use atomic transactions for related operations:
 ```typescript
 // Example: Creating recipe with ingredients
 export async function createRecipeWithIngredients(
+  userId: string,
   recipeData: RecipeInput,
   ingredients: IngredientInput[],
 ) {
   const kv = await getKv();
-  const recipeId = crypto.randomUUID();
+  const recipeId = ulid(); // ULID for chronological ordering
 
   // Atomic transaction for consistency
   const tx = kv.atomic();
 
-  // Create recipe
-  tx.set(["recipe", recipeId], {
+  // Create recipe in user's namespace
+  tx.set(["user_recipe", userId, recipeId], {
     ...recipeData,
     id: recipeId,
-    createdAt: new Date(),
+    createdBy: userId,
+    createdAt: new Date().toISOString(),
   });
 
-  // Create recipe-ingredient relationships
-  for (const ingredient of ingredients) {
-    const relationshipId = crypto.randomUUID();
-    tx.set(
-      ["recipe_ingredient", recipeId, ingredient.id],
-      {
-        id: relationshipId,
-        recipeId,
-        ingredientId: ingredient.id,
-        amount: ingredient.amount,
-        unit: ingredient.unit,
-      },
-    );
-
-    // Update secondary indexes
-    tx.set(
-      ["ingredient_recipes", ingredient.id, recipeId],
-      { recipeId },
-    );
+  // If public, also store in public namespace with same ULID
+  if (recipeData.visibility === "public") {
+    tx.set(["public_recipe", recipeId], {
+      ...recipeData,
+      id: recipeId,
+      originalRecipeId: recipeId,
+      createdBy: userId,
+      createdAt: new Date().toISOString(),
+    });
   }
 
   // Commit transaction

@@ -89,11 +89,11 @@ async function handlePost(recipeId: string, req: Request) {
       return new Response("Invalid action", { status: 400 });
     }
 
-    // Update recipe visibility using the new ULID-based structure
+    // Update recipe visibility using ULID-based structure
     // If making a public recipe private, we need to remove it from other users' collections
     let removedFromCollections = 0;
     if (recipe.visibility === "public" && newVisibility === "private") {
-      // Use the recipe model's update method which handles the ULID-based structure
+      // Use the recipe model's update method
       await recipeModel.updateUserRecipe(recipe.createdBy, recipeId, {
         visibility: newVisibility,
       });
@@ -128,7 +128,7 @@ async function handlePost(recipeId: string, req: Request) {
         }
       }
     } else {
-      // Simple update - just change visibility using the new structure
+      // Simple update - just change visibility
       await recipeModel.updateUserRecipe(recipe.createdBy, recipeId, {
         visibility: newVisibility,
       });

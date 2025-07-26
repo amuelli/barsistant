@@ -210,7 +210,9 @@ Deno.test("Recipe Visibility API", async (t) => {
 
   await t.step("should handle setPublic action", async () => {
     // First make it private
-    await recipeModel.update(testRecipe.id, { visibility: "private" });
+    await recipeModel.updateUserRecipe(testRecipe.createdBy, testRecipe.id, {
+      visibility: "private",
+    });
 
     const req = createMockRequest(
       "POST",
@@ -299,7 +301,7 @@ Deno.test("Recipe Visibility API", async (t) => {
 
   await t.step("cleanup", async () => {
     // Delete test recipe
-    await recipeModel.delete(testRecipe.id);
+    await recipeModel.deleteUserRecipe(testRecipe.createdBy, testRecipe.id);
 
     // Delete test users
     await deleteUser(testUser.id);

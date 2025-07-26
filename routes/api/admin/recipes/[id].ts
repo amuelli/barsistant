@@ -31,7 +31,23 @@ export async function handler(
     // Handle DELETE request for recipe deletion
     if (req.method === "DELETE") {
       try {
-        const deleted = await recipeModel.delete(recipeId);
+        // First get the recipe to determine the owner
+        const existingRecipe = await recipeModel.getById(recipeId);
+        if (!existingRecipe) {
+          return new Response(
+            JSON.stringify({ error: "Recipe not found" }),
+            {
+              status: 404,
+              headers: { "Content-Type": "application/json" },
+            },
+          );
+        }
+
+        // Use ULID-based delete method
+        const deleted = await recipeModel.deleteUserRecipe(
+          existingRecipe.createdBy,
+          recipeId,
+        );
 
         if (!deleted) {
           return new Response(

@@ -317,7 +317,7 @@ export const userCollectionModel = {
       let syncedCount = 0;
 
       // Get all recipes owned by the user
-      const ownedRecipes = await recipeModel.getByUser(userId);
+      const ownedRecipes = await recipeModel.listUserRecipes(userId);
 
       for (const recipe of ownedRecipes) {
         // Check if already in collection

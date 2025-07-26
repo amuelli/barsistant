@@ -26,7 +26,7 @@ export const handler = define.handlers({
         recipes = await userCollectionModel.getUserCollection(user.id, 30);
       } else {
         // Unauthenticated: Show only public recipes
-        recipes = await recipeModel.getPublicRecipes(30);
+        recipes = await recipeModel.listPublicRecipes(30);
       }
     }
 

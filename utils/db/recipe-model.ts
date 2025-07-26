@@ -89,7 +89,7 @@ export const recipeModel = {
         updatedAt: now,
       };
 
-      // Store recipe using new ULID-based key patterns
+      // Store recipe using ULID-based key patterns
       const transaction = kv.atomic();
 
       // Store in user's recipe namespace: ["user_recipe", userId, ulid] → Recipe
@@ -100,9 +100,9 @@ export const recipeModel = {
       ];
       transaction.set(userRecipeKey, recipe);
 
-      // If recipe is public, also store in public namespace with new ULID
+      // If recipe is public, also store in public namespace with separate ULID
       if (recipe.visibility === "public") {
-        const publicId = ulid(); // New ULID for public namespace
+        const publicId = ulid(); // Separate ULID for public namespace
         const publicRecipe: Recipe = {
           ...recipe,
           id: publicId,
@@ -198,7 +198,7 @@ export const recipeModel = {
   },
 
   /**
-   * Update an existing recipe in the new ULID-based structure
+   * Update an existing recipe
    *
    * @param userId User ID (owner of the recipe)
    * @param recipeId Recipe ID
@@ -251,46 +251,41 @@ export const recipeModel = {
 
       if (oldVisibility !== newVisibility) {
         if (newVisibility === "public" && oldVisibility === "private") {
-          // Making recipe public: create new public recipe with new ULID
-          const publicId = ulid();
+          // Making recipe public: use same ULID as user recipe
           const publicRecipe: Recipe = {
             ...updatedRecipe,
-            id: publicId,
             originalRecipeId: recipeId,
           };
 
-          // Store public recipe
+          // Store public recipe with same ULID
           const newPublicRecipeKey: PublicRecipeKey = [
             "public_recipe",
-            publicId,
+            recipeId,
           ];
           transaction.set(newPublicRecipeKey, publicRecipe);
 
-          // Update user recipe to reference public version
-          updatedRecipe.publicRecipeId = publicId;
+          // Mark user recipe as having a public version
+          updatedRecipe.publicRecipeId = recipeId;
         } else if (newVisibility === "private" && oldVisibility === "public") {
           // Making recipe private: remove from public namespace
-          if (existingRecipe.publicRecipeId) {
-            const existingPublicRecipeKey: PublicRecipeKey = [
-              "public_recipe",
-              existingRecipe.publicRecipeId,
-            ];
-            transaction.delete(existingPublicRecipeKey);
-          }
+          const existingPublicRecipeKey: PublicRecipeKey = [
+            "public_recipe",
+            recipeId,
+          ];
+          transaction.delete(existingPublicRecipeKey);
 
           // Clear public recipe reference
           updatedRecipe.publicRecipeId = undefined;
         }
-      } else if (newVisibility === "public" && existingRecipe.publicRecipeId) {
+      } else if (newVisibility === "public") {
         // Recipe is staying public, update the public version too
         const publicRecipe: Recipe = {
           ...updatedRecipe,
-          id: existingRecipe.publicRecipeId,
           originalRecipeId: recipeId,
         };
         const updatePublicRecipeKey: PublicRecipeKey = [
           "public_recipe",
-          existingRecipe.publicRecipeId,
+          recipeId,
         ];
         transaction.set(updatePublicRecipeKey, publicRecipe);
       }
@@ -311,20 +306,6 @@ export const recipeModel = {
 
       return updatedRecipe;
     }, `Failed to update recipe ${recipeId}`);
-  },
-
-  /**
-   * Legacy update method for backward compatibility (deprecated)
-   * Use updateUserRecipe instead for better performance
-   */
-  async update(id: string, params: UpdateRecipeParams): Promise<Recipe> {
-    // Find the recipe first
-    const recipe = await this.getById(id);
-    if (!recipe) {
-      throw new Error(`Recipe with ID ${id} not found`);
-    }
-
-    return this.updateUserRecipe(recipe.createdBy, id, params);
   },
 
   /**
@@ -405,20 +386,6 @@ export const recipeModel = {
 
       return true;
     }, `Failed to delete recipe ${recipeId}`);
-  },
-
-  /**
-   * Legacy delete method for backward compatibility (deprecated)
-   * Use deleteUserRecipe instead for better performance
-   */
-  async delete(id: string): Promise<boolean> {
-    // Find the recipe first
-    const recipe = await this.getById(id);
-    if (!recipe) {
-      return false;
-    }
-
-    return this.deleteUserRecipe(recipe.createdBy, id);
   },
 
   /**
@@ -534,7 +501,7 @@ export const recipeModel = {
         throw new Error(`Source recipe ${sourceRecipeId} not found`);
       }
 
-      // Generate new ULID for the copied recipe
+      // Generate ULID for the copied recipe
       const newRecipeId = ulid();
       const now = new Date().toISOString();
 
@@ -596,7 +563,7 @@ export const recipeModel = {
   },
 
   /**
-   * List recipes with pagination support (legacy method for admin interface).
+   * List recipes with pagination support for admin interface.
    * This method combines recipes from both user and public namespaces.
    * @param limit Number of recipes to return per page
    * @param cursor Cursor string from previous page (or empty string for first page)
@@ -610,11 +577,10 @@ export const recipeModel = {
     cursor?: string;
   }) {
     return await executeDbOperation(async () => {
-      // For the legacy listPage method, we need to collect all recipes
-      // This is less efficient but maintains compatibility with admin interface
+      // Get all recipes for admin pagination
       const allRecipes = await this.listAll();
 
-      // Simple pagination without cursor-based approach
+      // Simple offset-based pagination
       const offset = cursor ? parseInt(cursor) || 0 : 0;
       const items = allRecipes.slice(offset, offset + limit);
       const nextCursor = (offset + limit < allRecipes.length)
@@ -643,7 +609,7 @@ export const recipeModel = {
         offset = 0,
       } = params;
 
-      // Load all recipes from both namespaces using new ULID-based structure
+      // Load all recipes from both namespaces
       const allRecipes: Recipe[] = [];
 
       // Load user recipes
@@ -771,77 +737,6 @@ export const recipeModel = {
       const endIndex = startIndex + limit;
       return filteredRecipes.slice(startIndex, endIndex);
     }, `Failed to get recipes by ingredient ${ingredientId}`);
-  },
-
-  /**
-   * Get recipes created by a specific user (legacy method - use listUserRecipes)
-   *
-   * @param userId User ID to filter by
-   * @param limit Maximum number of recipes to return
-   * @param offset Number of recipes to skip
-   * @returns Array of recipes created by the user
-   * @throws {DatabaseError} If the database operation fails
-   */
-  async getByUser(
-    userId: string,
-    limit = 20,
-    offset = 0,
-  ): Promise<Recipe[]> {
-    return await executeDbOperation(async () => {
-      // Use the new listUserRecipes method and apply offset manually
-      const allUserRecipes = await this.listUserRecipes(userId);
-
-      // Apply offset and limit
-      const startIndex = offset;
-      const endIndex = startIndex + limit;
-      return allUserRecipes.slice(startIndex, endIndex);
-    }, `Failed to get recipes by user ${userId}`);
-  },
-
-  /**
-   * Get all public recipes (legacy method - use listPublicRecipes for better performance)
-   *
-   * @param limit Maximum number of recipes to return
-   * @param offset Number of recipes to skip
-   * @returns Array of public recipes
-   * @throws {DatabaseError} If the database operation fails
-   */
-  async getPublicRecipes(
-    limit = 20,
-    offset = 0,
-  ): Promise<Recipe[]> {
-    return await executeDbOperation(async () => {
-      // Use the new listPublicRecipes method and apply offset manually
-      const allPublicRecipes = await this.listPublicRecipes();
-
-      // Apply offset and limit
-      const startIndex = offset;
-      const endIndex = startIndex + limit;
-      return allPublicRecipes.slice(startIndex, endIndex);
-    }, "Failed to get public recipes");
-  },
-
-  /**
-   * Get all public recipes using batch fetching (legacy method - use listPublicRecipes)
-   *
-   * @param limit Maximum number of recipes to return
-   * @param offset Number of recipes to skip
-   * @returns Array of public recipes
-   * @throws {DatabaseError} If the database operation fails
-   */
-  async getPublicRecipesBatch(
-    limit = 20,
-    offset = 0,
-  ): Promise<Recipe[]> {
-    return await executeDbOperation(async () => {
-      // Use the new listPublicRecipes method and apply offset manually
-      const allPublicRecipes = await this.listPublicRecipes();
-
-      // Apply offset and limit
-      const startIndex = offset;
-      const endIndex = startIndex + limit;
-      return allPublicRecipes.slice(startIndex, endIndex);
-    }, "Failed to get public recipes batch");
   },
 
   /**

@@ -37,7 +37,20 @@ async function handleGet(id: string) {
 }
 
 async function handleDelete(id: string) {
-  const success = await recipeModel.delete(id);
+  // First, get the recipe to determine the owner
+  const existingRecipe = await recipeModel.getById(id);
+  if (!existingRecipe) {
+    return new Response("recipe not found", {
+      status: 404,
+      statusText: "Not Found",
+    });
+  }
+
+  // Use ULID-based delete method
+  const success = await recipeModel.deleteUserRecipe(
+    existingRecipe.createdBy,
+    id,
+  );
   if (!success) {
     return new Response("recipe not found", {
       status: 404,
@@ -64,8 +77,12 @@ async function handlePut(id: string, req: Request) {
     // Parse request body
     const updates = await req.json();
 
-    // Update the recipe (allowing partial updates)
-    const updatedRecipe = await recipeModel.update(id, updates);
+    // Update the recipe using ULID-based method
+    const updatedRecipe = await recipeModel.updateUserRecipe(
+      existingRecipe.createdBy,
+      id,
+      updates,
+    );
 
     return Response.json(updatedRecipe);
   } catch (error) {
