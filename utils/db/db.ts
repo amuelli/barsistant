@@ -7,38 +7,39 @@
  * for interacting with the database. It ensures a single connection instance
  * is used throughout the application and provides error handling.
  *
- * Key Structure Patterns (Simplified):
- * - Recipe primary keys: ["recipe", recipeId] → recipe data
- * - Ingredient primary keys: ["ingredient", ingredientId] → ingredient data
+ * Key Structure Patterns (ULID-based for chronological sorting):
+ *
+ * Recipe storage with namespace separation:
+ * - User recipes: ["user_recipe", userId, ulid] → full recipe data
+ * - Public recipes: ["public_recipe", ulid] → full recipe data
+ *
+ * Core entities:
+ * - Ingredients: ["ingredient", ingredientId] → ingredient data
  * - User favorites: ["user_favorites", userId, recipeId] → timestamp data
  * - User inventory: ["user_inventory", userId, ingredientId] → quantity data
  * - User recipe notes: ["user_notes", userId, recipeId] → notes data
- * - User created recipes: ["user_recipes", userId, recipeId] → recipe reference
- * - Public recipes: ["public_recipes", recipeId] → recipe reference
  * - User collections: ["user_collections", userId, recipeId] → collection entry
- * 
- * Note: Complex search indexes removed for simplified in-memory filtering
+ *
+ * Benefits:
+ * - ULID keys enable natural chronological ordering
+ * - Efficient kv.list() operations with prefix filtering
+ * - Clear namespace separation between user and public recipes
+ * - Single Recipe type for all use cases
  */
 
 // Import the Deno KV types directly from the Deno namespace
 type Kv = Deno.Kv;
 
-// Types for key patterns to enforce consistent usage (simplified)
-export type RecipeKey = ["recipe", string];
+// ULID-based key patterns for chronological ordering
+export type UserRecipeKey = ["user_recipe", string, string]; // [prefix, userId, ulid]
+export type PublicRecipeKey = ["public_recipe", string]; // [prefix, ulid]
+
+// Core entity types
 export type IngredientKey = ["ingredient", string];
 export type UserFavoritesKey = ["user_favorites", string, string];
 export type UserInventoryKey = ["user_inventory", string, string];
 export type UserNotesKey = ["user_notes", string, string];
-export type UserRecipesKey = ["user_recipes", string, string];
-export type PublicRecipesKey = ["public_recipes", string];
 export type UserCollectionsKey = ["user_collections", string, string];
-
-// Legacy key types (for cleanup purposes only)
-export type RecipeIngredientKey = ["recipe_ingredient", string, string];
-export type IngredientRecipesKey = ["ingredient_recipes", string, string];
-export type TagRecipesKey = ["tag_recipes", string, string];
-export type StrengthRecipesKey = ["strength_recipes", number, string];
-export type SweetnessRecipesKey = ["sweetness_recipes", number, string];
 
 // Error class for database operations
 export class DatabaseError extends Error {

@@ -528,7 +528,16 @@ export async function createRecipe(data: RecipeInput) {
 - **Database**: `utils/db/` patterns
 - **Testing**: `deno task test` (required)
 
+## 🧠 Development Workflow Tips
+
+- **Git Branch Management**:
+  - When having a long list of todos with lots of changes, create a new branch
+    and make commits for every stage/phase/step.
+
 ---
 
 For detailed development guidelines, testing requirements, and conventions, see
 the instruction files in `.github/instructions/`.
+
+```
+```

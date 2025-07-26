@@ -11,9 +11,9 @@ import { ulid } from "@std/ulid";
 import { Recipe } from "../../types/recipe.ts";
 import {
   executeDbOperation,
-  getKvIterator,
   kv,
-  processKvIterator,
+  type PublicRecipeKey,
+  type UserRecipeKey,
 } from "./db.ts";
 
 /**
@@ -82,27 +82,48 @@ export const recipeModel = {
         source: params.source,
         tags: params.tags || [],
         createdBy: params.createdBy,
-        visibility: params.visibility ?? "private", // Default to private
+        visibility: params.visibility,
         originalRecipeId: params.originalRecipeId,
         publicRecipeId: params.publicRecipeId,
         createdAt: now,
         updatedAt: now,
       };
 
-      // Start a transaction for atomic operations
+      // Store recipe using new ULID-based key patterns
       const transaction = kv.atomic();
 
-      // Add the main recipe entry
-      transaction.set(["recipe", id], recipe);
+      // Store in user's recipe namespace: ["user_recipe", userId, ulid] → Recipe
+      const userRecipeKey: UserRecipeKey = [
+        "user_recipe",
+        recipe.createdBy,
+        id,
+      ];
+      transaction.set(userRecipeKey, recipe);
 
-      // Add user-recipe index if recipe has a creator
-      if (recipe.createdBy) {
-        transaction.set(["user_recipes", recipe.createdBy, id], true);
-      }
-
-      // Add public recipe index if recipe is public
+      // If recipe is public, also store in public namespace with new ULID
       if (recipe.visibility === "public") {
-        transaction.set(["public_recipes", id], true);
+        const publicId = ulid(); // New ULID for public namespace
+        const publicRecipe: Recipe = {
+          ...recipe,
+          id: publicId,
+          originalRecipeId: id, // Track source recipe
+        };
+
+        // Store in public namespace: ["public_recipe", ulid] → Recipe
+        const publicRecipeKey: PublicRecipeKey = ["public_recipe", publicId];
+        transaction.set(publicRecipeKey, publicRecipe);
+
+        // Update user recipe to reference public version
+        const updatedUserRecipe: Recipe = {
+          ...recipe,
+          publicRecipeId: publicId,
+        };
+        const updatedUserRecipeKey: UserRecipeKey = [
+          "user_recipe",
+          recipe.createdBy,
+          id,
+        ];
+        transaction.set(updatedUserRecipeKey, updatedUserRecipe);
       }
 
       // Commit transaction
@@ -117,7 +138,7 @@ export const recipeModel = {
   },
 
   /**
-   * Get a recipe by ID
+   * Get a recipe by ID - searches both user and public namespaces
    *
    * @param id Recipe ID
    * @returns The recipe or null if not found
@@ -125,33 +146,85 @@ export const recipeModel = {
    */
   async getById(id: string): Promise<Recipe | null> {
     return await executeDbOperation(async () => {
-      const result = await kv.get<Recipe>(["recipe", id]);
-      return result.value;
+      // First check public recipes (most efficient)
+      const publicRecipeKey: PublicRecipeKey = ["public_recipe", id];
+      const publicResult = await kv.get<Recipe>(publicRecipeKey);
+      if (publicResult.value) {
+        return publicResult.value;
+      }
+
+      // If not found in public, search user recipe namespaces
+      // Note: This is less efficient but necessary for the general getById method
+      for await (const entry of kv.list<Recipe>({ prefix: ["user_recipe"] })) {
+        if (entry.value && entry.value.id === id) {
+          return entry.value;
+        }
+      }
+
+      return null;
     }, "Failed to get recipe");
   },
 
   /**
-   * Update an existing recipe
+   * Get a user's recipe by ID (more efficient when you know the user)
    *
-   * @param id Recipe ID
+   * @param userId User ID
+   * @param recipeId Recipe ID
+   * @returns The recipe or null if not found
+   */
+  async getUserRecipeById(
+    userId: string,
+    recipeId: string,
+  ): Promise<Recipe | null> {
+    return await executeDbOperation(async () => {
+      const userRecipeKey: UserRecipeKey = ["user_recipe", userId, recipeId];
+      const result = await kv.get<Recipe>(userRecipeKey);
+      return result.value;
+    }, "Failed to get user recipe");
+  },
+
+  /**
+   * Get a public recipe by ID (more efficient for public recipes)
+   *
+   * @param recipeId Recipe ID
+   * @returns The recipe or null if not found
+   */
+  async getPublicRecipeById(recipeId: string): Promise<Recipe | null> {
+    return await executeDbOperation(async () => {
+      const publicRecipeKey: PublicRecipeKey = ["public_recipe", recipeId];
+      const result = await kv.get<Recipe>(publicRecipeKey);
+      return result.value;
+    }, "Failed to get public recipe");
+  },
+
+  /**
+   * Update an existing recipe in the new ULID-based structure
+   *
+   * @param userId User ID (owner of the recipe)
+   * @param recipeId Recipe ID
    * @param params Update parameters
    * @returns The updated recipe
-   * @throws {Error} If the recipe doesn't exist
+   * @throws {Error} If the recipe doesn't exist or user doesn't own it
    * @throws {DatabaseError} If the database operation fails
    */
-  async update(id: string, params: UpdateRecipeParams): Promise<Recipe> {
+  async updateUserRecipe(
+    userId: string,
+    recipeId: string,
+    params: UpdateRecipeParams,
+  ): Promise<Recipe> {
     return await executeDbOperation(async () => {
-      // Get existing recipe
-      const result = await kv.get<Recipe>(["recipe", id]);
+      // Get existing user recipe
+      const existingRecipe = await this.getUserRecipeById(userId, recipeId);
 
-      if (!result.value) {
-        throw new Error(`Recipe with ID ${id} not found`);
+      if (!existingRecipe) {
+        throw new Error(
+          `Recipe with ID ${recipeId} not found for user ${userId}`,
+        );
       }
 
-      const existingRecipe = result.value;
       const now = new Date().toISOString();
 
-      // If ingredients are being updated, ensure every ingredient has a name
+      // Validate ingredients if being updated
       if (params.ingredients) {
         for (const ingredient of params.ingredients) {
           if (!ingredient.name || ingredient.name.trim() === "") {
@@ -160,78 +233,112 @@ export const recipeModel = {
         }
       }
 
-      // Update recipe fields while preserving existing data
+      // Create updated recipe
       const updatedRecipe: Recipe = {
         ...existingRecipe,
         ...params,
-        id, // Ensure ID doesn't change
+        id: recipeId, // Preserve original ID
         updatedAt: now,
         createdAt: existingRecipe.createdAt, // Preserve creation date
-        createdBy: params.createdBy !== undefined
-          ? params.createdBy
-          : existingRecipe.createdBy, // Handle createdBy updates
+        createdBy: existingRecipe.createdBy, // Cannot change ownership
       };
 
-      // Start a transaction for atomic operations
       const transaction = kv.atomic();
 
-      // Add the main recipe entry
-      transaction.set(["recipe", id], updatedRecipe);
+      // Handle visibility changes
+      const oldVisibility = existingRecipe.visibility;
+      const newVisibility = updatedRecipe.visibility;
 
-      // Note: No need to update ingredient or tag indexes since we removed complex search
+      if (oldVisibility !== newVisibility) {
+        if (newVisibility === "public" && oldVisibility === "private") {
+          // Making recipe public: create new public recipe with new ULID
+          const publicId = ulid();
+          const publicRecipe: Recipe = {
+            ...updatedRecipe,
+            id: publicId,
+            originalRecipeId: recipeId,
+          };
 
-      // If createdBy changed, update user-recipe index
-      if (
-        params.createdBy !== undefined &&
-        params.createdBy !== existingRecipe.createdBy
-      ) {
-        // Remove old user-recipe index if it existed
-        if (existingRecipe.createdBy) {
-          transaction.delete(["user_recipes", existingRecipe.createdBy, id]);
+          // Store public recipe
+          const newPublicRecipeKey: PublicRecipeKey = [
+            "public_recipe",
+            publicId,
+          ];
+          transaction.set(newPublicRecipeKey, publicRecipe);
+
+          // Update user recipe to reference public version
+          updatedRecipe.publicRecipeId = publicId;
+        } else if (newVisibility === "private" && oldVisibility === "public") {
+          // Making recipe private: remove from public namespace
+          if (existingRecipe.publicRecipeId) {
+            const existingPublicRecipeKey: PublicRecipeKey = [
+              "public_recipe",
+              existingRecipe.publicRecipeId,
+            ];
+            transaction.delete(existingPublicRecipeKey);
+          }
+
+          // Clear public recipe reference
+          updatedRecipe.publicRecipeId = undefined;
         }
-        // Add new user-recipe index if new creator is set
-        if (updatedRecipe.createdBy) {
-          transaction.set(["user_recipes", updatedRecipe.createdBy, id], true);
-        }
+      } else if (newVisibility === "public" && existingRecipe.publicRecipeId) {
+        // Recipe is staying public, update the public version too
+        const publicRecipe: Recipe = {
+          ...updatedRecipe,
+          id: existingRecipe.publicRecipeId,
+          originalRecipeId: recipeId,
+        };
+        const updatePublicRecipeKey: PublicRecipeKey = [
+          "public_recipe",
+          existingRecipe.publicRecipeId,
+        ];
+        transaction.set(updatePublicRecipeKey, publicRecipe);
       }
 
-      // If visibility changed, update public recipe index
-      if (
-        params.visibility !== undefined &&
-        params.visibility !== existingRecipe.visibility
-      ) {
-        // Remove from public index if was public
-        if (existingRecipe.visibility === "public") {
-          transaction.delete(["public_recipes", id]);
-        }
-        // Add to public index if now public
-        if (updatedRecipe.visibility === "public") {
-          transaction.set(["public_recipes", id], true);
-        }
-      }
+      // Always update user recipe
+      const updateUserRecipeKey: UserRecipeKey = [
+        "user_recipe",
+        userId,
+        recipeId,
+      ];
+      transaction.set(updateUserRecipeKey, updatedRecipe);
 
       // Commit transaction
-      const result2 = await transaction.commit();
-
-      if (!result2.ok) {
-        throw new Error(`Failed to update recipe: ${result2.toString()}`);
+      const result = await transaction.commit();
+      if (!result.ok) {
+        throw new Error(`Failed to update recipe: ${result.toString()}`);
       }
 
       return updatedRecipe;
-    }, `Failed to update recipe ${id}`);
+    }, `Failed to update recipe ${recipeId}`);
   },
 
   /**
-   * Delete a recipe by ID and all related user data
+   * Legacy update method for backward compatibility (deprecated)
+   * Use updateUserRecipe instead for better performance
+   */
+  async update(id: string, params: UpdateRecipeParams): Promise<Recipe> {
+    // Find the recipe first
+    const recipe = await this.getById(id);
+    if (!recipe) {
+      throw new Error(`Recipe with ID ${id} not found`);
+    }
+
+    return this.updateUserRecipe(recipe.createdBy, id, params);
+  },
+
+  /**
+   * Delete a user's recipe and all related data
    *
-   * @param id Recipe ID
+   * @param userId User ID (owner of the recipe)
+   * @param recipeId Recipe ID
    * @returns True if successfully deleted, false if recipe not found
    * @throws {DatabaseError} If the database operation fails
    */
-  async delete(id: string): Promise<boolean> {
+  async deleteUserRecipe(userId: string, recipeId: string): Promise<boolean> {
     return await executeDbOperation(async () => {
-      // Get existing recipe to remove all indexes
-      const existingRecipe = (await kv.get<Recipe>(["recipe", id])).value;
+      // Get existing recipe
+      const existingRecipe = await this.getUserRecipeById(userId, recipeId);
 
       if (!existingRecipe) {
         return false;
@@ -240,88 +347,257 @@ export const recipeModel = {
       // Start a transaction for atomic operations
       const transaction = kv.atomic();
 
-      // Delete the main recipe entry
-      transaction.delete(["recipe", id]);
+      // Delete the user recipe
+      const deleteUserRecipeKey: UserRecipeKey = [
+        "user_recipe",
+        userId,
+        recipeId,
+      ];
+      transaction.delete(deleteUserRecipeKey);
 
-      // Note: No need to delete ingredient or tag indexes since we removed complex search
-
-      // Delete user-recipe index if recipe had a creator
-      if (existingRecipe.createdBy) {
-        transaction.delete(["user_recipes", existingRecipe.createdBy, id]);
+      // If recipe is public, also delete from public namespace
+      if (
+        existingRecipe.visibility === "public" && existingRecipe.publicRecipeId
+      ) {
+        const deletePublicRecipeKey: PublicRecipeKey = [
+          "public_recipe",
+          existingRecipe.publicRecipeId,
+        ];
+        transaction.delete(deletePublicRecipeKey);
       }
 
-      // Delete public recipe index if recipe was public
-      if (existingRecipe.visibility === "public") {
-        transaction.delete(["public_recipes", id]);
+      // Delete all user favorites for this recipe (both IDs if public)
+      const recipeIdsToClean = [recipeId];
+      if (existingRecipe.publicRecipeId) {
+        recipeIdsToClean.push(existingRecipe.publicRecipeId);
       }
 
-      // Delete all user favorites for this recipe
-      for await (const entry of kv.list({ prefix: ["user_favorites"] })) {
-        const key = entry.key as [string, string, string];
-        if (key.length === 3 && key[2] === id) {
-          transaction.delete(key);
+      for (const idToClean of recipeIdsToClean) {
+        for await (const entry of kv.list({ prefix: ["user_favorites"] })) {
+          const key = entry.key as [string, string, string];
+          if (key.length === 3 && key[2] === idToClean) {
+            transaction.delete(key);
+          }
         }
-      }
 
-      // Delete all user notes for this recipe
-      for await (const entry of kv.list({ prefix: ["user_notes"] })) {
-        const key = entry.key as [string, string, string];
-        if (key.length === 3 && key[2] === id) {
-          transaction.delete(key);
+        // Delete all user notes for this recipe
+        for await (const entry of kv.list({ prefix: ["user_notes"] })) {
+          const key = entry.key as [string, string, string];
+          if (key.length === 3 && key[2] === idToClean) {
+            transaction.delete(key);
+          }
+        }
+
+        // Delete from user collections
+        for await (const entry of kv.list({ prefix: ["user_collections"] })) {
+          const key = entry.key as [string, string, string];
+          if (key.length === 3 && key[2] === idToClean) {
+            transaction.delete(key);
+          }
         }
       }
 
       // Commit transaction
       const result = await transaction.commit();
-
       if (!result.ok) {
         throw new Error(`Failed to delete recipe: ${result.toString()}`);
       }
 
       return true;
-    }, `Failed to delete recipe ${id}`);
+    }, `Failed to delete recipe ${recipeId}`);
   },
 
   /**
-   * List all recipes with optional pagination.
+   * Legacy delete method for backward compatibility (deprecated)
+   * Use deleteUserRecipe instead for better performance
+   */
+  async delete(id: string): Promise<boolean> {
+    // Find the recipe first
+    const recipe = await this.getById(id);
+    if (!recipe) {
+      return false;
+    }
+
+    return this.deleteUserRecipe(recipe.createdBy, id);
+  },
+
+  /**
+   * List all recipes from both user and public namespaces
+   * Note: This combines all recipes across all users - use carefully
    *
-   * @param limit Maximum number of recipes to return (optional; if not set, returns all)
-   * @returns Array of recipes
+   * @param limit Maximum number of recipes to return (optional)
+   * @returns Array of recipes sorted by creation time (newest first)
    * @throws {DatabaseError} If the database operation fails
    */
   async listAll(limit?: number): Promise<Recipe[]> {
-    // Use the paginated method to fetch all recipes if needed
-    if (limit === undefined) {
-      // Fetch all pages
-      let cursor = "";
-      let allRecipes: Recipe[] = [];
-      do {
-        const { items, cursor: nextCursor } = await recipeModel.listPage({
-          limit: 100,
-          cursor,
-        });
-        allRecipes = allRecipes.concat(items);
-        cursor = nextCursor;
-      } while (cursor !== "");
-      return allRecipes;
-    }
-
-    // Return the first x entries (limit)
     return await executeDbOperation(async () => {
       const recipes: Recipe[] = [];
-      for await (const entry of kv.list<Recipe>({ prefix: ["recipe"] })) {
-        if (recipes.length < limit) {
+
+      // Collect all user recipes
+      for await (const entry of kv.list<Recipe>({ prefix: ["user_recipe"] })) {
+        if (entry.value && (!limit || recipes.length < limit)) {
           recipes.push(entry.value);
-        } else {
-          break;
         }
       }
-      return recipes;
+
+      // Collect all public recipes (avoid duplicates)
+      const existingIds = new Set(recipes.map((r) => r.id));
+      for await (
+        const entry of kv.list<Recipe>({ prefix: ["public_recipe"] })
+      ) {
+        if (
+          entry.value && !existingIds.has(entry.value.id) &&
+          (!limit || recipes.length < limit)
+        ) {
+          recipes.push(entry.value);
+        }
+      }
+
+      // Sort by creation time (newest first) - ULID contains timestamp
+      recipes.sort((a, b) => b.id.localeCompare(a.id));
+
+      return limit ? recipes.slice(0, limit) : recipes;
     }, "Failed to list recipes");
   },
 
   /**
-   * List recipes with pagination support.
+   * List recipes for a specific user (chronologically sorted by ULID)
+   *
+   * @param userId User ID
+   * @param limit Maximum number of recipes to return
+   * @returns Array of user's recipes (newest first)
+   */
+  async listUserRecipes(userId: string, limit?: number): Promise<Recipe[]> {
+    return await executeDbOperation(async () => {
+      const recipes: Recipe[] = [];
+
+      // Get user's recipes with reverse ordering (newest first)
+      for await (
+        const entry of kv.list<Recipe>(
+          { prefix: ["user_recipe", userId] },
+          { reverse: true, limit },
+        )
+      ) {
+        if (entry.value) {
+          recipes.push(entry.value);
+        }
+      }
+
+      return recipes;
+    }, `Failed to list user recipes for ${userId}`);
+  },
+
+  /**
+   * List public recipes (chronologically sorted by ULID)
+   *
+   * @param limit Maximum number of recipes to return
+   * @returns Array of public recipes (newest first)
+   */
+  async listPublicRecipes(limit?: number): Promise<Recipe[]> {
+    return await executeDbOperation(async () => {
+      const recipes: Recipe[] = [];
+
+      // Use prefix to get public recipes with reverse ordering (newest first)
+      for await (
+        const entry of kv.list<Recipe>(
+          { prefix: ["public_recipe"] },
+          { reverse: true, limit },
+        )
+      ) {
+        if (entry.value) {
+          recipes.push(entry.value);
+        }
+      }
+
+      return recipes;
+    }, "Failed to list public recipes");
+  },
+
+  /**
+   * Copy a recipe to a user's collection with provenance tracking
+   *
+   * @param sourceRecipeId ID of the recipe to copy (can be user or public recipe)
+   * @param targetUserId User ID who is copying the recipe
+   * @param visibility Visibility of the copied recipe (default: "private")
+   * @returns The copied recipe
+   * @throws {Error} If source recipe not found or copy fails
+   */
+  async copyRecipe(
+    sourceRecipeId: string,
+    targetUserId: string,
+    visibility: "private" | "public" = "private",
+  ): Promise<Recipe> {
+    return await executeDbOperation(async () => {
+      // Find the source recipe
+      const sourceRecipe = await this.getById(sourceRecipeId);
+      if (!sourceRecipe) {
+        throw new Error(`Source recipe ${sourceRecipeId} not found`);
+      }
+
+      // Generate new ULID for the copied recipe
+      const newRecipeId = ulid();
+      const now = new Date().toISOString();
+
+      // Create copied recipe with provenance tracking
+      const copiedRecipe: Recipe = {
+        ...sourceRecipe,
+        id: newRecipeId,
+        createdBy: targetUserId,
+        visibility,
+        originalRecipeId: sourceRecipeId, // Track the source
+        publicRecipeId: undefined, // Clear this for the copy
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      const transaction = kv.atomic();
+
+      // Store in user's namespace
+      const copyUserRecipeKey: UserRecipeKey = [
+        "user_recipe",
+        targetUserId,
+        newRecipeId,
+      ];
+      transaction.set(copyUserRecipeKey, copiedRecipe);
+
+      // If copying as public, also store in public namespace
+      if (visibility === "public") {
+        const publicId = ulid();
+        const publicRecipe: Recipe = {
+          ...copiedRecipe,
+          id: publicId,
+          originalRecipeId: sourceRecipeId, // Still track original source
+        };
+
+        const copyPublicRecipeKey: PublicRecipeKey = [
+          "public_recipe",
+          publicId,
+        ];
+        transaction.set(copyPublicRecipeKey, publicRecipe);
+
+        // Update user recipe to reference public version
+        copiedRecipe.publicRecipeId = publicId;
+        const updatedCopyUserRecipeKey: UserRecipeKey = [
+          "user_recipe",
+          targetUserId,
+          newRecipeId,
+        ];
+        transaction.set(updatedCopyUserRecipeKey, copiedRecipe);
+      }
+
+      // Commit transaction
+      const result = await transaction.commit();
+      if (!result.ok) {
+        throw new Error(`Failed to copy recipe: ${result.toString()}`);
+      }
+
+      return copiedRecipe;
+    }, `Failed to copy recipe ${sourceRecipeId}`);
+  },
+
+  /**
+   * List recipes with pagination support (legacy method for admin interface).
+   * This method combines recipes from both user and public namespaces.
    * @param limit Number of recipes to return per page
    * @param cursor Cursor string from previous page (or empty string for first page)
    * @returns { items: Recipe[], cursor: string }
@@ -334,8 +610,18 @@ export const recipeModel = {
     cursor?: string;
   }) {
     return await executeDbOperation(async () => {
-      const iterator = getKvIterator<Recipe>(kv, ["recipe"], limit, cursor);
-      return await processKvIterator<Recipe>(iterator);
+      // For the legacy listPage method, we need to collect all recipes
+      // This is less efficient but maintains compatibility with admin interface
+      const allRecipes = await this.listAll();
+
+      // Simple pagination without cursor-based approach
+      const offset = cursor ? parseInt(cursor) || 0 : 0;
+      const items = allRecipes.slice(offset, offset + limit);
+      const nextCursor = (offset + limit < allRecipes.length)
+        ? String(offset + limit)
+        : "";
+
+      return { items, cursor: nextCursor };
     }, "Failed to list recipes (paginated)");
   },
 
@@ -357,10 +643,22 @@ export const recipeModel = {
         offset = 0,
       } = params;
 
-      // Load all recipes using efficient kv.list() operation
+      // Load all recipes from both namespaces using new ULID-based structure
       const allRecipes: Recipe[] = [];
-      for await (const entry of kv.list<Recipe>({ prefix: ["recipe"] })) {
+
+      // Load user recipes
+      for await (const entry of kv.list<Recipe>({ prefix: ["user_recipe"] })) {
         if (entry.value) {
+          allRecipes.push(entry.value);
+        }
+      }
+
+      // Load public recipes (avoid duplicates)
+      const existingIds = new Set(allRecipes.map((r) => r.id));
+      for await (
+        const entry of kv.list<Recipe>({ prefix: ["public_recipe"] })
+      ) {
+        if (entry.value && !existingIds.has(entry.value.id)) {
           allRecipes.push(entry.value);
         }
       }
@@ -394,10 +692,22 @@ export const recipeModel = {
    */
   async getByTag(tag: string, limit = 20, offset = 0): Promise<Recipe[]> {
     return await executeDbOperation(async () => {
-      // Load all recipes and filter by tag in memory
+      // Load all recipes from both namespaces and filter by tag in memory
       const allRecipes: Recipe[] = [];
-      for await (const entry of kv.list<Recipe>({ prefix: ["recipe"] })) {
+
+      // Load user recipes
+      for await (const entry of kv.list<Recipe>({ prefix: ["user_recipe"] })) {
         if (entry.value) {
+          allRecipes.push(entry.value);
+        }
+      }
+
+      // Load public recipes (avoid duplicates)
+      const existingIds = new Set(allRecipes.map((r) => r.id));
+      for await (
+        const entry of kv.list<Recipe>({ prefix: ["public_recipe"] })
+      ) {
+        if (entry.value && !existingIds.has(entry.value.id)) {
           allRecipes.push(entry.value);
         }
       }
@@ -429,10 +739,22 @@ export const recipeModel = {
     offset = 0,
   ): Promise<Recipe[]> {
     return await executeDbOperation(async () => {
-      // Load all recipes and filter by ingredient in memory
+      // Load all recipes from both namespaces and filter by ingredient in memory
       const allRecipes: Recipe[] = [];
-      for await (const entry of kv.list<Recipe>({ prefix: ["recipe"] })) {
+
+      // Load user recipes
+      for await (const entry of kv.list<Recipe>({ prefix: ["user_recipe"] })) {
         if (entry.value) {
+          allRecipes.push(entry.value);
+        }
+      }
+
+      // Load public recipes (avoid duplicates)
+      const existingIds = new Set(allRecipes.map((r) => r.id));
+      for await (
+        const entry of kv.list<Recipe>({ prefix: ["public_recipe"] })
+      ) {
+        if (entry.value && !existingIds.has(entry.value.id)) {
           allRecipes.push(entry.value);
         }
       }
@@ -452,7 +774,7 @@ export const recipeModel = {
   },
 
   /**
-   * Get recipes created by a specific user
+   * Get recipes created by a specific user (legacy method - use listUserRecipes)
    *
    * @param userId User ID to filter by
    * @param limit Maximum number of recipes to return
@@ -466,35 +788,18 @@ export const recipeModel = {
     offset = 0,
   ): Promise<Recipe[]> {
     return await executeDbOperation(async () => {
-      const recipes: Recipe[] = [];
-      let count = 0;
+      // Use the new listUserRecipes method and apply offset manually
+      const allUserRecipes = await this.listUserRecipes(userId);
 
-      for await (
-        const entry of kv.list<boolean>({
-          prefix: ["user_recipes", userId],
-        })
-      ) {
-        if (count >= offset && recipes.length < limit) {
-          const recipeId = entry.key[2] as string;
-          const recipe = await this.getById(recipeId);
-
-          if (recipe) {
-            recipes.push(recipe);
-          }
-        }
-        count++;
-
-        if (recipes.length >= limit) {
-          break;
-        }
-      }
-
-      return recipes;
+      // Apply offset and limit
+      const startIndex = offset;
+      const endIndex = startIndex + limit;
+      return allUserRecipes.slice(startIndex, endIndex);
     }, `Failed to get recipes by user ${userId}`);
   },
 
   /**
-   * Get all public recipes (legacy - use getPublicRecipesBatch for better performance)
+   * Get all public recipes (legacy method - use listPublicRecipes for better performance)
    *
    * @param limit Maximum number of recipes to return
    * @param offset Number of recipes to skip
@@ -506,39 +811,18 @@ export const recipeModel = {
     offset = 0,
   ): Promise<Recipe[]> {
     return await executeDbOperation(async () => {
-      const recipes: Recipe[] = [];
-      let count = 0;
+      // Use the new listPublicRecipes method and apply offset manually
+      const allPublicRecipes = await this.listPublicRecipes();
 
-      for await (
-        const entry of kv.list<boolean>({
-          prefix: ["public_recipes"],
-        })
-      ) {
-        if (count >= offset && recipes.length < limit) {
-          const recipeId = entry.key[1] as string;
-          const recipe = await this.getById(recipeId);
-
-          if (recipe) {
-            recipes.push(recipe);
-          }
-        }
-        count++;
-
-        if (recipes.length >= limit) {
-          break;
-        }
-      }
-
-      return recipes;
+      // Apply offset and limit
+      const startIndex = offset;
+      const endIndex = startIndex + limit;
+      return allPublicRecipes.slice(startIndex, endIndex);
     }, "Failed to get public recipes");
   },
 
   /**
-   * Get all public recipes using batch fetching for optimal performance
-   *
-   * This method reduces KV operations from N+1 to 2 calls total:
-   * 1. List public recipe IDs (1 KV call)
-   * 2. Batch fetch all recipes (1 KV call)
+   * Get all public recipes using batch fetching (legacy method - use listPublicRecipes)
    *
    * @param limit Maximum number of recipes to return
    * @param offset Number of recipes to skip
@@ -550,50 +834,13 @@ export const recipeModel = {
     offset = 0,
   ): Promise<Recipe[]> {
     return await executeDbOperation(async () => {
-      // Step 1: Get public recipe IDs efficiently
-      const recipeIds: string[] = [];
-      let count = 0;
+      // Use the new listPublicRecipes method and apply offset manually
+      const allPublicRecipes = await this.listPublicRecipes();
 
-      for await (
-        const entry of kv.list<boolean>({
-          prefix: ["public_recipes"],
-        })
-      ) {
-        if (count >= offset && recipeIds.length < limit) {
-          const recipeId = entry.key[1] as string;
-          recipeIds.push(recipeId);
-        }
-        count++;
-
-        if (recipeIds.length >= limit) {
-          break;
-        }
-      }
-
-      // Early return if no recipes found
-      if (recipeIds.length === 0) {
-        return [];
-      }
-
-      // Step 2: Batch fetch all recipes
-      // Deno KV has a limit of 10 keys per getMany operation
-      // See: https://docs.deno.com/deploy/kv/manual/transactions/
-      const recipes: Recipe[] = [];
-      const BATCH_SIZE = 10;
-
-      for (let i = 0; i < recipeIds.length; i += BATCH_SIZE) {
-        const batchIds = recipeIds.slice(i, i + BATCH_SIZE);
-        const recipeKeys = batchIds.map((id) => ["recipe", id] as const);
-        const results = await kv.getMany<Recipe[]>(recipeKeys);
-
-        for (const result of results) {
-          if (result.value) {
-            recipes.push(result.value);
-          }
-        }
-      }
-
-      return recipes;
+      // Apply offset and limit
+      const startIndex = offset;
+      const endIndex = startIndex + limit;
+      return allPublicRecipes.slice(startIndex, endIndex);
     }, "Failed to get public recipes batch");
   },
 
@@ -621,10 +868,9 @@ export const recipeModel = {
         return true;
       }
 
-      // Private recipes (or undefined visibility - default private) are only accessible to their owners
+      // Private recipes are only accessible to their owners
       if (
-        (recipe.visibility === "private" || !recipe.visibility) && userId &&
-        recipe.createdBy === userId
+        recipe.visibility === "private" && userId && recipe.createdBy === userId
       ) {
         return true;
       }

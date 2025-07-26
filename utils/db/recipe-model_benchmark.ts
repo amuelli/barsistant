@@ -16,6 +16,8 @@ async function setupTestData(count: number) {
     const recipe = await recipeModel.create({
       name: `Benchmark Recipe ${i}`,
       description: `Test recipe for benchmarking ${i}`,
+      createdBy: "benchmark-user",
+      visibility: "public",
       ingredients: [
         {
           ingredientId: `benchmark-ingredient-${i}`,
@@ -30,7 +32,6 @@ async function setupTestData(count: number) {
       preparation: ["Mix", "Serve"],
       source: { name: "Benchmark Test" },
       tags: ["benchmark"],
-      visibility: "public", // All public for this test
     });
     createdIds.push(recipe.id);
   }

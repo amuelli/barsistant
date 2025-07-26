@@ -89,44 +89,49 @@ async function handlePost(recipeId: string, req: Request) {
       return new Response("Invalid action", { status: 400 });
     }
 
+    // Update recipe visibility using the new ULID-based structure
     // If making a public recipe private, we need to remove it from other users' collections
     let removedFromCollections = 0;
     if (recipe.visibility === "public" && newVisibility === "private") {
-      // Start atomic transaction
-      const transaction = kv.atomic();
-
-      // Update recipe visibility
-      const updatedRecipe = {
-        ...recipe,
+      // Use the recipe model's update method which handles the ULID-based structure
+      await recipeModel.updateUserRecipe(recipe.createdBy, recipeId, {
         visibility: newVisibility,
-        updatedAt: new Date().toISOString(),
-      };
-      transaction.set(["recipe", recipeId], updatedRecipe);
-
-      // Remove from public recipes index
-      transaction.delete(["public_recipes", recipeId]);
+      });
 
       // Find and remove all user collections for this recipe (except owner's)
-      for await (const entry of kv.list({ prefix: ["user_collections"] })) {
-        const key = entry.key as ["user_collections", string, string];
-        const userId = key[1];
-        const collectionRecipeId = key[2];
+      // This handles both the original recipe ID and public recipe ID
+      const recipeIdsToClean = [recipeId];
+      if (recipe.publicRecipeId) {
+        recipeIdsToClean.push(recipe.publicRecipeId);
+      }
 
-        // If this is a collection entry for our recipe and not the owner's
-        if (collectionRecipeId === recipeId && userId !== user.id) {
-          transaction.delete(key);
-          removedFromCollections++;
+      const transaction = kv.atomic();
+      for (const idToClean of recipeIdsToClean) {
+        for await (const entry of kv.list({ prefix: ["user_collections"] })) {
+          const key = entry.key as ["user_collections", string, string];
+          const userId = key[1];
+          const collectionRecipeId = key[2];
+
+          // If this is a collection entry for our recipe and not the owner's
+          if (collectionRecipeId === idToClean && userId !== user.id) {
+            transaction.delete(key);
+            removedFromCollections++;
+          }
         }
       }
 
-      // Commit transaction
-      const result = await transaction.commit();
-      if (!result.ok) {
-        throw new Error("Failed to update recipe visibility");
+      // Commit collection cleanup transaction
+      if (removedFromCollections > 0) {
+        const result = await transaction.commit();
+        if (!result.ok) {
+          throw new Error("Failed to clean up user collections");
+        }
       }
     } else {
-      // Simple update - just change visibility
-      await recipeModel.update(recipeId, { visibility: newVisibility });
+      // Simple update - just change visibility using the new structure
+      await recipeModel.updateUserRecipe(recipe.createdBy, recipeId, {
+        visibility: newVisibility,
+      });
     }
 
     // Return success response with detailed information

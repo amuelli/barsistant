@@ -20,8 +20,8 @@ Deno.test({
       id: "test-recipe-id",
       name: "Test Cocktail",
       description: "Test description",
-      strength: 5,
-      sweetness: 5,
+      createdBy: "test-user",
+      visibility: "private" as const,
       ingredients: [
         {
           ingredientId: "1",

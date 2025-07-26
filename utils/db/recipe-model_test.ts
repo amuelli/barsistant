@@ -13,6 +13,8 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
   const testOldFashioned = {
     name: "Test Old Fashioned",
     description: "A test recipe for an Old Fashioned cocktail",
+    createdBy: "test-user-123", // Required field for new ULID-based structure
+    visibility: "private" as const,
     ingredients: [
       {
         ingredientId: "bourbon123",
@@ -54,6 +56,8 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
   const testMojito = {
     name: "Test Mojito",
     description: "A refreshing rum cocktail with mint and lime",
+    createdBy: "test-user-123", // Required field for new ULID-based structure
+    visibility: "private" as const,
     ingredients: [
       {
         ingredientId: "white-rum123",
@@ -112,6 +116,8 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     name: "Test Negroni",
     description:
       "A classic Italian cocktail with equal parts gin, vermouth, and Campari",
+    createdBy: "test-user-123", // Required field for new ULID-based structure
+    visibility: "private" as const,
     ingredients: [
       {
         ingredientId: "gin123",
@@ -285,50 +291,6 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     assertEquals(hasMojito, true);
   });
 
-  // Test advanced search - by strength
-  await t.step("search by strength range", async () => {
-    // Find cocktails by name
-    const strongCocktails = await recipeModel.search({
-      query: "Test",
-    });
-
-    assertExists(strongCocktails);
-    assertEquals(Array.isArray(strongCocktails), true);
-    // Should find Old Fashioned and Negroni
-    assertEquals(strongCocktails.length >= 2, true);
-
-    // Verify that we have Negroni in the results
-    const hasNegroni = strongCocktails.some((recipe) =>
-      recipe.name.includes("Negroni")
-    );
-    assertEquals(hasNegroni, true);
-  });
-
-  // Test advanced search - by sweetness
-  await t.step("search by sweetness range", async () => {
-    // Find cocktails by name
-    const sweetCocktails = await recipeModel.search({
-      query: "Test",
-    });
-
-    assertExists(sweetCocktails);
-    assertEquals(Array.isArray(sweetCocktails), true);
-    // Should find Old Fashioned and Mojito
-    assertEquals(sweetCocktails.length >= 2, true);
-
-    // Find cocktails by query
-    const dryCocktails = await recipeModel.search({
-      query: "Test",
-    });
-
-    assertExists(dryCocktails);
-    // Should find Negroni
-    const hasNegroni = dryCocktails.some((recipe) =>
-      recipe.name.includes("Negroni")
-    );
-    assertEquals(hasNegroni, true);
-  });
-
   // Test advanced search - by query text
   await t.step("search by text query", async () => {
     // Search for Italian cocktails
@@ -391,6 +353,8 @@ Deno.test("Recipe Model - Pagination", async (t) => {
     const recipe = await recipeModel.create({
       name: `Paginated Recipe ${i}`,
       description: `Description ${i}`,
+      createdBy: "test-user-pagination", // Required field for new ULID-based structure
+      visibility: "private" as const,
       ingredients: [
         {
           ingredientId: `ingredient${i}`,
@@ -457,6 +421,7 @@ Deno.test("Recipe Model - Batch Public Recipes", async (t) => {
       const recipe = await recipeModel.create({
         name: `Test Recipe ${i}`,
         description: `Test recipe description ${i}`,
+        createdBy: "test-user-batch", // Required field for new ULID-based structure
         ingredients: [
           {
             ingredientId: `test-ingredient-${i}`,

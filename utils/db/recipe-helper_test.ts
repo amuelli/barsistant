@@ -66,8 +66,8 @@ Deno.test("Recipe Helper - JIT Ingredient Creation and Recipe Management", async
   const testNegroni = {
     name: "Test Helper Negroni",
     description: "A classic Italian cocktail created via helper",
-    strength: 9,
-    sweetness: 4,
+    createdBy: "test-user",
+    visibility: "private" as const,
     ingredients: [testGin, testCampari, testSweetVermouth, testOrangePeel],
     garnish: ["Orange Peel"],
     glassware: "rocks" as GlasswareType,

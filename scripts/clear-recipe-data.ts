@@ -29,11 +29,17 @@ async function main() {
   try {
     // Clear all recipe-related data by deleting keys with known prefixes
     const prefixesToClear = [
+      // Old key patterns (for cleanup)
       ["recipe"],
       ["user_recipes"],
       ["public_recipes"],
+      // New ULID-based key patterns
+      ["user_recipe"],
+      ["public_recipe"],
+      // User data (unchanged)
       ["user_favorites"],
       ["user_collections"],
+      ["user_notes"],
       // Legacy indexes that may still exist (cleanup from old data structure)
       ["recipe_ingredient"],
       ["ingredient_recipes"],
