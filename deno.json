@@ -12,7 +12,8 @@
     "extract-recipes": "deno run --allow-net --allow-write scripts/extract-recipes.ts",
     "migration:create": "deno run -A scripts/generate-migration.ts",
     "migration:status": "deno run -A scripts/migrations.ts status",
-    "migration:run": "deno run -A scripts/migrations.ts run"
+    "migration:run": "deno run -A scripts/migrations.ts run",
+    "dump-kv": "deno run -A scripts/dump-kv.ts"
   },
   "lint": { "rules": { "tags": ["fresh", "recommended"] } },
   "exclude": [
@@ -21,6 +22,9 @@
     "utils/db/migrations/_template.ts"
   ],
   "imports": {
+    "🛠️/": "./utils/",
+    "🏝️/": "./islands/",
+    "🧱/": "./components/",
     "@ai-sdk/openai": "npm:@ai-sdk/openai@^1.3.22",
     "@b-fuze/deno-dom": "jsr:@b-fuze/deno-dom@^0.1.49",
     "@openai/openai": "jsr:@openai/openai@^4.102.0",

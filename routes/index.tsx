@@ -1,6 +1,6 @@
-import RecipeImage from "../islands/RecipeImage.tsx";
-import { define } from "../utils.ts";
-import { recipeModel } from "../utils/db/recipe-model.ts";
+import RecipeImage from "🏝️/RecipeImage.tsx";
+import { recipeModel } from "🛠️/db/recipe-model.ts";
+import { define } from "🛠️/define.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -8,8 +8,8 @@ export const handler = define.handlers({
     const user = ctx.state.user; // From auth middleware
 
     // Always show public recipes on the home page
-    // Use batch method for optimal performance (2 KV calls vs 13+)
-    const recipes = await recipeModel.getPublicRecipesBatch(12);
+    // Get latest public recipes
+    const recipes = await recipeModel.listPublicRecipes(12);
 
     return { data: { recipes, user } };
   },

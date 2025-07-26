@@ -4,11 +4,9 @@ import {
   ingredients as sampleIngredients,
   recipes as sampleRecipes,
 } from "../scripts/data.ts";
-import { kv } from "../utils/db/db.ts";
-import { ingredientModel } from "../utils/db/ingredient-model.ts";
-import {
-  createRecipeWithSimpleIngredients,
-} from "../utils/db/recipe-helper.ts";
+import { kv } from "🛠️/db/db.ts";
+import { ingredientModel } from "🛠️/db/ingredient-model.ts";
+import { createRecipeWithSimpleIngredients } from "🛠️/db/recipe-helper.ts";
 
 const DB_VERSION_KEY = ["db_meta", "version"];
 const CURRENT_VERSION = 1;
@@ -84,11 +82,12 @@ async function initializeRecipes(): Promise<void> {
       }));
 
       // Create the recipe with the enhanced ingredients
-      // Note: Sample recipes are created without user association (system-provided)
+      // Note: Sample recipes are created with a system user ID
       const newRecipe = await createRecipeWithSimpleIngredients({
         ...recipe,
         ingredients: simpleIngredients,
-        // createdBy is intentionally omitted for sample recipes
+        createdBy: "system", // System-created recipes
+        visibility: "public", // Make sample recipes public
       });
 
       console.log(`Created recipe: ${recipe.name} with ID ${newRecipe.id}`);

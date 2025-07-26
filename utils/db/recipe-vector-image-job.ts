@@ -39,7 +39,7 @@ export async function handleGenerateRecipeVectorImageJob(
   const { recipeId } = job;
   try {
     // Use recipeModel.getById instead of recipes.get
-    const recipe = await recipeModel.getById(recipeId);
+    const recipe = await recipeModel.getByIdForAdmin(recipeId);
     if (!recipe) {
       throw new DatabaseError(`Recipe not found: ${recipeId}`);
     }
@@ -52,8 +52,8 @@ export async function handleGenerateRecipeVectorImageJob(
       return;
     }
 
-    // Set image generation status to vector generating using recipeModel.update
-    await recipeModel.update(recipeId, {
+    // Set image generation status to vector generating
+    await recipeModel.updateUserRecipe(recipe.createdBy, recipeId, {
       images: {
         raster: recipe.images?.raster,
         vector: {
@@ -127,8 +127,10 @@ export async function handleGenerateRecipeVectorImageJob(
       },
     };
 
-    // Instead of using recipes.set, use recipeModel.update to update the recipe with the new images
-    await recipeModel.update(recipeId, { images: updatedImages });
+    // Update the recipe with the vector images
+    await recipeModel.updateUserRecipe(recipe.createdBy, recipeId, {
+      images: updatedImages,
+    });
 
     console.log(
       `[recipe-vector-image-job] Recipe updated with vector image for ${recipeId}`,

@@ -1,18 +1,18 @@
 /// <reference lib="deno.unstable" />
 
+import type { FreshContext } from "fresh";
 import {
   assertEquals,
   assertExists,
 } from "https://deno.land/std@0.208.0/assert/mod.ts";
-import { createMockRequest } from "../../../../utils/test-helpers.ts";
-import type { FreshContext } from "fresh";
-import { handler } from "./visibility.ts";
-import { recipeModel } from "../../../../utils/db/recipe-model.ts";
-import { createUser, deleteUser } from "../../../../utils/auth/user.ts";
-import { userCollectionModel } from "../../../../utils/db/user-collection-model.ts";
-import { createMagicLinkToken } from "../../../../utils/auth/token.ts";
-import { createUserSession } from "../../../../utils/auth/session.ts";
+import { createUserSession } from "🛠️/auth/session.ts";
+import { createMagicLinkToken } from "🛠️/auth/token.ts";
+import { createUser, deleteUser } from "🛠️/auth/user.ts";
+import { recipeModel } from "🛠️/db/recipe-model.ts";
+import { State } from "🛠️/define.ts";
+import { createMockRequest } from "🛠️/test-helpers.ts";
 import { Recipe } from "../../../../types/recipe.ts";
+import { handler } from "./visibility.ts";
 
 Deno.test("Recipe Visibility API", async (t) => {
   let testUser: { id: string; email: string };
@@ -39,8 +39,6 @@ Deno.test("Recipe Visibility API", async (t) => {
     testRecipe = await recipeModel.create({
       name: "Test Recipe for Visibility",
       description: "Testing visibility toggle",
-      strength: 5,
-      sweetness: 5,
       ingredients: [
         {
           ingredientId: "test-ingredient",
@@ -59,13 +57,8 @@ Deno.test("Recipe Visibility API", async (t) => {
       createdBy: testUser.id,
     });
 
-    // Have other user add the recipe to their collection
-    await userCollectionModel.addToCollection(
-      otherUser.id,
-      testRecipe.id,
-      "saved",
-      "Test",
-    );
+    // Other user copies the recipe to their collection (simulate saving)
+    await recipeModel.copyRecipe(testRecipe.id, otherUser.id, "private");
   });
 
   await t.step("should require authentication", async () => {
@@ -75,31 +68,30 @@ Deno.test("Recipe Visibility API", async (t) => {
       { action: "toggle" },
     );
 
-    const response = await handler({
+    const response = await handler.POST({
       req,
       params: { id: testRecipe.id },
-    } as unknown as FreshContext);
+    } as unknown as FreshContext<State>);
 
     assertEquals(response.status, 401);
   });
 
-  await t.step("should reject non-POST methods", async () => {
+  await t.step("should handle empty JSON body gracefully", async () => {
     const req = createMockRequest(
-      "GET",
+      "POST",
       `/api/recipes/${testRecipe.id}/visibility`,
-      null,
+      null, // Empty body that will cause JSON parse error
       {
         Cookie: `session=${sessionToken}`,
       },
     );
 
-    const response = await handler({
+    const response = await handler.POST({
       req,
       params: { id: testRecipe.id },
-    } as unknown as FreshContext);
+    } as unknown as FreshContext<State>);
 
-    assertEquals(response.status, 405);
-    assertEquals(response.headers.get("Allow"), "POST");
+    assertEquals(response.status, 500); // JSON parse error should result in 500
   });
 
   await t.step("should reject invalid actions", async () => {
@@ -112,10 +104,10 @@ Deno.test("Recipe Visibility API", async (t) => {
       },
     );
 
-    const response = await handler({
+    const response = await handler.POST({
       req,
       params: { id: testRecipe.id },
-    } as unknown as FreshContext);
+    } as unknown as FreshContext<State>);
 
     assertEquals(response.status, 400);
   });
@@ -132,22 +124,20 @@ Deno.test("Recipe Visibility API", async (t) => {
         },
       );
 
-      const response = await handler({
+      const response = await handler.POST({
         req,
         params: { id: testRecipe.id },
-      } as unknown as FreshContext);
+      } as unknown as FreshContext<State>);
 
       assertEquals(response.status, 403);
     },
   );
 
   await t.step("should toggle from public to private", async () => {
-    // Verify recipe is in other user's collection
-    const inCollectionBefore = await userCollectionModel.isInUserCollection(
-      otherUser.id,
-      testRecipe.id,
-    );
-    assertEquals(inCollectionBefore, true);
+    // Verify other user has a copy of the recipe
+    const otherUserRecipes = await recipeModel.listUserRecipes(otherUser.id);
+    const hasCopyBefore = otherUserRecipes.some(r => r.originalRecipeId === testRecipe.id);
+    assertEquals(hasCopyBefore, true);
 
     const req = createMockRequest(
       "POST",
@@ -158,10 +148,10 @@ Deno.test("Recipe Visibility API", async (t) => {
       },
     );
 
-    const response = await handler({
+    const response = await handler.POST({
       req,
       params: { id: testRecipe.id },
-    } as unknown as FreshContext);
+    } as unknown as FreshContext<State>);
 
     assertEquals(response.status, 200);
     const result = await response.json();
@@ -172,15 +162,13 @@ Deno.test("Recipe Visibility API", async (t) => {
     assertExists(result.message);
 
     // Verify recipe was updated
-    const updatedRecipe = await recipeModel.getById(testRecipe.id);
+    const updatedRecipe = await recipeModel.getByIdForAdmin(testRecipe.id);
     assertEquals(updatedRecipe?.visibility, "private");
 
-    // Verify recipe was removed from other user's collection
-    const inCollectionAfter = await userCollectionModel.isInUserCollection(
-      otherUser.id,
-      testRecipe.id,
-    );
-    assertEquals(inCollectionAfter, false);
+    // Verify other user's copy was removed when recipe became private
+    const otherUserRecipesAfter = await recipeModel.listUserRecipes(otherUser.id);
+    const hasCopyAfter = otherUserRecipesAfter.some(r => r.originalRecipeId === testRecipe.id);
+    assertEquals(hasCopyAfter, false);
   });
 
   await t.step("should toggle from private to public", async () => {
@@ -193,10 +181,10 @@ Deno.test("Recipe Visibility API", async (t) => {
       },
     );
 
-    const response = await handler({
+    const response = await handler.POST({
       req,
       params: { id: testRecipe.id },
-    } as unknown as FreshContext);
+    } as unknown as FreshContext<State>);
 
     assertEquals(response.status, 200);
     const result = await response.json();
@@ -206,13 +194,15 @@ Deno.test("Recipe Visibility API", async (t) => {
     assertEquals(result.changed, true);
 
     // Verify recipe was updated
-    const updatedRecipe = await recipeModel.getById(testRecipe.id);
+    const updatedRecipe = await recipeModel.getByIdForAdmin(testRecipe.id);
     assertEquals(updatedRecipe?.visibility, "public");
   });
 
   await t.step("should handle setPublic action", async () => {
     // First make it private
-    await recipeModel.update(testRecipe.id, { visibility: "private" });
+    await recipeModel.updateUserRecipe(testRecipe.createdBy, testRecipe.id, {
+      visibility: "private",
+    });
 
     const req = createMockRequest(
       "POST",
@@ -223,10 +213,10 @@ Deno.test("Recipe Visibility API", async (t) => {
       },
     );
 
-    const response = await handler({
+    const response = await handler.POST({
       req,
       params: { id: testRecipe.id },
-    } as unknown as FreshContext);
+    } as unknown as FreshContext<State>);
 
     assertEquals(response.status, 200);
     const result = await response.json();
@@ -245,10 +235,10 @@ Deno.test("Recipe Visibility API", async (t) => {
       },
     );
 
-    const response = await handler({
+    const response = await handler.POST({
       req,
       params: { id: testRecipe.id },
-    } as unknown as FreshContext);
+    } as unknown as FreshContext<State>);
 
     assertEquals(response.status, 200);
     const result = await response.json();
@@ -268,10 +258,10 @@ Deno.test("Recipe Visibility API", async (t) => {
       },
     );
 
-    const response = await handler({
+    const response = await handler.POST({
       req,
       params: { id: testRecipe.id },
-    } as unknown as FreshContext);
+    } as unknown as FreshContext<State>);
 
     assertEquals(response.status, 200);
     const result = await response.json();
@@ -291,17 +281,17 @@ Deno.test("Recipe Visibility API", async (t) => {
       },
     );
 
-    const response = await handler({
+    const response = await handler.POST({
       req,
       params: { id: "non-existent-id" },
-    } as unknown as FreshContext);
+    } as unknown as FreshContext<State>);
 
     assertEquals(response.status, 404);
   });
 
   await t.step("cleanup", async () => {
     // Delete test recipe
-    await recipeModel.delete(testRecipe.id);
+    await recipeModel.deleteUserRecipe(testRecipe.createdBy, testRecipe.id);
 
     // Delete test users
     await deleteUser(testUser.id);

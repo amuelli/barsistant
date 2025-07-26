@@ -1,12 +1,4 @@
-import { FreshContext } from "fresh";
-import { createMagicLinkToken } from "../../../utils/auth/token.ts";
-import { findUserByEmail } from "../../../utils/auth/user.ts";
-import { sendEmail } from "../../../utils/email/service.ts";
-import { generateMagicLinkEmail } from "../../../utils/email/templates.ts";
-import {
-  createIPRateLimiter,
-  rateLimit,
-} from "../../../utils/auth/rate-limit.ts";
+import { createIPRateLimiter, rateLimit } from "🛠️/auth/rate-limit.ts";
 import {
   createSecureHeaders,
   getClientIP,
@@ -15,7 +7,12 @@ import {
   logSecurityEvent,
   sanitizeEmail,
   validateOrigin,
-} from "../../../utils/auth/security.ts";
+} from "🛠️/auth/security.ts";
+import { createMagicLinkToken } from "🛠️/auth/token.ts";
+import { findUserByEmail } from "🛠️/auth/user.ts";
+import { define } from "🛠️/define.ts";
+import { sendEmail } from "🛠️/email/service.ts";
+import { generateMagicLinkEmail } from "🛠️/email/templates.ts";
 
 interface RequestMagicLinkRequest {
   email: string;
@@ -28,141 +25,144 @@ interface RequestMagicLinkResponse {
 
 const rateLimiter = createIPRateLimiter(15 * 60 * 1000, 10); // 10 requests per 15 minutes per IP
 
-export async function handler(ctx: FreshContext): Promise<Response> {
-  if (ctx.req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: createSecureHeaders({ "Content-Type": "application/json" }),
-    });
-  }
+export const handler = define.handlers({
+  async POST(ctx) {
+    // Apply rate limiting
+    const rateLimitResponse = await rateLimit(rateLimiter)(ctx.req);
+    if (rateLimitResponse) {
+      return rateLimitResponse;
+    }
 
-  // Apply rate limiting
-  const rateLimitResponse = await rateLimit(rateLimiter)(ctx.req);
-  if (rateLimitResponse) {
-    return rateLimitResponse;
-  }
-
-  // Validate origin for CSRF protection
-  if (!validateOrigin(ctx.req)) {
-    logSecurityEvent("Invalid origin", {
-      origin: ctx.req.headers.get("Origin"),
-      referer: ctx.req.headers.get("Referer"),
-      ip: getClientIP(ctx.req),
-    });
-    return new Response(
-      JSON.stringify({
-        success: false,
-        message: "Invalid request origin",
-      }),
-      {
-        status: 403,
-        headers: createSecureHeaders({ "Content-Type": "application/json" }),
-      },
-    );
-  }
-
-  // Check for bot requests
-  const userAgent = ctx.req.headers.get("User-Agent") || "";
-  if (isLikelyBot(userAgent)) {
-    logSecurityEvent("Bot request detected", {
-      userAgent,
-      ip: getClientIP(ctx.req),
-    });
-    return new Response(
-      JSON.stringify({
-        success: false,
-        message: "Automated requests are not allowed",
-      }),
-      {
-        status: 403,
-        headers: createSecureHeaders({ "Content-Type": "application/json" }),
-      },
-    );
-  }
-
-  try {
-    const body: RequestMagicLinkRequest = await ctx.req.json();
-
-    if (!body.email || typeof body.email !== "string") {
+    // Validate origin for CSRF protection
+    if (!validateOrigin(ctx.req)) {
+      logSecurityEvent("Invalid origin", {
+        origin: ctx.req.headers.get("Origin"),
+        referer: ctx.req.headers.get("Referer"),
+        ip: getClientIP(ctx.req),
+      });
       return new Response(
         JSON.stringify({
           success: false,
-          message: "Email is required",
+          message: "Invalid request origin",
         }),
         {
-          status: 400,
+          status: 403,
           headers: createSecureHeaders({ "Content-Type": "application/json" }),
         },
       );
     }
 
-    const email = sanitizeEmail(body.email);
-
-    if (!isValidEmail(email)) {
+    // Check for bot requests
+    const userAgent = ctx.req.headers.get("User-Agent") || "";
+    if (isLikelyBot(userAgent)) {
+      logSecurityEvent("Bot request detected", {
+        userAgent,
+        ip: getClientIP(ctx.req),
+      });
       return new Response(
         JSON.stringify({
           success: false,
-          message: "Invalid email format",
+          message: "Automated requests are not allowed",
         }),
         {
-          status: 400,
+          status: 403,
           headers: createSecureHeaders({ "Content-Type": "application/json" }),
         },
       );
     }
 
-    // Check if user exists
-    const existingUser = await findUserByEmail(email);
-    const isNewUser = !existingUser;
+    try {
+      const body: RequestMagicLinkRequest = await ctx.req.json();
 
-    // Create magic link token
-    const token = await createMagicLinkToken(email, existingUser?.id);
+      if (!body.email || typeof body.email !== "string") {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            message: "Email is required",
+          }),
+          {
+            status: 400,
+            headers: createSecureHeaders({
+              "Content-Type": "application/json",
+            }),
+          },
+        );
+      }
 
-    // Generate magic link URL
-    const baseUrl = new URL(ctx.req.url).origin;
-    const magicLinkUrl = `${baseUrl}/auth/verify?token=${token}`;
+      const email = sanitizeEmail(body.email);
 
-    // Generate and send email
-    const emailContent = generateMagicLinkEmail(email, magicLinkUrl, isNewUser);
-    await sendEmail({
-      to: email,
-      subject: emailContent.subject,
-      html: emailContent.html,
-      text: emailContent.text,
-    });
+      if (!isValidEmail(email)) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            message: "Invalid email format",
+          }),
+          {
+            status: 400,
+            headers: createSecureHeaders({
+              "Content-Type": "application/json",
+            }),
+          },
+        );
+      }
 
-    logSecurityEvent("Magic link sent", {
-      email,
-      isNewUser,
-      ip: getClientIP(ctx.req),
-    });
+      // Check if user exists
+      const existingUser = await findUserByEmail(email);
+      const isNewUser = !existingUser;
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Magic link sent successfully",
-      }),
-      {
-        status: 200,
-        headers: createSecureHeaders({ "Content-Type": "application/json" }),
-      },
-    );
-  } catch (error) {
-    console.error("Error sending magic link:", error);
-    logSecurityEvent("Magic link send failed", {
-      error: (error as Error).message,
-      ip: getClientIP(ctx.req),
-    });
+      // Create magic link token
+      const token = await createMagicLinkToken(email, existingUser?.id);
 
-    return new Response(
-      JSON.stringify({
-        success: false,
-        message: "Failed to send magic link",
-      }),
-      {
-        status: 500,
-        headers: createSecureHeaders({ "Content-Type": "application/json" }),
-      },
-    );
-  }
-}
+      // Generate magic link URL
+      const baseUrl = new URL(ctx.req.url).origin;
+      const magicLinkUrl = `${baseUrl}/auth/verify?token=${token}`;
+
+      // Generate and send email
+      const emailContent = generateMagicLinkEmail(
+        email,
+        magicLinkUrl,
+        isNewUser,
+      );
+      await sendEmail({
+        to: email,
+        subject: emailContent.subject,
+        html: emailContent.html,
+        text: emailContent.text,
+      });
+
+      logSecurityEvent("Magic link sent", {
+        email,
+        isNewUser,
+        ip: getClientIP(ctx.req),
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Magic link sent successfully",
+        }),
+        {
+          status: 200,
+          headers: createSecureHeaders({ "Content-Type": "application/json" }),
+        },
+      );
+    } catch (error) {
+      console.error("Error sending magic link:", error);
+      logSecurityEvent("Magic link send failed", {
+        error: (error as Error).message,
+        ip: getClientIP(ctx.req),
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Failed to send magic link",
+        }),
+        {
+          status: 500,
+          headers: createSecureHeaders({ "Content-Type": "application/json" }),
+        },
+      );
+    }
+  },
+});

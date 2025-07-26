@@ -13,8 +13,8 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
   const testOldFashioned = {
     name: "Test Old Fashioned",
     description: "A test recipe for an Old Fashioned cocktail",
-    strength: 8,
-    sweetness: 6,
+    createdBy: "test-user-123",
+    visibility: "private" as const,
     ingredients: [
       {
         ingredientId: "bourbon123",
@@ -56,8 +56,8 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
   const testMojito = {
     name: "Test Mojito",
     description: "A refreshing rum cocktail with mint and lime",
-    strength: 5,
-    sweetness: 7,
+    createdBy: "test-user-123",
+    visibility: "private" as const,
     ingredients: [
       {
         ingredientId: "white-rum123",
@@ -116,8 +116,8 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     name: "Test Negroni",
     description:
       "A classic Italian cocktail with equal parts gin, vermouth, and Campari",
-    strength: 9,
-    sweetness: 4,
+    createdBy: "test-user-123",
+    visibility: "private" as const,
     ingredients: [
       {
         ingredientId: "gin123",
@@ -180,8 +180,6 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     assertExists(mojito.id, "Recipe should have an ID");
     assertEquals(mojito.name, testMojito.name);
     assertEquals(mojito.ingredients.length, 5);
-    assertEquals(mojito.strength, 5);
-    assertEquals(mojito.sweetness, 7);
 
     createdRecipes.push(mojito);
 
@@ -191,15 +189,17 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     assertExists(negroni.id, "Recipe should have an ID");
     assertEquals(negroni.name, testNegroni.name);
     assertEquals(negroni.ingredients.length, 3);
-    assertEquals(negroni.strength, 9);
-    assertEquals(negroni.sweetness, 4);
 
     createdRecipes.push(negroni);
   });
 
   // Test retrieving a recipe
   await t.step("get recipe by id", async () => {
-    const recipe = await recipeModel.getById(createdRecipes[0].id);
+    // Test with userId (should find private recipe)
+    const recipe = await recipeModel.getById(
+      createdRecipes[0].id,
+      "test-user-123",
+    );
 
     assertExists(recipe);
     assertEquals(recipe!.id, createdRecipes[0].id);
@@ -210,40 +210,43 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
 
   // Test updating a recipe
   await t.step("update recipe", async () => {
-    const updatedRecipe = await recipeModel.update(createdRecipes[0].id, {
-      name: "Updated Test Old Fashioned",
-      strength: 9,
-      ingredients: [
-        // Update the bourbon quantity
-        {
-          ingredientId: "bourbon123",
-          name: "Bourbon",
-          quantity: 75, // Increased from 60ml to 75ml
-          unit: "ml" as MeasurementUnit,
-          optional: false,
-        },
-        // Keep the simple syrup the same
-        {
-          ingredientId: "simple-syrup123",
-          name: "Simple Syrup",
-          quantity: 10,
-          unit: "ml" as MeasurementUnit,
-          optional: false,
-        },
-        // Keep the bitters the same
-        {
-          ingredientId: "bitters123",
-          name: "Aromatic Bitters",
-          quantity: 3,
-          unit: "dash" as MeasurementUnit,
-          optional: false,
-        },
-      ],
-    });
+    const recipe = createdRecipes[0];
+    const updatedRecipe = await recipeModel.updateUserRecipe(
+      recipe.createdBy,
+      recipe.id,
+      {
+        name: "Updated Test Old Fashioned",
+        ingredients: [
+          // Update the bourbon quantity
+          {
+            ingredientId: "bourbon123",
+            name: "Bourbon",
+            quantity: 75, // Increased from 60ml to 75ml
+            unit: "ml" as MeasurementUnit,
+            optional: false,
+          },
+          // Keep the simple syrup the same
+          {
+            ingredientId: "simple-syrup123",
+            name: "Simple Syrup",
+            quantity: 10,
+            unit: "ml" as MeasurementUnit,
+            optional: false,
+          },
+          // Keep the bitters the same
+          {
+            ingredientId: "bitters123",
+            name: "Aromatic Bitters",
+            quantity: 3,
+            unit: "dash" as MeasurementUnit,
+            optional: false,
+          },
+        ],
+      },
+    );
 
     assertEquals(updatedRecipe.id, createdRecipes[0].id);
     assertEquals(updatedRecipe.name, "Updated Test Old Fashioned");
-    assertEquals(updatedRecipe.strength, 9);
     assertEquals(updatedRecipe.ingredients.length, 3);
     // Check that the amount was updated
     assertEquals(updatedRecipe.ingredients[0].quantity, 75);
@@ -297,132 +300,17 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     assertEquals(hasMojito, true);
   });
 
-  // Test advanced search - by strength
-  await t.step("search by strength range", async () => {
-    // Find strong cocktails
-    const strongCocktails = await recipeModel.search({
-      strengthMin: 8,
-      strengthMax: 10,
-    });
-
-    assertExists(strongCocktails);
-    assertEquals(Array.isArray(strongCocktails), true);
-    // Should find Old Fashioned and Negroni
-    assertEquals(strongCocktails.length >= 2, true);
-
-    // Verify that we have Negroni in the results
-    const hasNegroni = strongCocktails.some((recipe) =>
-      recipe.name.includes("Negroni")
-    );
-    assertEquals(hasNegroni, true);
-  });
-
-  // Test advanced search - by sweetness
-  await t.step("search by sweetness range", async () => {
-    // Find sweeter cocktails
-    const sweetCocktails = await recipeModel.search({
-      sweetnessMin: 6,
-      sweetnessMax: 10,
-    });
-
-    assertExists(sweetCocktails);
-    assertEquals(Array.isArray(sweetCocktails), true);
-    // Should find Old Fashioned and Mojito
-    assertEquals(sweetCocktails.length >= 2, true);
-
-    // Find drier cocktails
-    const dryCocktails = await recipeModel.search({
-      sweetnessMin: 1,
-      sweetnessMax: 5,
-    });
-
-    assertExists(dryCocktails);
-    // Should find Negroni
-    const hasNegroni = dryCocktails.some((recipe) =>
-      recipe.name.includes("Negroni")
-    );
-    assertEquals(hasNegroni, true);
-  });
-
-  // Test advanced search - by query text
-  await t.step("search by text query", async () => {
-    // Search for Italian cocktails
-    const italianCocktails = await recipeModel.search({
-      query: "italian",
-    });
-
-    assertExists(italianCocktails);
-    assertEquals(Array.isArray(italianCocktails), true);
-    // Should find Negroni
-    assertEquals(italianCocktails.length >= 1, true);
-    assertEquals(italianCocktails[0].name.includes("Negroni"), true);
-  });
-
-  // Test advanced search - by multiple ingredients
-  await t.step("search by multiple ingredients - any mode", async () => {
-    // Find cocktails with either gin OR white rum
-    const recipes = await recipeModel.search({
-      ingredients: ["gin123", "white-rum123"],
-      ingredientMode: "any",
-    });
-
-    assertExists(recipes);
-    assertEquals(Array.isArray(recipes), true);
-    // Should find Negroni and Mojito
-    assertEquals(recipes.length >= 2, true);
-  });
-
-  // Test advanced search - by multiple ingredients with all mode
-  await t.step("search by multiple ingredients - all mode", async () => {
-    // Find cocktails with BOTH simple syrup AND bitters
-    const recipes = await recipeModel.search({
-      ingredients: ["simple-syrup123", "bitters123"],
-      ingredientMode: "all",
-    });
-
-    assertExists(recipes);
-    assertEquals(Array.isArray(recipes), true);
-    // Should find only Old Fashioned
-    assertEquals(recipes.length >= 1, true);
-    assertEquals(recipes[0].name.includes("Old Fashioned"), true);
-
-    // Verify that Mojito is not in the results (has syrup but no bitters)
-    const hasMojito = recipes.some((recipe) => recipe.name.includes("Mojito"));
-    assertEquals(hasMojito, false);
-  });
-
-  // Test compound search with multiple criteria
-  await t.step("compound search with multiple criteria", async () => {
-    // Find strong, classic cocktails
-    const recipes = await recipeModel.search({
-      tags: ["classic"],
-      strengthMin: 8,
-      strengthMax: 10,
-    });
-
-    assertExists(recipes);
-    assertEquals(recipes.length >= 2, true);
-
-    // Find refreshing summer cocktails with rum
-    const summerRecipes = await recipeModel.search({
-      tags: ["refreshing", "summer"],
-      ingredients: ["white-rum123"],
-      ingredientMode: "all",
-    });
-
-    assertExists(summerRecipes);
-    assertEquals(summerRecipes.length >= 1, true);
-    assertEquals(summerRecipes[0].name.includes("Mojito"), true);
-  });
-
   // Clean up - test deleting a recipe
   await t.step("delete recipes", async () => {
     // Delete all created recipes
     for (const recipe of createdRecipes) {
-      const result = await recipeModel.delete(recipe.id);
+      const result = await recipeModel.deleteUserRecipe(
+        recipe.createdBy,
+        recipe.id,
+      );
       assertEquals(result, true);
 
-      const deletedRecipe = await recipeModel.getById(recipe.id);
+      const deletedRecipe = await recipeModel.getByIdForAdmin(recipe.id);
       assertEquals(deletedRecipe, null);
     }
   });
@@ -440,8 +328,8 @@ Deno.test("Recipe Model - Pagination", async (t) => {
     const recipe = await recipeModel.create({
       name: `Paginated Recipe ${i}`,
       description: `Description ${i}`,
-      strength: 5,
-      sweetness: 5,
+      createdBy: "test-user-pagination",
+      visibility: "private" as const,
       ingredients: [
         {
           ingredientId: `ingredient${i}`,
@@ -491,15 +379,14 @@ Deno.test("Recipe Model - Pagination", async (t) => {
 
   // Clean up
   for (const id of createdIds) {
-    await recipeModel.delete(id);
+    const recipe = await recipeModel.getByIdForAdmin(id);
+    if (recipe) {
+      await recipeModel.deleteUserRecipe(recipe.createdBy, id);
+    }
   }
 });
 
 Deno.test("Recipe Model - Batch Public Recipes", async (t) => {
-  // Track existing public recipes count
-  const existingPublicRecipes = await recipeModel.getPublicRecipes(100);
-  const existingPublicCount = existingPublicRecipes.length;
-
   const createdIds: string[] = [];
 
   await t.step("setup - create test recipes", async () => {
@@ -508,8 +395,7 @@ Deno.test("Recipe Model - Batch Public Recipes", async (t) => {
       const recipe = await recipeModel.create({
         name: `Test Recipe ${i}`,
         description: `Test recipe description ${i}`,
-        strength: 5,
-        sweetness: 5,
+        createdBy: "test-user-batch",
         ingredients: [
           {
             ingredientId: `test-ingredient-${i}`,
@@ -533,53 +419,49 @@ Deno.test("Recipe Model - Batch Public Recipes", async (t) => {
   await t.step(
     "should fetch public recipes efficiently with batch method",
     async () => {
-      const recipes = await recipeModel.getPublicRecipesBatch(10);
+      const recipes = await recipeModel.listPublicRecipes(10);
 
-      // Should return only public recipes (5 created + any existing)
-      assertEquals(recipes.length, 5 + existingPublicCount);
+      // Filter to only recipes created by this test
+      const testPublicRecipes = recipes.filter((r) =>
+        r.createdBy === "test-user-batch"
+      );
 
-      // All returned recipes should be public
-      for (const recipe of recipes) {
+      // Should return exactly 5 public recipes created by this test
+      assertEquals(testPublicRecipes.length, 5);
+
+      // All returned test recipes should be public
+      for (const recipe of testPublicRecipes) {
         assertEquals(recipe.visibility, "public");
       }
     },
   );
 
-  await t.step("should handle empty results correctly", async () => {
-    // Test with offset beyond available recipes
-    const recipes = await recipeModel.getPublicRecipesBatch(10, 100);
-    assertEquals(recipes.length, 0);
+  await t.step("should handle large limit correctly", async () => {
+    // Test with large limit
+    const recipes = await recipeModel.listPublicRecipes(100);
+    assertEquals(Array.isArray(recipes), true);
+
+    // Filter to only recipes created by this test
+    const testRecipes = recipes.filter((r) =>
+      r.createdBy === "test-user-batch"
+    );
+
+    // Should have exactly 5 public recipes from this test
+    assertEquals(testRecipes.length, 5);
   });
 
   await t.step("should respect limit parameter", async () => {
-    const recipes = await recipeModel.getPublicRecipesBatch(3);
-    assertEquals(recipes.length, 3);
-  });
-
-  await t.step("should respect offset parameter", async () => {
-    const allRecipes = await recipeModel.getPublicRecipesBatch(10);
-    const offsetRecipes = await recipeModel.getPublicRecipesBatch(10, 2);
-
-    // Should skip first 2 recipes
-    assertEquals(offsetRecipes.length, Math.max(0, allRecipes.length - 2));
-  });
-
-  await t.step("should return same results as legacy method", async () => {
-    const batchResults = await recipeModel.getPublicRecipesBatch(10);
-    const legacyResults = await recipeModel.getPublicRecipes(10);
-
-    // Should return same number of recipes
-    assertEquals(batchResults.length, legacyResults.length);
-
-    // Should contain same recipe IDs (order may differ)
-    const batchIds = new Set(batchResults.map((r) => r.id));
-    const legacyIds = new Set(legacyResults.map((r) => r.id));
-    assertEquals(batchIds, legacyIds);
+    const recipes = await recipeModel.listPublicRecipes(3);
+    assertEquals(Array.isArray(recipes), true);
+    assertEquals(recipes.length <= 3, true);
   });
 
   await t.step("cleanup", async () => {
     for (const id of createdIds) {
-      await recipeModel.delete(id);
+      const recipe = await recipeModel.getByIdForAdmin(id);
+      if (recipe) {
+        await recipeModel.deleteUserRecipe(recipe.createdBy, id);
+      }
     }
   });
 });

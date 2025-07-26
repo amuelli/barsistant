@@ -66,8 +66,8 @@ Deno.test("Recipe Helper - JIT Ingredient Creation and Recipe Management", async
   const testNegroni = {
     name: "Test Helper Negroni",
     description: "A classic Italian cocktail created via helper",
-    strength: 9,
-    sweetness: 4,
+    createdBy: "test-user",
+    visibility: "private" as const,
     ingredients: [testGin, testCampari, testSweetVermouth, testOrangePeel],
     garnish: ["Orange Peel"],
     glassware: "rocks" as GlasswareType,
@@ -318,8 +318,14 @@ Deno.test("Recipe Helper - JIT Ingredient Creation and Recipe Management", async
   await t.step("cleanup", async () => {
     // Delete the recipe
     if (createdRecipeId) {
-      const deleteResult = await recipeModel.delete(createdRecipeId);
-      assertEquals(deleteResult, true, "Recipe deletion should succeed");
+      const recipe = await recipeModel.getByIdForAdmin(createdRecipeId);
+      if (recipe) {
+        const deleteResult = await recipeModel.deleteUserRecipe(
+          recipe.createdBy,
+          createdRecipeId,
+        );
+        assertEquals(deleteResult, true, "Recipe deletion should succeed");
+      }
     }
 
     // Delete all ingredients we created
@@ -329,7 +335,7 @@ Deno.test("Recipe Helper - JIT Ingredient Creation and Recipe Management", async
 
     // Verify recipe is gone
     if (createdRecipeId) {
-      const deletedRecipe = await recipeModel.getById(createdRecipeId);
+      const deletedRecipe = await recipeModel.getByIdForAdmin(createdRecipeId);
       assertEquals(deletedRecipe, null, "Recipe should be deleted");
     }
   });

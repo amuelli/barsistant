@@ -125,7 +125,16 @@ export async function updateRecipeWithSimpleIngredients(
   if (!params.ingredients) {
     // Create a new object without the ingredients property to satisfy the type checker
     const { ingredients: _ingredients, ...updateParams } = params;
-    return await recipeModel.update(id, updateParams);
+    // Get recipe to get createdBy
+    const recipe = await recipeModel.getByIdForAdmin(id);
+    if (!recipe) {
+      throw new Error(`Recipe not found: ${id}`);
+    }
+    return await recipeModel.updateUserRecipe(
+      recipe.createdBy,
+      id,
+      updateParams,
+    );
   }
 
   // Process each ingredient
@@ -170,11 +179,21 @@ export async function updateRecipeWithSimpleIngredients(
     });
   }
 
+  // Get recipe to get createdBy (admin access for helper function)
+  const existingRecipe = await recipeModel.getByIdForAdmin(id);
+  if (!existingRecipe) {
+    throw new Error(`Recipe not found: ${id}`);
+  }
+
   // Update the recipe with processed ingredients
-  const recipe = await recipeModel.update(id, {
-    ...params,
-    ingredients: processedIngredients,
-  });
+  const recipe = await recipeModel.updateUserRecipe(
+    existingRecipe.createdBy,
+    id,
+    {
+      ...params,
+      ingredients: processedIngredients,
+    },
+  );
 
   return recipe;
 }

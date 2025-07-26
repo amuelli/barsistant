@@ -1,8 +1,8 @@
+import { createLogoutResponse, requireAuth } from "🛠️/auth/middleware.ts";
+import { deleteUserSession } from "🛠️/auth/session.ts";
+import { updateUserPreferences } from "🛠️/auth/user.ts";
+import { define } from "🛠️/define.ts";
 import { User, UserPreferences } from "../types/user.ts";
-import { define } from "../utils.ts";
-import { createLogoutResponse, requireAuth } from "../utils/auth/middleware.ts";
-import { deleteUserSession } from "../utils/auth/session.ts";
-import { updateUserPreferences } from "../utils/auth/user.ts";
 
 interface ProfileData {
   user: User;

@@ -5,27 +5,25 @@ import type { User } from "../types/user.ts";
 interface RecipeFavoritesProps {
   recipe: Recipe;
   user: User;
-  initialInCollection: boolean;
   className?: string;
 }
 
-interface FavoritesState {
-  inCollection: boolean;
+interface AddToRecipesState {
   loading: boolean;
   error: string | null;
+  success: boolean;
 }
 
 export default function RecipeFavorites({
   recipe,
   user,
-  initialInCollection,
   className = "",
 }: RecipeFavoritesProps) {
   // Component state
-  const state = useSignal<FavoritesState>({
-    inCollection: initialInCollection,
+  const state = useSignal<AddToRecipesState>({
     loading: false,
     error: null,
+    success: false,
   });
 
   // Don't show favorites button if:
@@ -36,7 +34,7 @@ export default function RecipeFavorites({
     return null;
   }
 
-  const toggleFavorite = async () => {
+  const addToRecipes = async () => {
     // Prevent double-clicks
     if (state.value.loading) return;
 
@@ -47,13 +45,13 @@ export default function RecipeFavorites({
     };
 
     try {
-      const response = await fetch(`/api/recipes/${recipe.id}/collection`, {
+      const response = await fetch(`/api/recipes/${recipe.id}/favorite`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          action: "toggle",
+          action: "add",
         }),
       });
 
@@ -64,24 +62,24 @@ export default function RecipeFavorites({
 
       const result = await response.json();
 
-      // Update state based on API response
+      // Update state to show success
       state.value = {
-        inCollection: result.inCollection,
         loading: false,
         error: null,
+        success: true,
       };
 
       // Optional: Show success feedback (could be a toast notification)
       console.log(result.message);
     } catch (error) {
-      console.error("Failed to toggle favorite:", error);
+      console.error("Failed to add recipe:", error);
 
       state.value = {
         ...state.value,
         loading: false,
         error: error instanceof Error
           ? error.message
-          : "Failed to update favorites",
+          : "Failed to update recipe collection",
       };
     }
   };
@@ -90,27 +88,23 @@ export default function RecipeFavorites({
     <div class={`recipe-favorites ${className}`}>
       <button
         type="button"
-        onClick={toggleFavorite}
-        disabled={state.value.loading}
-        title={state.value.inCollection
-          ? "Remove from favorites"
-          : "Add to favorites"}
+        onClick={addToRecipes}
+        disabled={state.value.loading || state.value.success}
+        title="Add to my recipes"
         class={`
           btn btn-square
           transition-all duration-200 ease-in-out
           hover:scale-110 active:scale-95
           disabled:opacity-50 disabled:cursor-not-allowed
           ${
-          state.value.inCollection
-            ? "text-error hover:text-error/80"
-            : "text-base-content/60 hover:text-error"
+          state.value.success
+            ? "text-success"
+            : "text-base-content/60 hover:text-primary"
         }
           ${state.value.loading ? "loading" : ""}
         `}
-        data-in-collection={state.value.inCollection ? "true" : "false"}
-        aria-label={state.value.inCollection
-          ? "Remove from favorites"
-          : "Add to favorites"}
+        data-success={state.value.success ? "true" : "false"}
+        aria-label="Add to my recipes"
       >
         {state.value.loading
           ? (
@@ -118,21 +112,21 @@ export default function RecipeFavorites({
             <span class="loading loading-spinner loading-sm"></span>
           )
           : (
-            // Heart SVG rendered directly in JSX
-            state.value.inCollection
+            // Plus icon for adding to recipes
+            state.value.success
               ? (
-                // Filled heart (in collection)
+                // Checkmark for success
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
                   fill="currentColor"
                   class="size-[1.2em]"
                 >
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                 </svg>
               )
               : (
-                // Outlined heart (not in collection)
+                // Plus icon
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -144,7 +138,7 @@ export default function RecipeFavorites({
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                    d="M12 4v16m8-8H4"
                   />
                 </svg>
               )

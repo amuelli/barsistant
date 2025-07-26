@@ -5,7 +5,7 @@ import { MeasurementUnit } from "../../types/ingredient.ts";
 import { GlasswareType } from "../../types/recipe.ts";
 
 /**
- * Benchmark to compare performance of batch vs legacy public recipe fetching
+ * Benchmark to compare performance of different public recipe fetching approaches
  */
 
 async function setupTestData(count: number) {
@@ -16,8 +16,8 @@ async function setupTestData(count: number) {
     const recipe = await recipeModel.create({
       name: `Benchmark Recipe ${i}`,
       description: `Test recipe for benchmarking ${i}`,
-      strength: Math.floor(Math.random() * 10) + 1,
-      sweetness: Math.floor(Math.random() * 10) + 1,
+      createdBy: "benchmark-user",
+      visibility: "public",
       ingredients: [
         {
           ingredientId: `benchmark-ingredient-${i}`,
@@ -32,7 +32,6 @@ async function setupTestData(count: number) {
       preparation: ["Mix", "Serve"],
       source: { name: "Benchmark Test" },
       tags: ["benchmark"],
-      visibility: "public", // All public for this test
     });
     createdIds.push(recipe.id);
   }
@@ -43,7 +42,10 @@ async function setupTestData(count: number) {
 async function cleanupTestData(ids: string[]) {
   console.log("🧹 Cleaning up test data...");
   for (const id of ids) {
-    await recipeModel.delete(id);
+    const recipe = await recipeModel.getByIdForAdmin(id);
+    if (recipe) {
+      await recipeModel.deleteUserRecipe(recipe.createdBy, id);
+    }
   }
 }
 
@@ -64,42 +66,18 @@ async function benchmarkPublicRecipes() {
     console.log(`\n📊 Testing with limit=${limit}`);
     console.log("─".repeat(50));
 
-    // Benchmark legacy method
-    const legacyStart = performance.now();
-    const legacyResults = await recipeModel.getPublicRecipes(limit);
-    const legacyEnd = performance.now();
-    const legacyTime = legacyEnd - legacyStart;
-
-    // Benchmark batch method
-    const batchStart = performance.now();
-    const batchResults = await recipeModel.getPublicRecipesBatch(limit);
-    const batchEnd = performance.now();
-    const batchTime = batchEnd - batchStart;
-
-    // Calculate improvement
-    const improvement = ((legacyTime - batchTime) / legacyTime) * 100;
-    const speedup = legacyTime / batchTime;
+    // Benchmark public recipe fetching
+    const start = performance.now();
+    const results = await recipeModel.listPublicRecipes(limit);
+    const end = performance.now();
+    const time = end - start;
 
     // Display results
     console.log(
-      `Legacy method: ${
-        legacyTime.toFixed(2)
-      }ms (${legacyResults.length} recipes)`,
+      `Public recipes: ${time.toFixed(2)}ms (${results.length} recipes)`,
     );
-    console.log(
-      `Batch method:  ${
-        batchTime.toFixed(2)
-      }ms (${batchResults.length} recipes)`,
-    );
-    console.log(`\n✨ Performance improvement: ${improvement.toFixed(1)}%`);
-    console.log(`⚡ Speed up: ${speedup.toFixed(1)}x faster`);
 
-    // Verify both methods return same results
-    const legacyIds = new Set(legacyResults.map((r) => r.id));
-    const batchIds = new Set(batchResults.map((r) => r.id));
-    const sameResults = legacyIds.size === batchIds.size &&
-      [...legacyIds].every((id) => batchIds.has(id));
-    console.log(`✅ Results match: ${sameResults ? "Yes" : "No"}`);
+    console.log(`✅ Fetched ${results.length} public recipes`);
   }
 
   console.log("\n\n🎯 Benchmark complete!");

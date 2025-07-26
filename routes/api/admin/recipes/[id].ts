@@ -1,55 +1,189 @@
-import { FreshContext } from "fresh";
-import { requireAdmin } from "../../../../utils/auth/admin.ts";
-import { recipeModel } from "../../../../utils/db/recipe-model.ts";
-import { State } from "../../../../utils.ts";
+import { requireAdmin } from "🛠️/auth/admin.ts";
+import { recipeModel } from "🛠️/db/recipe-model.ts";
+import { define } from "🛠️/define.ts";
 
-export async function handler(
-  ctx: FreshContext<State>,
-): Promise<Response> {
-  const req = ctx.req;
-  try {
-    // Require admin authentication
-    const authResult = await requireAdmin(req);
+export const handler = define.handlers({
+  async DELETE(ctx) {
+    try {
+      // Require admin authentication
+      const authResult = await requireAdmin(ctx.req);
 
-    if (authResult instanceof Response) {
-      return authResult;
-    }
+      if (authResult instanceof Response) {
+        return authResult;
+      }
 
-    const { user } = authResult;
-    const recipeId = ctx.params.id;
+      const { user } = authResult;
+      const recipeId = ctx.params.id;
 
-    if (!recipeId) {
+      if (!recipeId) {
+        return new Response(
+          JSON.stringify({ error: "Recipe ID is required" }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      // First get the recipe to determine the owner (admin access)
+      const existingRecipe = await recipeModel.getByIdForAdmin(recipeId);
+      if (!existingRecipe) {
+        return new Response(
+          JSON.stringify({ error: "Recipe not found" }),
+          {
+            status: 404,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      const deleted = await recipeModel.deleteUserRecipe(
+        existingRecipe.createdBy,
+        recipeId,
+      );
+
+      if (!deleted) {
+        return new Response(
+          JSON.stringify({ error: "Recipe not found" }),
+          {
+            status: 404,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      // Log the admin action for audit purposes
+      console.log(`Admin ${user.email} deleted recipe ${recipeId}`);
+
       return new Response(
-        JSON.stringify({ error: "Recipe ID is required" }),
+        JSON.stringify({
+          success: true,
+          message: "Recipe deleted successfully",
+          recipeId,
+        }),
         {
-          status: 400,
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    } catch (error) {
+      console.error("Error deleting recipe:", error);
+      return new Response(
+        JSON.stringify({
+          error: "Failed to delete recipe",
+          details: error instanceof Error ? error.message : String(error),
+        }),
+        {
+          status: 500,
           headers: { "Content-Type": "application/json" },
         },
       );
     }
+  },
 
-    // Handle DELETE request for recipe deletion
-    if (req.method === "DELETE") {
-      try {
-        const deleted = await recipeModel.delete(recipeId);
+  async GET(ctx) {
+    try {
+      // Require admin authentication
+      const authResult = await requireAdmin(ctx.req);
 
-        if (!deleted) {
-          return new Response(
-            JSON.stringify({ error: "Recipe not found" }),
-            {
-              status: 404,
-              headers: { "Content-Type": "application/json" },
-            },
-          );
-        }
+      if (authResult instanceof Response) {
+        return authResult;
+      }
 
-        // Log the admin action for audit purposes
-        console.log(`Admin ${user.email} deleted recipe ${recipeId}`);
+      const recipeId = ctx.params.id;
+
+      if (!recipeId) {
+        return new Response(
+          JSON.stringify({ error: "Recipe ID is required" }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      const recipe = await recipeModel.getByIdForAdmin(recipeId);
+
+      if (!recipe) {
+        return new Response(
+          JSON.stringify({ error: "Recipe not found" }),
+          {
+            status: 404,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ recipe }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    } catch (error) {
+      console.error("Error fetching recipe:", error);
+      return new Response(
+        JSON.stringify({
+          error: "Failed to fetch recipe",
+          details: error instanceof Error ? error.message : String(error),
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+  },
+
+  async POST(ctx) {
+    try {
+      // Require admin authentication
+      const authResult = await requireAdmin(ctx.req);
+      if (authResult instanceof Response) {
+        return authResult;
+      }
+
+      const recipeId = ctx.params.id;
+      if (!recipeId) {
+        return new Response(
+          JSON.stringify({ error: "Recipe ID is required" }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      // Check if the recipe exists (admin context)
+      const recipe = await recipeModel.getByIdForAdmin(recipeId);
+      if (!recipe) {
+        return new Response(
+          JSON.stringify({ error: "Recipe not found" }),
+          {
+            status: 404,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      // Parse request to determine what action to perform
+      const body = await ctx.req.json();
+
+      // Handle regenerating image
+      if (body.action === "regenerateImage") {
+        // Enqueue a job to generate a new image
+        // (admin already authenticated above)
+        await import("🛠️/db/queue-handler.ts").then(({ enqueueJob }) =>
+          enqueueJob({
+            type: "generate_recipe_raster_image",
+            recipeId,
+          })
+        );
 
         return new Response(
           JSON.stringify({
-            success: true,
-            message: "Recipe deleted successfully",
+            message: "raster image regeneration job enqueued",
             recipeId,
           }),
           {
@@ -57,80 +191,29 @@ export async function handler(
             headers: { "Content-Type": "application/json" },
           },
         );
-      } catch (error) {
-        console.error("Error deleting recipe:", error);
-        return new Response(
-          JSON.stringify({
-            error: "Failed to delete recipe",
-            details: error instanceof Error ? error.message : String(error),
-          }),
-          {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          },
-        );
       }
-    }
 
-    // Handle GET request for recipe details (admin view)
-    if (req.method === "GET") {
-      try {
-        const recipe = await recipeModel.getById(recipeId);
-
-        if (!recipe) {
-          return new Response(
-            JSON.stringify({ error: "Recipe not found" }),
-            {
-              status: 404,
-              headers: { "Content-Type": "application/json" },
-            },
-          );
-        }
-
-        return new Response(
-          JSON.stringify({ recipe }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          },
-        );
-      } catch (error) {
-        console.error("Error fetching recipe:", error);
-        return new Response(
-          JSON.stringify({
-            error: "Failed to fetch recipe",
-            details: error instanceof Error ? error.message : String(error),
-          }),
-          {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          },
-        );
-      }
-    }
-
-    // Method not allowed
-    return new Response(
-      JSON.stringify({ error: "Method not allowed" }),
-      {
-        status: 405,
-        headers: {
-          "Content-Type": "application/json",
-          "Allow": "GET, DELETE",
+      // If action is not recognized
+      return new Response(
+        JSON.stringify({ error: `Unknown action: ${body.action}` }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
         },
-      },
-    );
-  } catch (error) {
-    console.error("Admin API error:", error);
-    return new Response(
-      JSON.stringify({
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : String(error),
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
-  }
-}
+      );
+    } catch (error) {
+      const errorMessage = error instanceof Error
+        ? error.message
+        : "Unknown error";
+      return new Response(
+        JSON.stringify({
+          error: `Failed to process recipe action: ${errorMessage}`,
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+  },
+});

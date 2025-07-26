@@ -35,13 +35,13 @@ export async function handleGenerateRecipeRasterImageJob(
 ) {
   const { recipeId } = job;
   try {
-    const recipe = await recipeModel.getById(recipeId);
+    const recipe = await recipeModel.getByIdForAdmin(recipeId);
     if (!recipe) {
       throw new Error(`Recipe not found: ${recipeId}`);
     }
 
-    // Set image generation status to raster generating using recipeModel.update
-    await recipeModel.update(recipeId, {
+    // Set image generation status to raster generating
+    await recipeModel.updateUserRecipe(recipe.createdBy, recipeId, {
       images: {
         raster: {
           status: "generating",
@@ -92,7 +92,9 @@ export async function handleGenerateRecipeRasterImageJob(
           vector: recipe.images?.vector,
         };
 
-        await recipeModel.update(recipeId, { images: updatedImages });
+        await recipeModel.updateUserRecipe(recipe.createdBy, recipeId, {
+          images: updatedImages,
+        });
 
         console.log(
           `[recipe-raster-image-job] Recipe raster image updated for ${recipeId}`,

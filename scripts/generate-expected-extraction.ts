@@ -10,7 +10,7 @@
  */
 
 import "@std/dotenv/load";
-import { extractRecipeFromContent } from "../utils/ai/extraction.ts";
+import { extractRecipeFromContent } from "🛠️/ai/extraction.ts";
 
 // Get recipe ID from command line args
 const recipeId = Deno.args[0];

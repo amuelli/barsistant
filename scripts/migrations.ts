@@ -15,12 +15,9 @@
  * - rollback [name]: Roll back a specific migration
  */
 
-import { getKv } from "../utils/db/db.ts";
-import {
-  getMigrationStatus,
-  runMigrations,
-} from "../utils/db/migrations/index.ts";
-import type { MigrationOptions } from "../utils/db/migrations/types.ts";
+import { getKv } from "🛠️/db/db.ts";
+import { getMigrationStatus, runMigrations } from "🛠️/db/migrations/index.ts";
+import type { MigrationOptions } from "🛠️/db/migrations/types.ts";
 
 const command = Deno.args[0]?.toLowerCase();
 const migrationName = Deno.args[1];

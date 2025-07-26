@@ -263,21 +263,6 @@ export const ingredientModel = {
         }
       }
 
-      // Also need to check and delete any recipe relationships
-      // This should be done carefully to avoid orphaned references
-
-      // Get all recipes that use this ingredient
-      const recipesWithIngredient = kv.list({
-        prefix: ["ingredient_recipes", id],
-      });
-
-      // For each recipe, we should remove the ingredient relation
-      for await (const entry of recipesWithIngredient) {
-        const recipeId = entry.key[2] as string;
-        transaction.delete(["recipe_ingredient", recipeId, id]);
-        transaction.delete(["ingredient_recipes", id, recipeId]);
-      }
-
       // Commit transaction
       const result2 = await transaction.commit();
 
@@ -503,42 +488,6 @@ export const ingredientModel = {
 
       return ingredients;
     }, `Failed to get ingredients by type ${type}`);
-  },
-
-  /**
-   * Get all recipes that use a specific ingredient
-   *
-   * @param id Ingredient ID
-   * @param limit Maximum number of recipe IDs to return
-   * @param offset Number of recipe IDs to skip
-   * @returns Array of recipe IDs
-   * @throws {DatabaseError} If the database operation fails
-   */
-  async getRecipeIds(
-    id: string,
-    limit = 20,
-    offset = 0,
-  ): Promise<string[]> {
-    return await executeDbOperation(async () => {
-      const recipeIds: string[] = [];
-      let count = 0;
-
-      for await (
-        const entry of kv.list<boolean>({ prefix: ["ingredient_recipes", id] })
-      ) {
-        if (count >= offset && recipeIds.length < limit) {
-          const recipeId = entry.key[2] as string;
-          recipeIds.push(recipeId);
-        }
-        count++;
-
-        if (recipeIds.length >= limit) {
-          break;
-        }
-      }
-
-      return recipeIds;
-    }, `Failed to get recipes for ingredient ${id}`);
   },
 
   /**

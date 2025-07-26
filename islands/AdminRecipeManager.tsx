@@ -9,6 +9,7 @@ interface Recipe {
     url?: string;
   };
   tags: string[];
+  visibility: "public" | "private";
   createdAt: string;
   createdByEmail?: string;
 }
@@ -255,9 +256,20 @@ export default function AdminRecipeManager() {
                       <div class="card-body p-4">
                         <div class="flex justify-between items-start mb-3">
                           <div class="flex-1 min-w-0">
-                            <h3 class="font-semibold text-base leading-tight">
-                              {recipe.name}
-                            </h3>
+                            <div class="flex items-center gap-2 mb-1">
+                              <h3 class="font-semibold text-base leading-tight">
+                                {recipe.name}
+                              </h3>
+                              <span
+                                class={`badge badge-sm ${
+                                  recipe.visibility === "public"
+                                    ? "badge-success"
+                                    : "badge-neutral"
+                                }`}
+                              >
+                                {recipe.visibility}
+                              </span>
+                            </div>
                             {recipe.description && (
                               <p class="text-sm text-base-content/70 mt-1 line-clamp-2">
                                 {recipe.description}
@@ -359,6 +371,7 @@ export default function AdminRecipeManager() {
                     <thead>
                       <tr>
                         <th>Name</th>
+                        <th>Visibility</th>
                         <th>Source</th>
                         <th>Created By</th>
                         <th>Created</th>
@@ -375,6 +388,17 @@ export default function AdminRecipeManager() {
                                 {truncateText(recipe.description, 100)}
                               </div>
                             )}
+                          </td>
+                          <td>
+                            <span
+                              class={`badge ${
+                                recipe.visibility === "public"
+                                  ? "badge-success"
+                                  : "badge-neutral"
+                              }`}
+                            >
+                              {recipe.visibility}
+                            </span>
                           </td>
                           <td>
                             <div class="text-sm">

@@ -1,7 +1,6 @@
-import RecipeImage from "../../islands/RecipeImage.tsx";
-import { define } from "../../utils.ts";
-import { recipeModel } from "../../utils/db/recipe-model.ts";
-import { userCollectionModel } from "../../utils/db/user-collection-model.ts";
+import RecipeImage from "🏝️/RecipeImage.tsx";
+import { recipeModel } from "🛠️/db/recipe-model.ts";
+import { define } from "🛠️/define.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -12,21 +11,25 @@ export const handler = define.handlers({
 
     let recipes;
     if (query) {
-      // For search, show all public recipes + user's own recipes
+      // For search, use secure search methods based on user authentication
       if (user) {
-        // TODO: Implement user-aware search that includes user's private recipes
-        recipes = await recipeModel.search({ query, limit: 100 });
+        // Authenticated users can search their accessible recipes (public + own private)
+        recipes = await recipeModel.searchUserAccessibleRecipes(user.id, {
+          query,
+          limit: 100,
+        });
       } else {
         // Unauthenticated users only see public recipes in search
-        recipes = await recipeModel.search({ query, limit: 100 });
+        recipes = await recipeModel.searchPublicRecipes({ query, limit: 100 });
       }
     } else {
       if (user) {
-        // Authenticated: Show user's collection (owned + saved recipes)
-        recipes = await userCollectionModel.getUserCollection(user.id, 30);
+        // Authenticated: Show user's own recipes
+        // TODO: In the future, combine with favorited recipes
+        recipes = await recipeModel.listUserRecipes(user.id, 30);
       } else {
         // Unauthenticated: Show only public recipes
-        recipes = await recipeModel.getPublicRecipes(30);
+        recipes = await recipeModel.listPublicRecipes(30);
       }
     }
 
@@ -37,14 +40,14 @@ export const handler = define.handlers({
 export default define.page<typeof handler>(
   ({ data }) => {
     const { recipes, query, user } = data;
-    const pageTitle = user ? "My Recipe Collection" : "Public Recipes";
+    const pageTitle = user ? "My Recipes" : "Public Recipes";
 
     return (
       <div class="container mx-auto p-4">
         <h1 class="text-4xl font-bold mb-6">{pageTitle}</h1>
         {user && (
           <p class="text-base-content/70 mb-4">
-            Your personal collection of created and saved recipes
+            Your personal recipes
           </p>
         )}
         <form method="GET" class="flex mb-6">

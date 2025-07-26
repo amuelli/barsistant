@@ -1,6 +1,6 @@
 import { page } from "fresh";
-import { define } from "../../utils.ts";
-import Login from "../../islands/Login.tsx";
+import Login from "🏝️/Login.tsx";
+import { define } from "🛠️/define.ts";
 
 export const handler = define.handlers({
   GET(ctx) {
@@ -9,6 +9,8 @@ export const handler = define.handlers({
   },
 });
 
-export default function LoginPage() {
-  return <Login />;
-}
+export default define.page<typeof handler>(
+  () => {
+    return <Login />;
+  },
+);

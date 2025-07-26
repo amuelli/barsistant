@@ -11,7 +11,7 @@
  * deno run -A scripts/add-test-case.ts negroni-classic "Classic Negroni" https://www.diffordsguide.com/cocktails/recipe/1204/negroni
  */
 
-import { type RecipeTestCase } from "../utils/ai/extraction_eval_test_cases.ts";
+import { type RecipeTestCase } from "🛠️/ai/extraction_eval_test_cases.ts";
 import { fetchAndSaveEvalData } from "./fetch-eval-data.ts";
 
 // Check command line arguments

@@ -3,8 +3,8 @@ import "@std/dotenv/load";
 import { tailwind } from "@pakornv/fresh-plugin-tailwindcss";
 import { Builder } from "fresh/dev";
 import { app } from "./main.ts";
-import { getMigrationStatus } from "./utils/db/migrations/index.ts";
-import { startQueueHandler } from "./utils/db/queue-handler.ts";
+import { getMigrationStatus } from "🛠️/db/migrations/index.ts";
+import { startQueueHandler } from "🛠️/db/queue-handler.ts";
 
 const builder = new Builder();
 tailwind(builder, app);

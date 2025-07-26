@@ -85,24 +85,24 @@ The app uses **magic link authentication** exclusively:
 Follow these established patterns from `utils/db/db.ts`:
 
 ```typescript
-// Primary entities
-["recipe", recipeId] → Recipe
+// Recipe storage with ULID-based keys for chronological ordering
+["user_recipe", userId, ulid] → Recipe      // User's recipes
+["public_recipe", ulid] → Recipe           // Public recipes
+
+// Core entities
 ["ingredient", ingredientId] → Ingredient
 ["user", userId] → User
 
-// Relationships
-["recipe_ingredient", recipeId, ingredientId] → RecipeIngredient
+// User data
 ["user_favorites", userId, recipeId] → UserFavorite
 ["user_inventory", userId, ingredientId] → UserInventoryItem
+["user_notes", userId, recipeId] → UserNote
+["user_collections", userId, recipeId] → UserCollection
 
 // Authentication
 ["auth_tokens", token] → MagicLinkToken
 ["user_sessions", sessionId] → UserSession
 ["user_emails", email] → userId
-
-// Secondary indexes
-["ingredient_recipes", ingredientId, recipeId] → RecipeReference
-["tag_recipes", tag, recipeId] → RecipeReference
 ```
 
 ### Database Models Location
@@ -118,41 +118,33 @@ Always use atomic transactions for related operations:
 ```typescript
 // Example: Creating recipe with ingredients
 export async function createRecipeWithIngredients(
+  userId: string,
   recipeData: RecipeInput,
   ingredients: IngredientInput[],
 ) {
   const kv = await getKv();
-  const recipeId = crypto.randomUUID();
+  const recipeId = ulid(); // ULID for chronological ordering
 
   // Atomic transaction for consistency
   const tx = kv.atomic();
 
-  // Create recipe
-  tx.set(["recipe", recipeId], {
+  // Create recipe in user's namespace
+  tx.set(["user_recipe", userId, recipeId], {
     ...recipeData,
     id: recipeId,
-    createdAt: new Date(),
+    createdBy: userId,
+    createdAt: new Date().toISOString(),
   });
 
-  // Create recipe-ingredient relationships
-  for (const ingredient of ingredients) {
-    const relationshipId = crypto.randomUUID();
-    tx.set(
-      ["recipe_ingredient", recipeId, ingredient.id],
-      {
-        id: relationshipId,
-        recipeId,
-        ingredientId: ingredient.id,
-        amount: ingredient.amount,
-        unit: ingredient.unit,
-      },
-    );
-
-    // Update secondary indexes
-    tx.set(
-      ["ingredient_recipes", ingredient.id, recipeId],
-      { recipeId },
-    );
+  // If public, also store in public namespace with same ULID
+  if (recipeData.visibility === "public") {
+    tx.set(["public_recipe", recipeId], {
+      ...recipeData,
+      id: recipeId,
+      originalRecipeId: recipeId,
+      createdBy: userId,
+      createdAt: new Date().toISOString(),
+    });
   }
 
   // Commit transaction
@@ -163,6 +155,40 @@ export async function createRecipeWithIngredients(
 
   return { success: true, recipeId };
 }
+
+// Example: Using check() for conditional updates
+export async function toggleFavorite(userId: string, recipeId: string) {
+  const kv = await getKv();
+  const favoriteKey = ["user_favorites", userId, recipeId];
+
+  // Get current state
+  const current = await kv.get(favoriteKey);
+
+  // Atomic operation with check
+  const tx = kv.atomic();
+
+  if (current.value) {
+    // Remove favorite only if it still exists
+    tx.check(current) // Ensures value hasn't changed
+      .delete(favoriteKey);
+  } else {
+    // Add favorite only if it doesn't exist
+    tx.check(current) // Ensures key is still null
+      .set(favoriteKey, {
+        userId,
+        recipeId,
+        createdAt: new Date(),
+      });
+  }
+
+  const result = await tx.commit();
+  if (!result.ok) {
+    // Another operation modified the key concurrently
+    throw new Error("Concurrent modification detected");
+  }
+
+  return { success: true, isFavorite: !current.value };
+}
 ```
 
 ### Key Transaction Rules:
@@ -171,6 +197,65 @@ export async function createRecipeWithIngredients(
 - **Check transaction result** with `result.ok` before proceeding
 - **Include secondary indexes** in the same transaction
 - **Handle cleanup** in separate transactions if needed
+- **Use `check()` for conditional operations** to prevent race conditions
+
+### Sorting with Indexes
+
+Deno KV enables efficient sorting through secondary indexes. Key parts are
+ordered lexicographically with type hierarchy: `Uint8Array` > `string` >
+`number` > `bigint` > `boolean`.
+
+**Reference**:
+[Comprehensive Guide to Deno KV - Sorting with Indexes](https://deno-blog.com/A_Comprehensive_Guide_to_Deno_KV.2023-06-30#sorting-with-indexes)
+
+#### Sorting Pattern Example:
+
+```typescript
+// Create secondary index for sorting recipes by date
+await kv.atomic()
+  .set(["recipe", recipeId], recipeData)
+  .set(["recipes_by_date", createdAt.toISOString(), recipeId], { recipeId })
+  .commit();
+
+// Get the latest recipe
+const latestRecipeIter = kv.list(
+  { prefix: ["recipes_by_date"] },
+  { reverse: true, limit: 1 },
+);
+const latestEntry = (await latestRecipeIter.next()).value;
+if (latestEntry) {
+  const recipeId = latestEntry.value.recipeId;
+  const recipe = await kv.get(["recipe", recipeId]);
+  console.log("Latest recipe:", recipe.value);
+}
+
+// Get 10 most recent recipes
+const recentRecipes = [];
+for await (
+  const entry of kv.list(
+    { prefix: ["recipes_by_date"] },
+    { reverse: true, limit: 10 },
+  )
+) {
+  const recipe = await kv.get(["recipe", entry.value.recipeId]);
+  if (recipe.value) recentRecipes.push(recipe.value);
+}
+
+// Sort by multiple criteria (e.g., category then name)
+await kv.atomic()
+  .set(["recipe", recipeId], recipeData)
+  .set(["recipes_by_category", category, recipeName, recipeId], { recipeId })
+  .commit();
+```
+
+#### Best Practices for Sorting:
+
+- Design index keys with sort order in mind (leftmost parts determine primary
+  sort)
+- Include unique identifiers (like IDs) as the last key part to handle
+  duplicates
+- Use `reverse: true` in `list()` for descending order
+- Consider performance implications of multiple indexes
 
 ## 🛠️ Architecture Patterns
 
@@ -435,7 +520,16 @@ export async function createRecipe(data: RecipeInput) {
 - **Database**: `utils/db/` patterns
 - **Testing**: `deno task test` (required)
 
+## 🧠 Development Workflow Tips
+
+- **Git Branch Management**:
+  - When having a long list of todos with lots of changes, create a new branch
+    and make commits for every stage/phase/step.
+
 ---
 
 For detailed development guidelines, testing requirements, and conventions, see
 the instruction files in `.github/instructions/`.
+
+```
+```
