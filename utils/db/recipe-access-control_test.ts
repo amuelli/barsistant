@@ -263,18 +263,6 @@ Deno.test("Recipe Search Security - Private Recipe Filtering", async (t) => {
     },
   );
 
-  await t.step(
-    "deprecated search method - returns all recipes (security issue)",
-    async () => {
-      const results = await recipeModel.search({ query: searchTerm });
-
-      const matchingResults = results.filter((r) =>
-        r.name.includes(searchTerm)
-      );
-      assertEquals(matchingResults.length >= 3, true); // Should find all 3 (this is the security issue)
-    },
-  );
-
   await t.step("cleanup", async () => {
     await recipeModel.deleteUserRecipe(testUser1, privateRecipe1.id);
     await recipeModel.deleteUserRecipe(testUser2, privateRecipe2.id);

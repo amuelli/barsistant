@@ -682,63 +682,6 @@ export const recipeModel = {
   },
 
   /**
-   * @deprecated Use searchPublicRecipes() or searchUserAccessibleRecipes() instead
-   * Search for recipes using simple in-memory name filtering
-   *
-   * WARNING: This method loads ALL recipes including private ones!
-   * Use the secure alternatives for user-facing functionality.
-   *
-   * @param params Search parameters (only query supported for now)
-   * @returns Array of matching recipes
-   * @throws {DatabaseError} If the database operation fails
-   */
-  async search(params: SearchRecipeParams): Promise<Recipe[]> {
-    return await executeDbOperation(async () => {
-      const {
-        query,
-        limit = 20,
-        offset = 0,
-      } = params;
-
-      // Load all recipes from both namespaces
-      const allRecipes: Recipe[] = [];
-
-      // Load user recipes
-      for await (const entry of kv.list<Recipe>({ prefix: ["user_recipe"] })) {
-        if (entry.value) {
-          allRecipes.push(entry.value);
-        }
-      }
-
-      // Load public recipes (avoid duplicates)
-      const existingIds = new Set(allRecipes.map((r) => r.id));
-      for await (
-        const entry of kv.list<Recipe>({ prefix: ["public_recipe"] })
-      ) {
-        if (entry.value && !existingIds.has(entry.value.id)) {
-          allRecipes.push(entry.value);
-        }
-      }
-
-      // Filter by name, description, and tags if query is provided
-      let filteredRecipes = allRecipes;
-      if (query && query.trim()) {
-        const queryLower = query.toLowerCase().trim();
-        filteredRecipes = allRecipes.filter((recipe) =>
-          recipe.name.toLowerCase().includes(queryLower) ||
-          recipe.description.toLowerCase().includes(queryLower) ||
-          recipe.tags.some((tag) => tag.toLowerCase().includes(queryLower))
-        );
-      }
-
-      // Apply pagination
-      const startIndex = offset;
-      const endIndex = startIndex + limit;
-      return filteredRecipes.slice(startIndex, endIndex);
-    }, "Failed to search recipes");
-  },
-
-  /**
    * Search public recipes only (safe for unauthenticated users)
    *
    * @param params Search parameters

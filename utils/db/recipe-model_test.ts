@@ -300,43 +300,6 @@ Deno.test("Recipe Model - CRUD Operations", async (t) => {
     assertEquals(hasMojito, true);
   });
 
-  // Test advanced search - by query text
-  await t.step("search by text query", async () => {
-    // Search for Italian cocktails
-    const italianCocktails = await recipeModel.search({
-      query: "italian",
-    });
-
-    assertExists(italianCocktails);
-    assertEquals(Array.isArray(italianCocktails), true);
-    // Should find Negroni
-    assertEquals(italianCocktails.length >= 1, true);
-    assertEquals(italianCocktails[0].name.includes("Negroni"), true);
-  });
-
-  // Test simplified search - by name only
-  await t.step("search by name", async () => {
-    // Find cocktails with "Old" in the name
-    const oldFashionedRecipes = await recipeModel.search({
-      query: "Old",
-    });
-
-    assertExists(oldFashionedRecipes);
-    assertEquals(Array.isArray(oldFashionedRecipes), true);
-    assertEquals(oldFashionedRecipes.length >= 1, true);
-    assertEquals(oldFashionedRecipes[0].name.includes("Old Fashioned"), true);
-
-    // Find cocktails with "Mojito" in the name
-    const mojitoRecipes = await recipeModel.search({
-      query: "Mojito",
-    });
-
-    assertExists(mojitoRecipes);
-    assertEquals(Array.isArray(mojitoRecipes), true);
-    assertEquals(mojitoRecipes.length >= 1, true);
-    assertEquals(mojitoRecipes[0].name.includes("Mojito"), true);
-  });
-
   // Clean up - test deleting a recipe
   await t.step("delete recipes", async () => {
     // Delete all created recipes

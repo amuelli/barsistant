@@ -114,11 +114,6 @@ async function main() {
     return recipes;
   });
 
-  await benchmark("Search recipes", async () => {
-    const recipes = await recipeModel.search({ query: "Test", limit: 10 });
-    return recipes;
-  });
-
   // Performance comparison info
   console.log("\n📊 Performance Comparison:");
   console.log("Old approach (N+1 queries):");
