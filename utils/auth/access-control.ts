@@ -182,13 +182,13 @@ export class AccessControlService {
   }
 
   /**
-   * Collection Access Control
+   * User Recipe Management Access Control
    */
 
   /**
-   * Check if a user can manage another user's collection
+   * Check if a user can manage another user's recipes
    */
-  canManageUserCollection(
+  canManageUserRecipes(
     targetUserId: string,
     context: AccessContext,
   ): boolean {
@@ -197,16 +197,16 @@ export class AccessControlService {
     }
 
     try {
-      // Admin can manage any collection
+      // Admin can manage any user's recipes
       if (this.isAdmin(context.user)) {
         return true;
       }
 
-      // User can manage their own collection
+      // User can manage their own recipes
       return context.user.id === targetUserId;
     } catch (error) {
       console.error(
-        `Collection access check failed for user ${targetUserId}:`,
+        `Recipe management access check failed for user ${targetUserId}:`,
         error,
       );
       return false;
@@ -283,8 +283,8 @@ export class AccessControlService {
    */
   getListMethod(context: AccessContext) {
     if (context.user) {
-      // Authenticated users get their collection (handled by collection model)
-      return null; // Use userCollectionModel.getUserCollection instead
+      // Authenticated users get their own recipes
+      return (limit?: number) => recipeModel.listUserRecipes(context.user!.id, limit);
     } else {
       // Unauthenticated users see public recipes
       return (limit?: number) => recipeModel.listPublicRecipes(limit);

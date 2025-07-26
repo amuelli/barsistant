@@ -8,7 +8,6 @@ import {
 import { requireAuth } from "🛠️/auth/middleware.ts";
 import { enqueueJob } from "🛠️/db/queue-handler.ts";
 import { createRecipeWithSimpleIngredients } from "🛠️/db/recipe-helper.ts";
-import { userCollectionModel } from "🛠️/db/user-collection-model.ts";
 import { define } from "🛠️/define.ts";
 import { fetchUrlContent, prepareHtmlForAI } from "🛠️/url-content.ts";
 import type {
@@ -160,19 +159,10 @@ export const handler = define.handlers({
         visibility: recipe.visibility,
       });
 
-      // Add recipe to user's collection as owned
-      try {
-        await userCollectionModel.addToCollection(
-          user.id,
-          recipe.id,
-          "owned",
-          "Created via recipe extraction",
-        );
-        console.log("[extract] Recipe added to user collection");
-      } catch (err) {
-        console.error("[extract] Failed to add recipe to user collection", err);
-        // Don't fail the entire operation if collection add fails
-      }
+      // Recipe is automatically in user's collection since they created it
+      console.log(
+        "[extract] Recipe created and added to user's recipe collection",
+      );
 
       // Enqueue background image generation job
       try {

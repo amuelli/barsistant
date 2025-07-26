@@ -4,7 +4,6 @@ import RecipeImage from "🏝️/RecipeImage.tsx";
 import RecipePrivacyToggle from "🏝️/RecipePrivacyToggle.tsx";
 import { checkAdminFromUser } from "🛠️/auth/admin.ts";
 import { recipeModel } from "🛠️/db/recipe-model.ts";
-import { userCollectionModel } from "🛠️/db/user-collection-model.ts";
 import { define } from "🛠️/define.ts";
 
 export const handler = define.handlers({
@@ -25,22 +24,27 @@ export const handler = define.handlers({
       throw new HttpError(403, "This recipe is private");
     }
 
-    // Check if user has this recipe in their collection
-    const inCollection = user
-      ? await userCollectionModel.isInUserCollection(user.id, recipe.id)
-      : false;
+    // Check if user has a copy of this recipe (only for public recipes not owned by user)
+    let isFavorited = false;
+    if (
+      user && recipe.createdBy !== user.id && recipe.visibility === "public"
+    ) {
+      const userRecipes = await recipeModel.listUserRecipes(user.id);
+      const hasCopy = userRecipes.some((r) => r.originalRecipeId === recipe.id);
+      isFavorited = hasCopy;
+    }
 
     // Check if user is the owner
     const isOwner = user && recipe.createdBy === user.id;
 
     ctx.state.title = recipe.name;
-    return { data: { recipe, inCollection, isOwner, user } };
+    return { data: { recipe, isFavorited, isOwner, user } };
   },
 });
 
 export default define.page<typeof handler>(
   ({ data, state }) => {
-    const { recipe, inCollection, isOwner, user } = data;
+    const { recipe, isFavorited, isOwner, user } = data;
     const isAdmin = checkAdminFromUser(state.user);
     return (
       <div class="container mx-auto p-3 md:p-4 pb-8 md:pb-12">
@@ -95,7 +99,7 @@ export default define.page<typeof handler>(
               )}
 
             {/* Collection status (read-only indicator for owners) */}
-            {user && inCollection && recipe.createdBy === user.id && (
+            {user && recipe.createdBy === user.id && (
               <div class="tooltip" data-tip="Your recipe">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -109,11 +113,10 @@ export default define.page<typeof handler>(
             )}
 
             {/* Interactive favorites button for public recipes */}
-            {user && (
+            {user && !isFavorited && (
               <RecipeFavorites
                 recipe={recipe}
                 user={user}
-                initialInCollection={inCollection}
               />
             )}
           </div>
