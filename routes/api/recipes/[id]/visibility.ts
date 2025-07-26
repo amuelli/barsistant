@@ -83,7 +83,7 @@ async function handlePost(recipeId: string, req: Request) {
       return new Response("Invalid action", { status: 400 });
     }
 
-    // If making a public recipe private, we need to remove it from other users' collections
+    // If making a public recipe private, we need to remove it from other users' saved copies
     let removedFromCollections = 0;
     if (recipe.visibility === "public" && newVisibility === "private") {
       // Use the recipe model's update method
@@ -91,29 +91,27 @@ async function handlePost(recipeId: string, req: Request) {
         visibility: newVisibility,
       });
 
-      // Find and remove all user collections for this recipe (except owner's)
-      const recipeIdsToClean = [recipeId];
-
+      // Find and delete all user copies of this recipe (recipes with originalRecipeId matching this recipe)
       const transaction = kv.atomic();
-      for (const idToClean of recipeIdsToClean) {
-        for await (const entry of kv.list({ prefix: ["user_collections"] })) {
-          const key = entry.key as ["user_collections", string, string];
-          const userId = key[1];
-          const collectionRecipeId = key[2];
-
-          // If this is a collection entry for our recipe and not the owner's
-          if (collectionRecipeId === idToClean && userId !== user.id) {
-            transaction.delete(key);
-            removedFromCollections++;
-          }
+      
+      // Search through all user recipes to find copies of this recipe
+      for await (const entry of kv.list({ prefix: ["user_recipe"] })) {
+        const userRecipe = entry.value as any;
+        const key = entry.key as ["user_recipe", string, string];
+        const userId = key[1];
+        
+        // If this is a copy of our recipe and not owned by the original creator
+        if (userRecipe.originalRecipeId === recipeId && userId !== user.id) {
+          transaction.delete(key);
+          removedFromCollections++;
         }
       }
 
-      // Commit collection cleanup transaction
+      // Commit cleanup transaction
       if (removedFromCollections > 0) {
         const result = await transaction.commit();
         if (!result.ok) {
-          throw new Error("Failed to clean up user collections");
+          throw new Error("Failed to clean up user recipe copies");
         }
       }
     } else {
@@ -132,8 +130,8 @@ async function handlePost(recipeId: string, req: Request) {
         ? "Recipe is now public and visible to everyone"
         : `Recipe is now private. ${
           removedFromCollections > 0
-            ? `Removed from ${removedFromCollections} user collection${
-              removedFromCollections > 1 ? "s" : ""
+            ? `Deleted ${removedFromCollections} user cop${
+              removedFromCollections > 1 ? "ies" : "y"
             }.`
             : ""
         }`,
