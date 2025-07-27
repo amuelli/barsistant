@@ -30,32 +30,41 @@ Deno.test("createMagicLinkToken", async (t) => {
   const testUserId = "test-user-id";
 
   await t.step("should create token for new user", async () => {
-    const token = await createMagicLinkToken(testEmail);
+    const { token: _token, code } = await createMagicLinkToken(testEmail);
 
-    assertEquals(token.length, 64);
-    assertEquals(/^[a-f0-9]+$/.test(token), true);
+    assertEquals(_token.length, 64);
+    assertEquals(/^[a-f0-9]+$/.test(_token), true);
+    assertEquals(code.length, 9); // Format: 1234-5678
+    assertEquals(/^\d{4}-\d{4}$/.test(code), true);
 
-    // Verify token exists in database
-    const stored = await kv.get<MagicLinkToken>(["auth_tokens", token]);
+    // Verify token exists in database by code
+    const stored = await kv.get<MagicLinkToken>(["auth_codes", code]);
     assertEquals(stored.value?.email, testEmail);
     assertEquals(stored.value?.userId, undefined);
     assertEquals(stored.value?.used, false);
   });
 
   await t.step("should create token for existing user", async () => {
-    const token = await createMagicLinkToken(testEmail, testUserId);
+    const { token: _token, code } = await createMagicLinkToken(
+      testEmail,
+      testUserId,
+    );
 
-    // Verify token exists in database
-    const stored = await kv.get<MagicLinkToken>(["auth_tokens", token]);
+    // Verify token exists in database by code
+    const stored = await kv.get<MagicLinkToken>(["auth_codes", code]);
     assertEquals(stored.value?.email, testEmail);
     assertEquals(stored.value?.userId, testUserId);
     assertEquals(stored.value?.used, false);
   });
 
   await t.step("should set custom expiration", async () => {
-    const token = await createMagicLinkToken(testEmail, undefined, 5);
+    const { token: _token, code } = await createMagicLinkToken(
+      testEmail,
+      undefined,
+      5,
+    );
 
-    const stored = await kv.get<MagicLinkToken>(["auth_tokens", token]);
+    const stored = await kv.get<MagicLinkToken>(["auth_codes", code]);
     const expiresAt = new Date(stored.value?.expires || "");
     const now = new Date();
     const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
@@ -70,8 +79,12 @@ Deno.test("createMagicLinkToken", async (t) => {
 
   // Cleanup
   await t.step("cleanup", async () => {
-    const iterator = kv.list({ prefix: ["auth_tokens"] });
-    for await (const entry of iterator) {
+    const codeIterator = kv.list({ prefix: ["auth_codes"] });
+    for await (const entry of codeIterator) {
+      await kv.delete(entry.key);
+    }
+    const emailIterator = kv.list({ prefix: ["auth_code_email"] });
+    for await (const entry of emailIterator) {
       await kv.delete(entry.key);
     }
   });
@@ -81,10 +94,13 @@ Deno.test("validateMagicLinkToken", async (t) => {
   const testEmail = "test@example.com";
   const testUserId = "test-user-id";
 
-  await t.step("should validate valid token", async () => {
-    const token = await createMagicLinkToken(testEmail, testUserId);
+  await t.step("should validate valid code", async () => {
+    const { token: _token, code } = await createMagicLinkToken(
+      testEmail,
+      testUserId,
+    );
 
-    const validatedToken = await validateMagicLinkToken(token);
+    const validatedToken = await validateMagicLinkToken(code);
     assertEquals(validatedToken?.email, testEmail);
     assertEquals(validatedToken?.userId, testUserId);
     assertEquals(validatedToken?.used, true);
@@ -97,32 +113,43 @@ Deno.test("validateMagicLinkToken", async (t) => {
     assertEquals(validatedToken, null);
   });
 
-  await t.step("should reject used token", async () => {
-    const token = await createMagicLinkToken(testEmail, testUserId);
+  await t.step("should reject used code", async () => {
+    const { token: _token, code } = await createMagicLinkToken(
+      testEmail,
+      testUserId,
+    );
 
-    // Use token once
-    await validateMagicLinkToken(token);
+    // Use code once
+    await validateMagicLinkToken(code);
 
     // Try to use again
-    const validatedToken = await validateMagicLinkToken(token);
+    const validatedToken = await validateMagicLinkToken(code);
     assertEquals(validatedToken, null);
   });
 
-  await t.step("should reject expired token", async () => {
+  await t.step("should reject expired code", async () => {
     // Create token that expires in 1ms
-    const token = await createMagicLinkToken(testEmail, testUserId, 0.001 / 60);
+    const { token: _token, code } = await createMagicLinkToken(
+      testEmail,
+      testUserId,
+      0.001 / 60,
+    );
 
     // Wait for token to expire
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    const validatedToken = await validateMagicLinkToken(token);
+    const validatedToken = await validateMagicLinkToken(code);
     assertEquals(validatedToken, null);
   });
 
   // Cleanup
   await t.step("cleanup", async () => {
-    const iterator = kv.list({ prefix: ["auth_tokens"] });
-    for await (const entry of iterator) {
+    const codeIterator = kv.list({ prefix: ["auth_codes"] });
+    for await (const entry of codeIterator) {
+      await kv.delete(entry.key);
+    }
+    const emailIterator = kv.list({ prefix: ["auth_code_email"] });
+    for await (const entry of emailIterator) {
       await kv.delete(entry.key);
     }
   });

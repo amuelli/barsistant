@@ -3,189 +3,77 @@
  */
 
 /**
- * Generate magic link email content
+ * Generate magic link email content with verification code
  */
 export function generateMagicLinkEmail(
   _email: string,
   magicLinkUrl: string,
-  isNewUser: boolean = false,
+  verificationCode: string,
 ): { html: string; text: string; subject: string } {
-  const subject = isNewUser
-    ? "Welcome to Barsistant!"
-    : "Your Barsistant login link";
+  const subject = "Your login code for Barsistant";
 
   const html = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>${subject}</title>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .logo { font-size: 24px; font-weight: bold; color: #8B5CF6; }
-          .button { display: inline-block; background: #8B5CF6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500; margin: 20px 0; }
-          .button:hover { background: #7C3AED; }
-          .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 14px; color: #666; text-align: center; }
-          .security-note { background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0; font-size: 14px; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="logo">🍸 Barsistant</div>
-        </div>
-        
-        <h2>${
-    isNewUser ? "Welcome to Barsistant!" : "Sign in to your account"
-  }</h2>
-        
-        <p>Hello,</p>
-        
-        ${
-    isNewUser
-      ? "<p>Welcome to Barsistant! We're excited to have you join our community of cocktail enthusiasts.</p>"
-      : "<p>You requested to sign in to your Barsistant account.</p>"
-  }
-        
-        <p>Click the button below to ${
-    isNewUser ? "complete your registration and " : ""
-  }sign in:</p>
-        
-        <p style="text-align: center;">
-          <a href="${magicLinkUrl}" class="button">
-            ${isNewUser ? "Complete Registration" : "Sign In"}
-          </a>
-        </p>
-        
-        <p>Or copy and paste this link into your browser:</p>
-        <p style="word-break: break-all; background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px;">
-          ${magicLinkUrl}
-        </p>
-        
-        <div class="security-note">
-          <strong>Security Notice:</strong> This link will expire in 15 minutes and can only be used once. 
-          If you didn't request this email, you can safely ignore it.
-        </div>
-        
-        <div class="footer">
-          <p>Happy mixing! 🍹</p>
-          <p>The Barsistant Team</p>
-        </div>
-      </body>
-    </html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" lang="en">
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <meta name="x-apple-disable-message-reformatting" />
+  </head>
+  <body style='background-color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif'>
+    <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="max-width:560px;margin:0 auto;padding:20px 0 48px">
+      <tbody>
+        <tr style="width:100%">
+          <td>
+            <div style="margin-bottom:20px">
+              <img src="https://barsistant.com/logo.png" alt="Barsistant" width="32" height="32" style="display:block;margin:0 auto" />
+            </div>
+            <h1 style="font-size:24px;letter-spacing:-0.5px;line-height:1.3;font-weight:400;color:#484848;padding:17px 0 0">
+              Your login code for Barsistant
+            </h1>
+            <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="padding:27px 0 27px">
+              <tbody>
+                <tr>
+                  <td>
+                    <a href="${magicLinkUrl}" style="line-height:100%;text-decoration:none;display:block;max-width:100%;mso-padding-alt:0px;background-color:#2a2a2a;border-radius:3px;font-weight:600;color:#fff;font-size:15px;text-align:center;padding:11px 23px" target="_blank">
+                      <span style="max-width:100%;display:inline-block;line-height:120%;mso-padding-alt:0px;mso-text-raise:8.25px">
+                        Login to Barsistant
+                      </span>
+                    </a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p style="font-size:15px;line-height:1.4;margin:0 0 15px;color:#3c4149">
+              This link and code will only be valid for the next 15 minutes. If the link does not work, you can use the login verification code directly:
+            </p>
+            <code style="font-family:monospace;font-weight:700;padding:1px 4px;background-color:#dfe1e4;letter-spacing:-0.3px;font-size:21px;border-radius:4px;color:#3c4149">
+              ${verificationCode}
+            </code>
+            <hr style="width:100%;border:none;border-top:1px solid #eaeaea;border-color:#dfe1e4;margin:42px 0 26px" />
+            <a href="https://barsistant.com" style="color:#b4becc;text-decoration-line:none;font-size:14px" target="_blank">
+              Barsistant
+            </a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>
   `;
 
   const text = `
-${isNewUser ? "Welcome to Barsistant!" : "Sign in to your account"}
+Your login code for Barsistant
 
-Hello,
+You requested to sign in to your Barsistant account.
 
-${
-    isNewUser
-      ? "Welcome to Barsistant! We're excited to have you join our community of cocktail enthusiasts."
-      : "You requested to sign in to your Barsistant account."
-  }
-
-Click the link below to ${
-    isNewUser ? "complete your registration and " : ""
-  }sign in:
-
+Click this link to login:
 ${magicLinkUrl}
 
-Security Notice: This link will expire in 15 minutes and can only be used once. If you didn't request this email, you can safely ignore it.
+This link and code will only be valid for the next 15 minutes. If the link does not work, you can use the login verification code directly:
 
-Happy mixing! 🍹
-The Barsistant Team
-  `;
+${verificationCode}
 
-  return { html, text, subject };
-}
-
-/**
- * Generate welcome email content for new users
- */
-export function generateWelcomeEmail(
-  displayName: string,
-  _email: string,
-): { html: string; text: string; subject: string } {
-  const subject = "Welcome to Barsistant - Let's get mixing!";
-
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>${subject}</title>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .logo { font-size: 24px; font-weight: bold; color: #8B5CF6; }
-          .feature { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 6px; }
-          .feature h3 { margin: 0 0 10px 0; color: #8B5CF6; }
-          .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 14px; color: #666; text-align: center; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="logo">🍸 Barsistant</div>
-        </div>
-        
-        <h2>Welcome to Barsistant, ${displayName}!</h2>
-        
-        <p>You've successfully joined Barsistant, your personal cocktail companion. Here's what you can do:</p>
-        
-        <div class="feature">
-          <h3>🔍 Discover Recipes</h3>
-          <p>Search through thousands of cocktail recipes or use our AI to extract recipes from your favorite websites and videos.</p>
-        </div>
-        
-        <div class="feature">
-          <h3>📚 Build Your Collection</h3>
-          <p>Save your favorite recipes, add personal notes, and organize them into collections.</p>
-        </div>
-        
-        <div class="feature">
-          <h3>🏠 Track Your Bar</h3>
-          <p>Maintain an inventory of your home bar and discover what cocktails you can make with what you have.</p>
-        </div>
-        
-        <div class="feature">
-          <h3>🎨 Beautiful Images</h3>
-          <p>Generate AI-powered cocktail images to make your recipe collection visually stunning.</p>
-        </div>
-        
-        <p>Ready to start mixing? Head over to Barsistant and explore what's possible!</p>
-        
-        <div class="footer">
-          <p>Cheers to great cocktails! 🍹</p>
-          <p>The Barsistant Team</p>
-        </div>
-      </body>
-    </html>
-  `;
-
-  const text = `
-Welcome to Barsistant, ${displayName}!
-
-You've successfully joined Barsistant, your personal cocktail companion. Here's what you can do:
-
-🔍 Discover Recipes
-Search through thousands of cocktail recipes or use our AI to extract recipes from your favorite websites and videos.
-
-📚 Build Your Collection
-Save your favorite recipes, add personal notes, and organize them into collections.
-
-🏠 Track Your Bar
-Maintain an inventory of your home bar and discover what cocktails you can make with what you have.
-
-🎨 Beautiful Images
-Generate AI-powered cocktail images to make your recipe collection visually stunning.
-
-Ready to start mixing? Head over to Barsistant and explore what's possible!
-
-Cheers to great cocktails! 🍹
+Happy mixing!
 The Barsistant Team
   `;
 

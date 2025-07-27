@@ -110,18 +110,21 @@ export const handler = define.handlers({
       const existingUser = await findUserByEmail(email);
       const isNewUser = !existingUser;
 
-      // Create magic link token
-      const token = await createMagicLinkToken(email, existingUser?.id);
+      // Create magic link token with verification code
+      const { token: _token, code } = await createMagicLinkToken(
+        email,
+        existingUser?.id,
+      );
 
-      // Generate magic link URL
+      // Generate magic link URL using the code
       const baseUrl = new URL(ctx.req.url).origin;
-      const magicLinkUrl = `${baseUrl}/auth/verify?token=${token}`;
+      const magicLinkUrl = `${baseUrl}/auth/verify?code=${code}`;
 
-      // Generate and send email
+      // Generate and send email with verification code
       const emailContent = generateMagicLinkEmail(
         email,
         magicLinkUrl,
-        isNewUser,
+        code,
       );
       await sendEmail({
         to: email,

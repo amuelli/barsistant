@@ -66,6 +66,7 @@ export interface UserInventoryItem {
 export interface MagicLinkToken {
   token: string;
   email: string;
+  verificationCode: string; // 8-digit code (format: 1234-5678)
   userId?: string; // For returning users
   expires: string; // ISO date string
   used: boolean; // To prevent token reuse

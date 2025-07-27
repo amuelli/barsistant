@@ -526,10 +526,11 @@ export async function createRecipe(data: RecipeInput) {
   - When having a long list of todos with lots of changes, create a new branch
     and make commits for every stage/phase/step.
 
+### Development Best Practices
+
+- Always run `deno task check` before reporting a task as complete
+
 ---
 
 For detailed development guidelines, testing requirements, and conventions, see
 the instruction files in `.github/instructions/`.
-
-```
-```

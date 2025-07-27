@@ -27,12 +27,12 @@ Deno.test("Recipe Visibility API", async (t) => {
     otherUser = await createUser("other-visibility@example.com");
 
     // Create sessions for users
-    const token = await createMagicLinkToken(testUser.email);
-    const session = await createUserSession(testUser.id, token);
+    const { token: _token } = await createMagicLinkToken(testUser.email);
+    const session = await createUserSession(testUser.id, testUser.email);
     sessionToken = session.id;
 
-    const otherToken = await createMagicLinkToken(otherUser.email);
-    const otherSession = await createUserSession(otherUser.id, otherToken);
+    const { token: _otherToken } = await createMagicLinkToken(otherUser.email);
+    const otherSession = await createUserSession(otherUser.id, otherUser.email);
     otherSessionToken = otherSession.id;
 
     // Create a test recipe

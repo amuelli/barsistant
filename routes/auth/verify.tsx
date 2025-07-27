@@ -7,13 +7,13 @@ import {
   updateUserLastLogin,
 } from "🛠️/auth/user.ts";
 import { define } from "🛠️/define.ts";
-import { sendEmail } from "🛠️/email/service.ts";
-import { generateWelcomeEmail } from "🛠️/email/templates.ts";
+import VerifyCode from "🏝️/VerifyCode.tsx";
 
 interface VerifyPageData {
   success: false;
   message: string;
   error: string;
+  showCodeForm?: boolean;
 }
 
 export const handler = define.handlers({
@@ -21,64 +21,58 @@ export const handler = define.handlers({
     ctx.state.title = "Verify Sign In";
 
     const url = new URL(ctx.req.url);
-    const token = url.searchParams.get("token");
+    const code = url.searchParams.get("code");
 
-    if (!token) {
+    if (!code) {
+      // No code in URL, show the code entry form
       return {
         data: {
           success: false,
-          message: "No verification token found",
-          error: "missing_token",
+          message: "Enter your verification code",
+          error: "missing_code",
+          showCodeForm: true,
         } as VerifyPageData,
       };
     }
 
     try {
-      // Validate the magic link token
-      const tokenData = await validateMagicLinkToken(token);
+      // Validate the verification code
+      const tokenData = await validateMagicLinkToken(code);
 
       if (!tokenData) {
         return {
           data: {
             success: false,
-            message: "Invalid or expired link",
-            error: "invalid_token",
+            message: "Invalid or expired code",
+            error: "invalid_code",
+            showCodeForm: true,
+          } as VerifyPageData,
+        };
+      }
+
+      // If email is provided in URL, verify it matches
+      const emailParam = url.searchParams.get("email");
+      if (emailParam && tokenData.email !== emailParam) {
+        return {
+          data: {
+            success: false,
+            message: "Invalid code for this email address",
+            error: "email_mismatch",
+            showCodeForm: true,
           } as VerifyPageData,
         };
       }
 
       // Find or create user
       let user = await findUserByEmail(tokenData.email);
-      let _isNewUser = false;
 
       if (!user) {
         // Create new user
         user = await createUser(tokenData.email);
-        _isNewUser = true;
-
-        // Set lastLoginAt for new user on first login
-        await updateUserLastLogin(user.id);
-
-        // Send welcome email for new users
-        try {
-          const welcomeEmail = generateWelcomeEmail(
-            user.displayName,
-            user.email,
-          );
-          await sendEmail({
-            to: user.email,
-            subject: welcomeEmail.subject,
-            html: welcomeEmail.html,
-            text: welcomeEmail.text,
-          });
-        } catch (emailError) {
-          console.error("Failed to send welcome email:", emailError);
-          // Don't fail the registration if welcome email fails
-        }
-      } else {
-        // Update last login for existing user
-        await updateUserLastLogin(user.id);
       }
+
+      // Update last login for user
+      await updateUserLastLogin(user.id);
 
       // Create session
       const session = await createUserSession(user.id, user.email);
@@ -101,8 +95,9 @@ export const handler = define.handlers({
       return {
         data: {
           success: false,
-          message: "Failed to verify magic link",
+          message: "Failed to verify code",
           error: "verification_failed",
+          showCodeForm: true,
         } as VerifyPageData,
       };
     }
@@ -121,20 +116,34 @@ export default define.page<typeof handler>(({ data }) => {
             </h1>
           </div>
 
-          <div class="space-y-4">
-            <div class="alert alert-error">
-              <span>{data.message}</span>
-            </div>
+          {data.showCodeForm
+            ? <VerifyCode initialMessage={data.message} />
+            : (
+              <div class="space-y-4">
+                <div class="alert alert-error">
+                  <span>{data.message}</span>
+                </div>
 
-            <div class="space-y-4">
-              <p class="text-sm text-base-content/70">
-                Your magic link may have expired or already been used.
-              </p>
-              <a href="/auth/login" class="btn btn-primary">
-                Request New Magic Link
-              </a>
-            </div>
-          </div>
+                <div class="space-y-4">
+                  <p class="text-sm text-base-content/70">
+                    Your magic link may have expired or the button might not
+                    work in your email client.
+                  </p>
+                  <a href="/auth/verify" class="btn btn-primary">
+                    Enter Verification Code
+                  </a>
+                  <p class="text-sm text-base-content/50">
+                    Check your email for the 8-digit code
+                  </p>
+                </div>
+
+                <div class="divider">OR</div>
+
+                <a href="/auth/login" class="btn btn-outline btn-primary">
+                  Request New Code
+                </a>
+              </div>
+            )}
 
           <div class="mt-6">
             <a href="/" class="link link-hover text-sm">

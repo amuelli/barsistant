@@ -41,6 +41,8 @@ export type IngredientAllergenKey = ["ingredient_allergen", string, string]; // 
 export type UserKey = ["users", string]; // [prefix, userId]
 export type UserEmailKey = ["user_emails", string]; // [prefix, email]
 export type AuthTokenKey = ["auth_tokens", string]; // [prefix, token]
+export type AuthCodeKey = ["auth_codes", string]; // [prefix, code]
+export type AuthCodeEmailKey = ["auth_code_email", string]; // [prefix, email] -> codes[]
 export type UserSessionKey = ["user_sessions", string]; // [prefix, sessionId]
 export type UserSessionLookupKey = ["user_session_lookup", string, string]; // [prefix, userId, sessionId]
 

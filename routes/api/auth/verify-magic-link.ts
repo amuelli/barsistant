@@ -6,8 +6,6 @@ import {
   updateUserLastLogin,
 } from "🛠️/auth/user.ts";
 import { define } from "🛠️/define.ts";
-import { sendEmail } from "🛠️/email/service.ts";
-import { generateWelcomeEmail } from "🛠️/email/templates.ts";
 
 interface VerifyMagicLinkRequest {
   token: string;
@@ -66,27 +64,10 @@ export const handler = define.handlers({
         // Create new user
         user = await createUser(tokenData.email);
         isNewUser = true;
-
-        // Send welcome email for new users
-        try {
-          const welcomeEmail = generateWelcomeEmail(
-            user.displayName,
-            user.email,
-          );
-          await sendEmail({
-            to: user.email,
-            subject: welcomeEmail.subject,
-            html: welcomeEmail.html,
-            text: welcomeEmail.text,
-          });
-        } catch (emailError) {
-          console.error("Failed to send welcome email:", emailError);
-          // Don't fail the registration if welcome email fails
-        }
-      } else {
-        // Update last login for existing user
-        await updateUserLastLogin(user.id);
       }
+
+      // Update last login for user
+      await updateUserLastLogin(user.id);
 
       // Create session
       const session = await createUserSession(user.id, user.email);
