@@ -25,7 +25,7 @@ export function generateMagicLinkEmail(
         <tr style="width:100%">
           <td>
             <div style="margin-bottom:20px">
-              <img src="https://barsistant.com/logo.png" alt="Barsistant" width="32" height="32" style="display:block;margin:0 auto" />
+              <img src="https://barsistant.com/logo.png" alt="Barsistant" width="64" height="64" style="display:block;margin:0 auto" />
             </div>
             <h1 style="font-size:24px;letter-spacing:-0.5px;line-height:1.3;font-weight:400;color:#484848;padding:17px 0 0">
               Your login code for Barsistant
