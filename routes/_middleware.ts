@@ -1,11 +1,7 @@
-import { FreshContext } from "fresh";
 import { optionalAuth } from "🛠️/auth/middleware.ts";
-import { State } from "🛠️/define.ts";
+import { define } from "🛠️/define.ts";
 
-export async function handler(
-  ctx: FreshContext<State>,
-) {
-  // Get user from session for all requests
+export default define.middleware(async (ctx) => {
   const { user } = await optionalAuth(ctx.req);
 
   // Set user in context state so it's available to _app.tsx
@@ -13,4 +9,4 @@ export async function handler(
 
   // Continue to next handler
   return await ctx.next();
-}
+});

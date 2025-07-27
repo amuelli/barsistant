@@ -24,7 +24,7 @@ export default function App(
 }
 
 function AppContent(
-  { Component, state, url, isAdmin }: {
+  { Component, state, isAdmin }: {
     Component: preact.ComponentType<unknown>;
     state: State;
     url: URL;
@@ -104,7 +104,7 @@ function AppContent(
 
           {/* Mobile dock navigation */}
           <div class="dock bg-base-200 lg:hidden fixed bottom-0 left-0 right-0">
-            <a href="/" class={url.pathname === "/" ? "dock-active" : ""}>
+            <a href="/" class="aria-[current=page]:dock-active">
               <svg
                 class="size-[1.2em]"
                 xmlns="http://www.w3.org/2000/svg"
@@ -123,7 +123,7 @@ function AppContent(
             </a>
             <a
               href="/recipes"
-              class={url.pathname.startsWith("/recipes") ? "dock-active" : ""}
+              class="aria-[current]:dock-active"
             >
               <svg
                 class="size-[1.2em]"
@@ -145,7 +145,7 @@ function AppContent(
             </a>
             <a
               href="/extract"
-              class={url.pathname === "/extract" ? "dock-active" : ""}
+              class="aria-[current]:dock-active"
             >
               <svg
                 class="size-[1.2em]"
@@ -166,7 +166,7 @@ function AppContent(
             {state.user && isAdmin && (
               <a
                 href="/admin"
-                class={url.pathname.startsWith("/admin") ? "dock-active" : ""}
+                class="aria-[current]:dock-active"
               >
                 <svg
                   class="size-[1.2em]"
@@ -194,7 +194,7 @@ function AppContent(
               ? (
                 <a
                   href="/profile"
-                  class={url.pathname === "/profile" ? "dock-active" : ""}
+                  class="aria-[current]:dock-active"
                 >
                   <div class="w-5 h-5 rounded-full bg-primary text-primary-content flex items-center justify-center text-xs">
                     {state.user.displayName?.charAt(0)?.toUpperCase() || "U"}
@@ -205,7 +205,7 @@ function AppContent(
               : (
                 <a
                   href="/auth/login"
-                  class={url.pathname === "/auth/login" ? "dock-active" : ""}
+                  class="aria-[current]:dock-active"
                 >
                   <svg
                     class="size-[1.2em]"

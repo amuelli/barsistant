@@ -1,13 +1,12 @@
 #!/usr/bin/env -S deno run -A --watch=static/,routes/
+import { tailwind } from "@fresh/plugin-tailwind";
 import "@std/dotenv/load";
-import { tailwind } from "@pakornv/fresh-plugin-tailwindcss";
 import { Builder } from "fresh/dev";
-import { app } from "./main.ts";
 import { getMigrationStatus } from "🛠️/db/migrations/index.ts";
 import { startQueueHandler } from "🛠️/db/queue-handler.ts";
 
 const builder = new Builder();
-tailwind(builder, app);
+tailwind(builder);
 
 /**
  * Print the migration status for development info
@@ -49,11 +48,11 @@ async function printMigrationStatus() {
 }
 
 if (Deno.args.includes("build")) {
-  await builder.build(app);
+  await builder.build();
 } else {
   // Check migration status when starting dev server
   await printMigrationStatus();
 
-  await builder.listen(app);
+  await builder.listen(() => import("./main.ts"));
   await startQueueHandler();
 }

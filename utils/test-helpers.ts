@@ -49,6 +49,7 @@ export function createMockContext(
     req,
     params,
     state,
-    render: (_component: unknown) => new Response("Mock render"),
+    render: (_component: unknown) =>
+      Promise.resolve(new Response("Mock render")),
   };
 }
