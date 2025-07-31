@@ -31,15 +31,15 @@ function createEmptyExtractionTemplate(): RecipeExtraction {
       {
         name: "",
         quantity: 0,
-        unit: "",
+        unit: "oz" as const,
         optional: false,
-        type: "",
+        type: "spirit" as const,
         notes: "",
       },
     ],
     instructions: [""],
     garnish: [""],
-    glassware: "",
+    glassware: "old-fashioned" as const,
     category: [""],
     source: {
       url: "",

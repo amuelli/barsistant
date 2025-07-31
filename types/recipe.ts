@@ -74,18 +74,24 @@ export interface Recipe {
   updatedAt: string; // ISO date string
 }
 
-export type GlasswareType =
-  | "collins"
-  | "coupe"
-  | "fizz"
-  | "highball"
-  | "hurricane"
-  | "irish-coffee"
-  | "margarita"
-  | "martini"
-  | "nick-and-nora"
-  | "old-fashioned"
-  | "rocks"
-  | "shot"
-  | "sour"
-  | "wine";
+/**
+ * Available glassware types
+ */
+export const GLASSWARE_TYPES = [
+  "collins",
+  "coupe",
+  "fizz",
+  "highball",
+  "hurricane",
+  "irish-coffee",
+  "margarita",
+  "martini",
+  "nick-and-nora",
+  "old-fashioned",
+  "rocks",
+  "shot",
+  "sour",
+  "wine",
+] as const;
+
+export type GlasswareType = typeof GLASSWARE_TYPES[number];

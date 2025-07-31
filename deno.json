@@ -45,7 +45,7 @@
     "node-vibrant": "npm:node-vibrant@^4.0.3",
     "preact": "npm:preact@^10.26.9",
     "tailwindcss": "npm:tailwindcss@^4.1.10",
-    "zod": "npm:zod@^3.25.51"
+    "zod": "npm:zod@^4.0.14"
   },
   "compilerOptions": {
     "lib": ["dom", "dom.asynciterable", "dom.iterable", "deno.ns"],

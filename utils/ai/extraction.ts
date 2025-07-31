@@ -1,6 +1,8 @@
 import { generateObject, ModelMessage } from "ai";
 import { z } from "zod";
 import { executeAIOperation, getModel } from "./ai-core.ts";
+import { INGREDIENT_TYPES, MEASUREMENT_UNITS } from "../../types/ingredient.ts";
+import { GLASSWARE_TYPES } from "../../types/recipe.ts";
 
 export const RECIPE_EXTRACTION_SYSTEM_PROMPT = `
 You are an expert cocktail recipe analyzer and extractor.
@@ -29,15 +31,11 @@ export const RecipeExtractionSchema = z.object({
   ingredients: z.array(z.object({
     name: z.string(),
     quantity: z.number(),
-    unit: z.string().describe(
-      `needs to be a valid measurement unit from this list: ml, oz, cl, dash, drop, barspoon, tsp, tbsp, cup, pint, part, piece, slice, whole, pinch, spritz, leaf, sprig, rim.`,
-    ),
+    unit: z.enum(MEASUREMENT_UNITS),
     optional: z.boolean().default(false).describe(
       "Indicates if the ingredient is optional. If true, the ingredient can be omitted without significantly altering the cocktail.",
     ),
-    type: z.string().describe(
-      `needs to be a valid ingredient type from this list: spirit, liqueur, wine, mixer, juice, syrup, bitter, fruit, herb, spice, other.`,
-    ),
+    type: z.enum(INGREDIENT_TYPES),
     notes: z.string().optional().describe(
       "Any additional notes about the ingredient, such as preparation or specific brand recommendations.",
     ),
@@ -46,9 +44,7 @@ export const RecipeExtractionSchema = z.object({
     "Step-by-step instructions for preparing the cocktail",
   ),
   garnish: z.array(z.string()).optional(),
-  glassware: z.string().describe(
-    `needs to be a valid glassware type from this list: martini, coupe, highball, collins, old-fashioned, nick-and-nora, margarita, hurricane, sour, fizz, wine, shot, irish-coffee.`,
-  ),
+  glassware: z.enum(GLASSWARE_TYPES),
   category: z.array(z.string()).optional().describe(
     "Categories or tags for the cocktail, such as 'classic', 'modern', 'tiki', 'sour', 'aperitivo', etc. Use an array to allow multiple categories. Make them lowercase and use hyphens instead of spaces. Do not include any special characters or punctuation.",
   ),
@@ -56,9 +52,7 @@ export const RecipeExtractionSchema = z.object({
     url: z.string(),
     name: z.string().optional(),
     author: z.string().optional(),
-    image: z.string().url().optional().or(z.literal("")).transform((val) =>
-      val === "" ? undefined : val
-    ).describe(
+    image: z.url().optional().describe(
       "Direct URL to a clear image of the cocktail from the website, if available. Prefer the main cocktail photo, not logos or unrelated images. Omit if not available.",
     ),
   }),
@@ -90,6 +84,7 @@ export async function extractRecipeFromContent(
     if (!result.object) {
       throw new Error("No structured object received from AI provider");
     }
+
     return result.object as RecipeExtraction;
   }, "Failed to extract recipe from content");
 }
