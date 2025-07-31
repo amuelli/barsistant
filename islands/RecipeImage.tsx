@@ -11,6 +11,8 @@ interface RecipeImageProps {
   showGradientBackground?: boolean;
   gradientOpacity?: number;
   isAdmin?: boolean;
+  defaultWidth?: number;
+  defaultHeight?: number;
 }
 
 export default function RecipeImage(
@@ -24,6 +26,8 @@ export default function RecipeImage(
     showGradientBackground = true,
     gradientOpacity = 0.2,
     isAdmin = false,
+    defaultWidth = 800,
+    defaultHeight = 600,
   }: RecipeImageProps,
 ) {
   const [recipe, setRecipe] = useState(initialRecipe);
@@ -95,7 +99,7 @@ export default function RecipeImage(
         class={`flex flex-col items-center justify-center rounded-lg bg-base-300 animate-pulse ${className}`}
         style={{
           ...containerStyle,
-          minHeight: "150px", // Add minimum height to prevent shrinking
+          aspectRatio: `${defaultWidth} / ${defaultHeight}`,
         }}
       >
         <span class="text-gray-500">Generating image…</span>
@@ -122,6 +126,8 @@ export default function RecipeImage(
           alt={recipe.name}
           class={`${imageClassName} relative`}
           style={containerStyle}
+          width={defaultWidth}
+          height={defaultHeight}
         />
         {showRegenerateButton && isAdmin && (
           <div class="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -142,7 +148,7 @@ export default function RecipeImage(
         class={`flex flex-col items-center justify-center rounded-lg bg-base-300 ${className}`}
         style={{
           ...containerStyle,
-          minHeight: "150px", // Add minimum height to prevent shrinking
+          aspectRatio: `${defaultWidth} / ${defaultHeight}`,
         }}
       >
         <span class="text-gray-400 mb-4">No image available</span>
