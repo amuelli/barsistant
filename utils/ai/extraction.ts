@@ -1,4 +1,4 @@
-import { type CreateMessage, generateObject } from "ai";
+import { generateObject, ModelMessage } from "ai";
 import { z } from "zod";
 import { executeAIOperation, getModel } from "./ai-core.ts";
 
@@ -32,7 +32,7 @@ export const RecipeExtractionSchema = z.object({
     unit: z.string().describe(
       `needs to be a valid measurement unit from this list: ml, oz, cl, dash, drop, barspoon, tsp, tbsp, cup, pint, part, piece, slice, whole, pinch, spritz, leaf, sprig, rim.`,
     ),
-    optional: z.boolean().describe(
+    optional: z.boolean().default(false).describe(
       "Indicates if the ingredient is optional. If true, the ingredient can be omitted without significantly altering the cocktail.",
     ),
     type: z.string().describe(
@@ -56,7 +56,9 @@ export const RecipeExtractionSchema = z.object({
     url: z.string(),
     name: z.string().optional(),
     author: z.string().optional(),
-    image: z.string().url().optional().describe(
+    image: z.string().url().optional().or(z.literal("")).transform((val) =>
+      val === "" ? undefined : val
+    ).describe(
       "Direct URL to a clear image of the cocktail from the website, if available. Prefer the main cocktail photo, not logos or unrelated images. Omit if not available.",
     ),
   }),
@@ -70,7 +72,7 @@ export async function extractRecipeFromContent(
 ): Promise<RecipeExtraction> {
   return await executeAIOperation(async () => {
     const model = getModel();
-    const messages: CreateMessage[] = [
+    const messages: ModelMessage[] = [
       { role: "system", content: RECIPE_EXTRACTION_SYSTEM_PROMPT },
       {
         role: "user",
@@ -82,7 +84,7 @@ export async function extractRecipeFromContent(
       model,
       messages,
       schema: RecipeExtractionSchema,
-      maxTokens: 1024,
+      maxOutputTokens: 1024,
       temperature: 0.2,
     });
     if (!result.object) {
