@@ -1,3 +1,8 @@
+// Load .env file only in non-production environments
+if (!Deno.env.get("DENO_DEPLOYMENT_ID") && Deno.env.get("NODE_ENV") !== "production") {
+  await import("@std/dotenv/load");
+}
+
 import { App, staticFiles } from "fresh";
 import { runMigrationsOnStartup } from "🛠️/db/migration-runner.ts";
 import { startQueueHandler } from "🛠️/db/queue-handler.ts";

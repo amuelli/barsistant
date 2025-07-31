@@ -84,16 +84,19 @@ S3_REGION=us-east-1
 Start the development server:
 
 ```bash
-deno task start
-```
-
-Or use the watch mode for development:
-
-```bash
-deno task start
+deno task dev
 ```
 
 The application will be available at `http://localhost:8000`.
+
+You can also use the production server locally (it will still load .env file in non-production environments):
+
+```bash
+deno task build  # Build the app first
+deno task start   # Then start the production server
+```
+
+Note: The .env file is automatically loaded in development but not in production deployments.
 
 ### Database Migrations
 

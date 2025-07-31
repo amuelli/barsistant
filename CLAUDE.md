@@ -33,8 +33,9 @@ URLs, and AI-generated recipe images.
 
 ```bash
 # Development
-deno task start          # Start dev server with hot reload
-deno task build          # Build for production
+deno task dev            # Start dev server with hot reload
+deno task build          # Build for production (required before 'start')
+deno task start          # Start production server (requires 'build' first)
 deno task preview        # Preview production build
 
 # Quality Assurance (MANDATORY before completion)
