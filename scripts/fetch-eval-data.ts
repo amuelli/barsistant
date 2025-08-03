@@ -78,9 +78,12 @@ export async function fetchAndSaveEvalData(overrideRecipes?: RecipeTestCase[]) {
       const { html, contentType } = await fetchUrlContent(recipe.url);
       console.log(`Fetched ${html.length} bytes of content (${contentType})`);
 
-      // Process HTML with prepareHtmlForAI
+      // Process HTML with prepareHtmlForAI with size limit
       console.log("Processing HTML with prepareHtmlForAI...");
-      const optimizedContent = prepareHtmlForAI(html, recipe.url);
+      const MAX_CONTENT_SIZE = 30000; // Same limit as in extract API
+      const optimizedContent = prepareHtmlForAI(html, recipe.url, {
+        maxChars: MAX_CONTENT_SIZE,
+      });
 
       if (!optimizedContent) {
         console.error(`Failed to prepare HTML for ${recipe.id}`);

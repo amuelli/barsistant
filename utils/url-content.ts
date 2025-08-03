@@ -1,7 +1,11 @@
 // Utility for fetching and parsing URL content (AI-2, AI-3)
 // Uses Deno's fetch and @b-fuze/deno-dom for HTML processing
 
-import { DOMParser, HTMLDocument } from "@b-fuze/deno-dom";
+import { DOMParser, Element, HTMLDocument, Node } from "@b-fuze/deno-dom";
+import {
+  extractRecipeFocusedContent,
+  truncateContent,
+} from "./ai/content-size.ts";
 
 /**
  * Fetches the content of a URL and returns the raw HTML/text and content type.
@@ -150,15 +154,28 @@ function extractYouTubeRecipeData(html: string): string | null {
 }
 
 /**
+ * Options for HTML preparation
+ */
+export interface PrepareHtmlOptions {
+  /** Maximum characters to return (will truncate intelligently if exceeded) */
+  maxChars?: number;
+}
+
+/**
  * Prepares HTML for AI recipe extraction by cleaning and optimizing the content.
  * Preserves semantic structure while removing noise elements like ads, navigation, and scripts.
  * Special handling for YouTube URLs to extract recipe data from player response.
  *
  * @param html The raw HTML string
  * @param url Optional URL to identify source type (e.g., YouTube)
+ * @param options Optional configuration for content processing
  * @returns Processed HTML with noise elements removed, or null if parsing fails
  */
-export function prepareHtmlForAI(html: string, url?: string): string | null {
+export function prepareHtmlForAI(
+  html: string,
+  url?: string,
+  options?: PrepareHtmlOptions,
+): string | null {
   // Handle empty input explicitly
   if (!html || !html.trim()) return null;
 
@@ -199,9 +216,30 @@ export function prepareHtmlForAI(html: string, url?: string): string | null {
       clone.querySelectorAll(selector).forEach((el) => el.remove());
     });
 
+    // Remove HTML comments
+    const removeComments = (node: Element | HTMLDocument) => {
+      const toRemove: Node[] = [];
+      for (const child of node.childNodes) {
+        if (child.nodeType === 8) { // Comment node
+          toRemove.push(child);
+        } else if (child.childNodes) {
+          removeComments(child as Element);
+        }
+      }
+      toRemove.forEach((comment) => {
+        if (comment.parentNode) {
+          comment.parentNode.removeChild(comment);
+        }
+      });
+    };
+    removeComments(clone);
+
     // Get the body content
     const bodyContent = clone.querySelector("body");
     if (!bodyContent) return null;
+
+    // Strip verbose attributes from all elements to reduce size
+    stripVerboseAttributes(bodyContent);
 
     // Build optimized content for AI processing
     let result = `<title>${title}</title>\n\n`;
@@ -209,9 +247,66 @@ export function prepareHtmlForAI(html: string, url?: string): string | null {
     // Add the body content
     result += bodyContent.outerHTML;
 
+    // Apply size limit if specified
+    if (options?.maxChars && result.length > options.maxChars) {
+      console.log(
+        `Content size (${result.length}) exceeds limit (${options.maxChars}), reducing...`,
+      );
+
+      // First try to extract just recipe-focused content
+      const recipeFocused = extractRecipeFocusedContent(result);
+      if (recipeFocused && recipeFocused.length <= options.maxChars) {
+        return recipeFocused;
+      }
+
+      // Otherwise truncate intelligently
+      result = truncateContent(result, options.maxChars);
+    }
+
     return result;
   } catch (e) {
     console.error("Error preparing HTML for AI:", e);
     return null;
+  }
+}
+
+/**
+ * Strips verbose attributes from HTML elements to reduce content size.
+ * Preserves only essential attributes like src, href, alt, and title.
+ *
+ * @param element The DOM element to process recursively
+ */
+function stripVerboseAttributes(element: Element): void {
+  // List of attributes to preserve
+  const preserveAttrs = new Set([
+    "src",
+    "data-src",
+    "href",
+    "alt",
+    "title",
+    "type",
+  ]);
+
+  // Process current element
+  if (element.attributes) {
+    const attrsToRemove: string[] = [];
+
+    for (const attr of element.attributes) {
+      if (!preserveAttrs.has(attr.name.toLowerCase())) {
+        attrsToRemove.push(attr.name);
+      }
+    }
+
+    // Remove non-essential attributes
+    for (const attrName of attrsToRemove) {
+      element.removeAttribute(attrName);
+    }
+  }
+
+  // Recursively process child elements
+  for (const child of element.children) {
+    if (child instanceof Element) {
+      stripVerboseAttributes(child);
+    }
   }
 }

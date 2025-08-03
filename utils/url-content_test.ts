@@ -208,6 +208,82 @@ Deno.test({
 });
 
 Deno.test({
+  name: "prepareHtmlForAI handles large HTML content efficiently",
+  fn() {
+    // Generate large HTML content similar to liquor.com case
+    const largeHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Recipe Page</title>
+        <style>${"body { margin: 0; } ".repeat(1000)}</style>
+        <script>${"var analytics = {}; ".repeat(500)}</script>
+      </head>
+      <body>
+        <header>${"Navigation Item ".repeat(100)}</header>
+        <nav>${"<a href='/link'>Link</a>".repeat(50)}</nav>
+        <aside class="sidebar">${"Ad content ".repeat(200)}</aside>
+        <div class="comments">${"User comment ".repeat(300)}</div>
+        <main>
+          <article class="recipe">
+            <h1>Cocktail Recipe</h1>
+            <img src="https://example.com/cocktail.jpg" alt="Cocktail" 
+                 class="recipe-image" style="width:100%" data-src="lazy.jpg" />
+            <div class="ingredients">
+              <p>1 oz ingredient one</p>
+              <p>2 oz ingredient two</p>
+            </div>
+            <div class="instructions">
+              <p>Mix and serve</p>
+            </div>
+          </article>
+        </main>
+        <footer>${"Footer content ".repeat(100)}</footer>
+        ${"<!-- Comment padding -->".repeat(1000)}
+      </body>
+      </html>
+    `;
+
+    const prepared = prepareHtmlForAI(largeHTML, "https://example.com/recipe");
+
+    assert(prepared !== null, "Should return prepared HTML");
+    assert(
+      prepared.length < largeHTML.length / 2,
+      `Should significantly reduce size: ${prepared.length} < ${
+        largeHTML.length / 2
+      }`,
+    );
+
+    // Essential content preserved
+    assert(
+      prepared.includes("<h1>Cocktail Recipe</h1>"),
+      "Should preserve recipe title",
+    );
+    assert(prepared.includes("1 oz ingredient"), "Should preserve ingredients");
+    assert(prepared.includes("Mix and serve"), "Should preserve instructions");
+
+    // Image preserved with essential attributes
+    assert(
+      prepared.includes('<img src="https://example.com/cocktail.jpg"'),
+      "Should preserve image src",
+    );
+    assert(prepared.includes('alt="Cocktail"'), "Should preserve image alt");
+
+    // Noise removed
+    assert(
+      !prepared.includes("Navigation Item"),
+      "Should remove header content",
+    );
+    assert(!prepared.includes("Ad content"), "Should remove sidebar");
+    assert(!prepared.includes("User comment"), "Should remove comments");
+    assert(!prepared.includes("Footer content"), "Should remove footer");
+    assert(!prepared.includes("<!-- Comment"), "Should remove HTML comments");
+    assert(!prepared.includes("analytics"), "Should remove scripts");
+    assert(!prepared.includes("body { margin"), "Should remove styles");
+  },
+});
+
+Deno.test({
   name: "prepareHtmlForAI properly extracts YouTube recipe data",
   fn() {
     const youtubeHtml = `

@@ -89,9 +89,12 @@ export const handler = define.handlers({
         );
       }
 
-      // Prepare HTML for AI extraction
+      // Prepare HTML for AI extraction with size limit
       console.log("[extract] Preparing HTML for AI extraction");
-      const optimizedContent = prepareHtmlForAI(html, body.url);
+      const MAX_CONTENT_SIZE = 30000; // ~7500 tokens, safe for gpt-4o
+      const optimizedContent = prepareHtmlForAI(html, body.url, {
+        maxChars: MAX_CONTENT_SIZE,
+      });
       if (!optimizedContent) {
         console.warn("[extract] Could not parse HTML content");
         return Response.json(
@@ -99,6 +102,10 @@ export const handler = define.handlers({
           { status: 400 },
         );
       }
+
+      console.log(
+        `[extract] Optimized content size: ${optimizedContent.length} chars (from ${html.length} chars)`,
+      );
 
       // Extract recipe using AI service
       let extractedRecipe: RecipeExtraction;

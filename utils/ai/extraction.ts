@@ -3,6 +3,12 @@ import { z } from "zod";
 import { executeAIOperation, getModel } from "./ai-core.ts";
 import { INGREDIENT_TYPES, MEASUREMENT_UNITS } from "../../types/ingredient.ts";
 import { GLASSWARE_TYPES } from "../../types/recipe.ts";
+import {
+  calculateSizeMetrics,
+  getMaxCharsForTokens,
+  isContentTooLarge,
+  truncateContent,
+} from "./content-size.ts";
 
 export const RECIPE_EXTRACTION_SYSTEM_PROMPT = `
 You are an expert cocktail recipe analyzer and extractor.
@@ -62,29 +68,80 @@ export type RecipeExtraction = z.infer<typeof RecipeExtractionSchema>;
 
 export async function extractRecipeFromContent(
   content: string,
-  _sourceUrl: string,
+  sourceUrl: string,
 ): Promise<RecipeExtraction> {
-  return await executeAIOperation(async () => {
-    const model = getModel();
-    const messages: ModelMessage[] = [
-      { role: "system", content: RECIPE_EXTRACTION_SYSTEM_PROMPT },
-      {
-        role: "user",
-        content:
-          `Extract the complete cocktail recipe from the following content:\n\n${content}`,
-      },
-    ];
-    const result = await generateObject({
-      model,
-      messages,
-      schema: RecipeExtractionSchema,
-      maxOutputTokens: 1024,
-      temperature: 0.2,
-    });
-    if (!result.object) {
-      throw new Error("No structured object received from AI provider");
+  // Check content size and reduce if necessary
+  const MAX_SAFE_TOKENS = 7500; // Conservative limit for gpt-4o with 30k limit
+  const MAX_CHARS = getMaxCharsForTokens(MAX_SAFE_TOKENS);
+
+  let processedContent = content;
+
+  if (isContentTooLarge(content, MAX_SAFE_TOKENS)) {
+    const metrics = calculateSizeMetrics(content, content);
+    console.log(
+      `Content too large: ${metrics.originalSize} chars (~${metrics.estimatedTokens} tokens), reducing to fit ${MAX_SAFE_TOKENS} token limit...`,
+    );
+
+    // Truncate content intelligently
+    processedContent = truncateContent(content, MAX_CHARS);
+
+    const reducedMetrics = calculateSizeMetrics(content, processedContent);
+    console.log(
+      `Reduced content to ${reducedMetrics.processedSize} chars (~${reducedMetrics.estimatedTokens} tokens, ${reducedMetrics.reductionPercent}% reduction)`,
+    );
+  }
+
+  try {
+    return await executeAIOperation(async () => {
+      const model = getModel();
+      const messages: ModelMessage[] = [
+        { role: "system", content: RECIPE_EXTRACTION_SYSTEM_PROMPT },
+        {
+          role: "user",
+          content:
+            `Extract the complete cocktail recipe from the following content. Make sure to extract the image URL if present in img tags:\n\n${processedContent}`,
+        },
+      ];
+      const result = await generateObject({
+        model,
+        messages,
+        schema: RecipeExtractionSchema,
+        maxOutputTokens: 1024,
+        temperature: 0.2,
+      });
+      if (!result.object) {
+        throw new Error("No structured object received from AI provider");
+      }
+
+      return result.object as RecipeExtraction;
+    }, "Failed to extract recipe from content");
+  } catch (error) {
+    // Check if it's a token limit error and retry with even smaller content
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    if (
+      errorMessage.includes("token") ||
+      errorMessage.includes("too large") ||
+      errorMessage.includes("rate_limit_exceeded")
+    ) {
+      console.warn(
+        "Token limit error detected, retrying with significantly reduced content...",
+      );
+
+      // Try with 50% of the safe limit
+      const FALLBACK_CHARS = getMaxCharsForTokens(MAX_SAFE_TOKENS / 2);
+      const fallbackContent = truncateContent(content, FALLBACK_CHARS);
+
+      const fallbackMetrics = calculateSizeMetrics(content, fallbackContent);
+      console.log(
+        `Fallback: reduced to ${fallbackMetrics.processedSize} chars (~${fallbackMetrics.estimatedTokens} tokens)`,
+      );
+
+      // Recursive call with smaller content
+      return await extractRecipeFromContent(fallbackContent, sourceUrl);
     }
 
-    return result.object as RecipeExtraction;
-  }, "Failed to extract recipe from content");
+    // Re-throw if not a token limit error
+    throw error;
+  }
 }

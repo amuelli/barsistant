@@ -1,0 +1,56 @@
+{
+  "title": "Paper Plane",
+  "description": "The Paper Plane is a modern classic cocktail created by bartender Sam Ross. This equal-parts cocktail perfectly balances bourbon whiskey with the bitter-sweet flavors of Aperol and Amaro Nonino, brightened with fresh lemon juice.",
+  "ingredients": [
+    {
+      "name": "Bourbon",
+      "quantity": 0.75,
+      "unit": "oz",
+      "optional": false,
+      "type": "spirit",
+      "notes": ""
+    },
+    {
+      "name": "Aperol",
+      "quantity": 0.75,
+      "unit": "oz",
+      "optional": false,
+      "type": "liqueur",
+      "notes": ""
+    },
+    {
+      "name": "Amaro Nonino Quintessentia",
+      "quantity": 0.75,
+      "unit": "oz",
+      "optional": false,
+      "type": "liqueur",
+      "notes": ""
+    },
+    {
+      "name": "Lemon juice",
+      "quantity": 0.75,
+      "unit": "oz",
+      "optional": false,
+      "type": "juice",
+      "notes": "Freshly squeezed"
+    }
+  ],
+  "instructions": [
+    "Add the bourbon, Aperol, Amaro Nonino and lemon juice into a shaker with ice",
+    "Shake until well-chilled",
+    "Strain into a coupe glass"
+  ],
+  "garnish": [],
+  "glassware": "coupe",
+  "category": [
+    "modern-classic",
+    "equal-parts",
+    "shaken"
+  ],
+  "source": {
+    "url": "https://www.liquor.com/recipes/the-paper-plane/",
+    "name": "Liquor.com",
+    "author": "",
+    "image": "https://www.liquor.com/thmb/JHYqlZiH5R0pbhUQCIho5QTxC6Q=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/paper-plane-720x720-primary-3e0b79b1d81c4e7e8f017093d4b27f12.jpg"
+  }
+}

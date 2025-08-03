@@ -35,6 +35,11 @@ export const TEST_CASES: RecipeTestCase[] = [
     name: "Pegu Club Cocktail",
     url: "https://www.youtube.com/watch?v=989hd-zEmLI",
   },
+  {
+    id: "paper-plane-liquor",
+    name: "Paper Plane (Liquor.com)",
+    url: "https://www.liquor.com/recipes/the-paper-plane/",
+  },
   // Additional test cases can be added here
   // Example:
   // {
