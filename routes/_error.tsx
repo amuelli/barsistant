@@ -2,15 +2,22 @@ import { HttpError, PageProps } from "fresh";
 
 export default function ErrorPage(props: PageProps) {
   const error = props.error; // Contains the thrown Error or HTTPError
+  const url = props.url?.pathname || "unknown path";
 
-  console.error("Error occurred:", error);
+  // Log errors with appropriate severity
   if (error instanceof HttpError) {
     const status = error.status; // HTTP status code
 
-    // Render a 404 not found page
+    // Log 404s as info since they're normal user behavior
     if (status === 404) {
+      console.info(`404 Not Found: ${url}`);
       return <NotFoundPage />;
     }
+
+    // Log other HTTP errors as errors
+    console.error(`HTTP ${status} error at ${url}:`, error);
+
+    // Render appropriate error pages
     if (status === 500) {
       return <InternalServerErrorPage />;
     }
@@ -18,6 +25,8 @@ export default function ErrorPage(props: PageProps) {
     return <ErrorBoundary error={error} />;
   }
 
+  // Log non-HTTP errors (unexpected exceptions)
+  console.error(`Unexpected error at ${url}:`, error);
   return <InternalServerErrorPage />;
 }
 

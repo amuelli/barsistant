@@ -11,7 +11,8 @@
       "Bash(mv:*)",
       "WebFetch(domain:daisyui.com)",
       "WebFetch(domain:fresh.deno.dev)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(deno test:*)"
     ],
     "deny": []
   }
