@@ -275,6 +275,7 @@ await kv.atomic()
 - Image generation: `utils/ai/image-generation.ts` (DALL-E)
 - Vector images: `utils/ai/recraft.ts` (SVG generation)
 - Non-blocking processing via Deno KV queues
+- **Content size management**: Use `utils/ai/content-size.ts` for token limits
 
 ### Fresh Framework Specifics
 
@@ -342,6 +343,14 @@ For EVERY task, follow this systematic approach:
 - [ ] Verify all required dependencies exist in the codebase
 - [ ] Define TypeScript types and interfaces first
 
+#### Testing Phase (TDD - Start Here):
+
+- [ ] **Start with failing tests** - write tests that demonstrate the problem
+      before implementing solutions
+- [ ] Write tests for ALL code paths including error scenarios
+- [ ] Test database operations with cleanup (avoid data pollution)
+- [ ] Use real-world data when possible for testing
+
 #### Implementation Phase:
 
 - [ ] Follow established patterns from similar components
@@ -350,10 +359,8 @@ For EVERY task, follow this systematic approach:
 - [ ] Ensure mobile-responsive design from the start
 - [ ] Add logging for debugging (use `console.error` for errors)
 
-#### Testing Phase (CRITICAL):
+#### Verification Phase (CRITICAL):
 
-- [ ] Write tests for ALL code paths including error scenarios
-- [ ] Test database operations with cleanup (avoid data pollution)
 - [ ] Verify mobile responsiveness and accessibility
 - [ ] Run `deno task test` and resolve ALL failures
 - [ ] Run `deno task check` and resolve ALL formatting/lint issues
@@ -484,6 +491,9 @@ export async function createRecipe(data: RecipeInput) {
 - **Mobile layout issues**: Check responsive classes and touch targets
 - **Test failures**: Ensure proper cleanup and mock dependencies
 - **Fresh routing**: Verify file-based routing conventions
+- **AI token limits**: Check content size using content-size utilities
+- **Missing attributes**: Verify essential attributes (src, data-src) are
+  preserved
 
 ## ⚡ Performance & Optimization
 
