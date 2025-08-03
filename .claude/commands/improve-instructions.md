@@ -1,101 +1,67 @@
 # Claude Session Review and Instructions Improvement
 
-Analyze the failures in previous Claude sessions and recommend improvements to
-the CLAUDE.md file and project instructions.
+Analyze the recent Claude session and make MINIMAL, ESSENTIAL improvements to
+the CLAUDE.md file only. Keep the file concise and focused.
 
-## 1. Review Project Architecture and Instructions
+## 1. Check Current Project State
 
-First, review the current CLAUDE.md and instruction files:
-
-- CLAUDE.md: Project overview and guidance for Claude Code
-- /.github/instructions/project.instructions.md: Development conventions and
-  workflow
-- /.github/instructions/requirements.instructions.md: Project requirements
-- /README.md: Setup and environment
-
-Analyze where instructions might be ambiguous or incomplete.
-
-## 2. Identify Common Failure Patterns
-
-Look for patterns in previous Claude session failures:
-
-- Where did Claude misunderstand project structure?
-- What project conventions were not followed?
-- Where were tests insufficient or skipped?
-- What architectural patterns were not clearly documented?
-- Were there permission issues when running commands?
-- Did Claude overlook important error messages?
-- Were there misinterpretations of the task requirements?
-
-## 3. Check Current Project State
-
-Assess the current state of the project:
+First, verify the project is in good shape:
 
 ```bash
 deno task check
 deno task test
 ```
 
-Review any failing tests or linting issues to understand systemic problems.
+## 2. Identify Success Patterns
 
-## 4. Improve Project Documentation
+Look for what worked well in the recent session:
 
-Based on the review, recommend specific improvements to CLAUDE.md:
+- What development approach was most effective?
+- Which testing strategies led to success?
+- What tools or patterns solved problems efficiently?
+- Were there specific techniques that should be emphasized?
 
-1. **Architecture Documentation**
-   - Make clearer diagrams or explanations of data flow
-   - Add more examples of correct implementation patterns
-   - Document cross-cutting concerns more explicitly
+## 3. Identify Critical Gaps
 
-2. **Testing Requirements**
-   - Provide more specific testing requirements for each component
-   - Include examples of good test coverage
-   - Add guidance on testing error cases
+Look for ONLY the most critical missing guidance:
 
-3. **Error Handling Patterns**
-   - Document standard error handling approaches
-   - Add examples of proper error propagation
-   - Clarify logging requirements
+- What caused confusion or errors that could be prevented?
+- Which patterns weren't clear from existing instructions?
+- What debugging scenarios came up that need brief mention?
 
-4. **Performance Considerations**
-   - Document performance expectations and patterns
-   - Add guidance on avoiding common performance issues
+## 4. Make Minimal Updates to CLAUDE.md
 
-5. **Database Operations**
-   - Clarify KV data modeling best practices
-   - Add more examples of correct transaction patterns
-   - Document atomic operation requirements
+Based on the analysis, make ONLY essential additions to CLAUDE.md:
 
-## 5. Create Implementation Checklist
+**Criteria for additions:**
+- Must address a critical gap that caused problems
+- Must be concise (1-2 lines maximum per addition)
+- Must provide actionable guidance
+- Should reference existing utilities or patterns in the codebase
 
-Create a specific checklist that Claude should follow for each task:
+**What NOT to add:**
+- Lengthy explanations or tutorials
+- Duplicate information already in other instruction files
+- Detailed code examples (brief snippets only if essential)
+- Extensive new sections
 
-1. [ ] Understand the task requirements completely
-2. [ ] Plan the implementation with types first
-3. [ ] Implement core logic with proper error handling
-4. [ ] Write comprehensive tests for all code paths
-5. [ ] Run tests to verify functionality
-6. [ ] Check for performance and security issues
-7. [ ] Document the implementation
-8. [ ] Verify against the project instructions
+**Focus areas for minimal improvements:**
+- Development workflow order/emphasis
+- Critical debugging scenarios (1-2 new items max)
+- Essential tool references (if missing)
+- Brief success pattern reminders
 
-## 6. Recommended Updates to CLAUDE.md
+## 5. Implementation
 
-Based on the analysis, recommend specific updates to CLAUDE.md with:
-
-- New sections to add
-- Existing sections to clarify
-- Examples to include
-- Common pitfalls to warn about
-- Testing requirements to emphasize
-- Command execution patterns to follow
-
-Provide the complete recommended CLAUDE.md updates as a diff or complete
-replacement.
+1. Review recent session for key lessons
+2. Make 3-5 minimal line additions maximum to CLAUDE.md
+3. Ensure changes are concise and actionable
+4. Test that formatting is correct
+5. Commit with clear message about specific improvements
 
 Remember:
 
-- Be specific about what went wrong in previous sessions
-- Focus on actionable improvements to instructions
-- Provide concrete examples whenever possible
-- Emphasize the critical importance of testing and error handling
+- LESS IS MORE - keep CLAUDE.md concise and scannable
+- Focus on preventing the most critical failures only
+- Reference existing tools/patterns rather than explaining them
+- Maintain the current structure and flow of the document
