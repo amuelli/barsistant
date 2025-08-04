@@ -251,6 +251,30 @@ These variables are already included in the `.env.example` template. For local
 development, fill them in your `.env` file. For production, set these variables
 in your deployment environment.
 
+## Development Tools
+
+### GitHub MCP for Claude Code
+
+This project includes MCP (Model Context Protocol) configuration for enhanced GitHub integration when using Claude Code. The `.mcp.json` file configures the GitHub MCP server to enable Claude Code to interact directly with this GitHub repository.
+
+#### Setup for Developers
+
+To enable GitHub MCP features in Claude Code:
+
+1. Create a GitHub Personal Access Token with access to this repository:
+   - Go to GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens (recommended)
+   - Create a token with access to this specific repository
+   - Grant permissions for: Contents, Issues, Pull requests, Metadata
+
+2. Set the environment variable:
+   ```bash
+   export GITHUB_PERSONAL_ACCESS_TOKEN=your_github_token_here
+   ```
+
+3. Ensure Docker is running (the MCP server runs in a container)
+
+This enables Claude Code to create issues, manage pull requests, search code, and perform other GitHub operations directly within this repository from the development environment.
+
 ## Project Structure
 
 - `/routes` - Page components and API endpoints
