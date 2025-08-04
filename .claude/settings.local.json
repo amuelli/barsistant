@@ -12,16 +12,11 @@
       "WebFetch(domain:daisyui.com)",
       "WebFetch(domain:fresh.deno.dev)",
       "Bash(git add:*)",
-<<<<<<< Updated upstream
-      "Bash(deno test:*)"
-=======
+      "Bash(deno test:*)",
       "mcp__github__create_issue"
->>>>>>> Stashed changes
     ],
     "deny": []
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "github"
-  ]
+  "enabledMcpjsonServers": ["github"]
 }
