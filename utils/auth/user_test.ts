@@ -7,6 +7,7 @@ import {
   findUserByEmail,
   findUserById,
   generateUserId,
+  migrateLegacyPreferences,
   updateUserLastLogin,
   updateUserPreferences,
 } from "./user.ts";
@@ -31,7 +32,7 @@ Deno.test("createDefaultUserPreferences", async (t) => {
     const preferences = createDefaultUserPreferences();
 
     assertEquals(preferences.theme, "system");
-    assertEquals(preferences.preferredMeasurementUnit, "imperial");
+    assertEquals(preferences.preferredMeasurementUnit, "oz");
   });
 });
 
