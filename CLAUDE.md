@@ -325,6 +325,39 @@ await kv.atomic()
 
 ## 🔧 Development Workflow
 
+### Agent-Based Development Process
+
+The Barsistant project uses specialized Claude Code agents for development phases. Each agent is configured in `.claude/agents/` with specific expertise:
+
+- **Issue Planner** (`.claude/agents/issue-planner.md`): Creates comprehensive GitHub issues from development tasks
+- **Feature Developer** (`.claude/agents/feature-developer.md`): Implements features following TDD and project patterns  
+- **PR Manager** (`.claude/agents/pr-manager.md`): Manages pull request creation and quality verification
+
+#### Workflow Steps:
+
+1. **Planning**: Use Issue Planner agent to create GitHub issue with detailed requirements
+2. **Branch**: Create feature branch: `feature/123-brief-description` 
+3. **Implementation**: Use Feature Developer agent to implement with TDD approach
+4. **Quality**: Agent verifies all tests pass and code quality standards are met
+5. **Integration**: Use PR Manager agent to create comprehensive pull request
+
+#### Branch Management:
+```bash
+git checkout main && git pull origin main
+git checkout -b feature/123-brief-description
+git push -u origin feature/123-brief-description
+```
+
+### Agent Usage Examples
+
+See the agent files in `.claude/agents/` for detailed specifications. Common usage patterns:
+
+- **Complex Features**: Use Issue Planner → Feature Developer → PR Manager workflow
+- **Bug Fixes**: Issue Planner for root cause analysis → Feature Developer for fix
+- **Performance Optimization**: Issue Planner for bottleneck analysis → Feature Developer for optimization
+
+### Traditional Development Steps (Non-Agent):
+
 1. **Read the instruction files** (linked above)
 2. **Follow established patterns**: Check existing code for conventions
 3. **Run tests**: `deno task test` (MANDATORY before completion)
@@ -332,44 +365,17 @@ await kv.atomic()
 5. **Database operations**: Use utilities from `utils/db/`
 6. **Test thoroughly** - authentication flows, mobile experience, error cases
 
-### Implementation Checklist (Use TodoWrite for tracking)
+### Implementation Checklist
 
-For EVERY task, follow this systematic approach:
+For every development task:
 
-#### Planning Phase:
-
-- [ ] Use TodoWrite tool to create specific, actionable tasks
-- [ ] Read related existing code to understand patterns
-- [ ] Verify all required dependencies exist in the codebase
-- [ ] Define TypeScript types and interfaces first
-
-#### Testing Phase (TDD - Start Here):
-
-- [ ] **Start with failing tests** - write tests that demonstrate the problem
-      before implementing solutions
-- [ ] Write tests for ALL code paths including error scenarios
-- [ ] Test database operations with cleanup (avoid data pollution)
-- [ ] Use real-world data when possible for testing
-
-#### Implementation Phase:
-
-- [ ] Follow established patterns from similar components
-- [ ] Implement comprehensive error handling with specific error types
-- [ ] Use atomic database transactions for related operations
-- [ ] Ensure mobile-responsive design from the start
-- [ ] Add logging for debugging (use `console.error` for errors)
-
-#### Verification Phase (CRITICAL):
-
-- [ ] Verify mobile responsiveness and accessibility
-- [ ] Run `deno task test` and resolve ALL failures
-- [ ] Run `deno task check` and resolve ALL formatting/lint issues
-
-#### Documentation Phase:
-
-- [ ] Update TodoWrite tasks as completed
-- [ ] Follow commit message conventions
-- [ ] Update relevant documentation files if needed
+- [ ] Create GitHub issue (via Issue Planner agent for complex tasks)
+- [ ] Create feature branch: `feature/123-description`
+- [ ] Implement following TDD: tests first, then code
+- [ ] Run `deno task test` - all tests must pass
+- [ ] Run `deno task check` - resolve all formatting/lint issues
+- [ ] Verify mobile responsiveness 
+- [ ] Create PR linking to issue: "Closes #123"
 
 ## 🚨 Critical Reminders
 
@@ -533,13 +539,45 @@ export async function createRecipe(data: RecipeInput) {
 
 ## 🧠 Development Workflow Tips
 
-- **Git Branch Management**:
-  - When having a long list of todos with lots of changes, create a new branch
-    and make commits for every stage/phase/step.
+### Git Branch Management & Naming Conventions:
 
-### Development Best Practices
+- **Branch Names**: Use descriptive names with issue references
+  - `feature/123-add-recipe-search` - New features
+  - `fix/456-resolve-auth-bug` - Bug fixes
+  - `improvement/789-optimize-db-queries` - Performance improvements
+  - `docs/101-update-api-docs` - Documentation updates
+- **Commit Strategy**: When having a long list of todos with lots of changes,
+  make commits for every stage/phase/step
+- **Regular Pushes**: Push feature branch regularly to back up work
+- **Clean History**: Use meaningful commit messages that reference the issue
+
+### Pull Request Best Practices:
+
+- **PR Title**: Should clearly describe what the PR accomplishes
+- **Description**: Include "Closes #123" to auto-link and close the issue
+- **Testing**: Include verification that all tests pass and quality checks
+  complete
+- **Review Ready**: Only create PR when implementation is complete and tested
+
+### When to Use Agents
+
+**Use Specialized Agents For**:
+- Complex features requiring research and planning
+- Large implementations with multiple components  
+- Bug fixes requiring codebase analysis
+- Code reviews for quality assurance
+
+**Use Direct Implementation For**:
+- Simple, straightforward changes
+- Minor bug fixes with obvious solutions
+- Documentation updates
+
+### Traditional Development Best Practices
 
 - Always run `deno task check` before reporting a task as complete
+- Create GitHub issue BEFORE starting any significant work
+- Use feature branches for ALL changes, never work directly on main
+- Link all commits to relevant issues with commit message references
 
 ## GitHub MCP Integration
 

@@ -14,7 +14,8 @@
       "Bash(mv:*)",
       "WebFetch(domain:daisyui.com)",
       "WebFetch(domain:fresh.deno.dev)",
-      "mcp__github__create_issue"
+      "mcp__github__*",
+      "WebFetch(domain:docs.anthropic.com)"
     ],
     "deny": []
   },

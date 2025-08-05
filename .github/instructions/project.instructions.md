@@ -40,31 +40,74 @@ const state = signal({ value: initialValue });
 
 ## Development Workflow
 
-1. Work on one task at a time (see docs/tasks.md)
-2. Plan before coding; start with types, then implement core logic
-3. Add error handling and inline documentation
-4. Integrate with existing code
-5. Write and run tests (MANDATORY)
+**IMPORTANT**: All development MUST follow the GitHub issue-based workflow:
+
+### Issue-First Development Process:
+
+1. **Plan First, Then Create GitHub Issue**: Before any development work
+   - Formulate comprehensive plan using TodoWrite tool and code analysis
+   - Research existing code patterns and dependencies
+   - Define TypeScript types and interfaces
+   - Use `mcp__github__create_issue` to create detailed issue documenting the
+     plan
+   - Include scope, acceptance criteria, implementation approach, testing
+     requirements based on your analysis
+   - Apply appropriate labels (feature, bug, enhancement, docs)
+   - Reference any related issues or dependencies
+
+2. **Create Feature Branch**: Always branch from main using local git
+   - Use local git commands with naming: `feature/123-brief-description`
+   - Branch name MUST include issue number
+   - Examples: `feature/45-recipe-search`, `fix/67-auth-bug`,
+     `improvement/89-db-performance`
+   - Commands:
+     ```bash
+     git checkout main
+     git pull origin main
+     git checkout -b feature/123-brief-description
+     ```
+
+3. **Development Implementation**:
+   - Work on one issue at a time
+   - Plan before coding; start with types, then implement core logic
+   - Add error handling and inline documentation
+   - Integrate with existing code
+   - Make regular commits referencing issue number (e.g., "feat: add search
+     functionality (#45)")
+
+4. **Testing & Quality Assurance (MANDATORY)**:
    - Write unit tests for all backend/logic components
    - Use Browser MCP for UI verification when applicable
-   - ALWAYS run the full test suite using `deno task test` before considering a
-     task complete
+   - ALWAYS run the full test suite using `deno task test` before considering
+     work complete
    - Fix any failing tests before proceeding
    - This is a critical step and cannot be skipped under any circumstances
    - Tests must pass with the correct permissions and environment settings
-6. Update docs as needed (README.md, docs/tasks.md, etc.)
-7. Perform a final verification checklist:
-   - ✓ All code is implemented
+
+5. **Pre-Pull Request Verification**:
+   - ✓ All code is implemented according to issue requirements
    - ✓ All tests are passing (`deno task test`)
    - ✓ All lint checks are passing (`deno task check`)
-   - ✓ Documentation is updated
+   - ✓ Documentation is updated as needed
    - ✓ No TypeScript errors or warnings
-8. Only after completing steps 1-7 and receiving user confirmation, mark the
-   task as done in docs/tasks.md and commit with a descriptive message
+   - ✓ Feature branch is pushed to remote repository:
+     ```bash
+     git push -u origin feature/123-brief-description
+     ```
 
-- Keep task descriptions in docs/tasks.md short and concise. If more detail is
-  needed, add it to project.instructions.md or another appropriate documentation
-  file.
+6. **Pull Request Creation**:
+   - Use `mcp__github__create_pull_request` to create PR
+   - Link to issue with "Closes #123" or "Fixes #123" in description
+   - Include comprehensive testing verification in PR description
+   - PR title should clearly describe what was accomplished
+
+7. **Completion**: Only after PR is created and verified complete
+
+### Legacy Task Management:
+
+- docs/tasks.md is supplementary for additional context
+- Primary tracking should happen through GitHub issues
+- Keep any task descriptions in docs/tasks.md short and concise
 
 ## Technical Implementation
 
@@ -106,22 +149,52 @@ const state = signal({ value: initialValue });
 
 ## Commit Message Guidelines
 
-- Use a short, descriptive title with a prefix and task ID in brackets:
-  - `feat(AI-3): implement ai provider`
-  - `fix(DB-2): correct recipe model bug`
-  - `refactor(UI-5): update recipe form layout`
-  - `doc(README): update setup instructions`
-- Prefixes: `feat`, `fix`, `refactor`, `doc`, `test`, etc.
-- List additional details as bullet points in the body below the title, if
-  needed.
+**IMPORTANT**: All commits MUST reference GitHub issue numbers:
+
+### Format with Issue References:
+
+- Use conventional commit format with issue number: `type: description (#123)`
+- Examples:
+  - `feat: implement recipe search functionality (#45)`
+  - `fix: resolve authentication session bug (#67)`
+  - `refactor: optimize database query performance (#89)`
+  - `docs: update API documentation (#101)`
+  - `test: add unit tests for recipe service (#112)`
+
+### Alternative Formats (when applicable):
+
+- For work-in-progress: `feat: add search UI components (ref #45)`
+- For partial fixes: `fix: partially resolve auth issue (ref #67)`
+- For multiple issues: `feat: implement search and filters (#45, #67)`
+
+### Commit Types:
+
+- `feat`: New features
+- `fix`: Bug fixes
+- `refactor`: Code refactoring without functional changes
+- `docs`: Documentation updates
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks, dependency updates
+- `style`: Code formatting, whitespace changes
+- `perf`: Performance improvements
+
+### Commit Body (optional):
+
+- List additional details as bullet points below the title if needed
 - Example:
-
   ```text
-  feat(AI-3): implement ai provider
+  feat: implement recipe search functionality (#45)
 
-  - Add provider-agnostic AI SDK integration
-  - Update environment variable docs
+  - Add full-text search across recipe names and ingredients
+  - Implement search result pagination
+  - Add search filters for dietary restrictions
   ```
+
+### Legacy Format (deprecated):
+
+- Old format with task IDs: `feat(AI-3): implement ai provider`
+- Only use when working with legacy docs/tasks.md items
+- Transition to GitHub issue references for all new work
 
 ## Reference
 
