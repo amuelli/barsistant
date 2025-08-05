@@ -6,13 +6,14 @@
       "Bash(deno lint:*)",
       "Bash(deno run:*)",
       "Bash(deno task:*)",
+      "Bash(deno test:*)",
       "Bash(find:*)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
       "Bash(grep:*)",
       "Bash(mv:*)",
       "WebFetch(domain:daisyui.com)",
       "WebFetch(domain:fresh.deno.dev)",
-      "Bash(git add:*)",
-      "Bash(deno test:*)",
       "mcp__github__create_issue"
     ],
     "deny": []

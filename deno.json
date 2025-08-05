@@ -14,7 +14,8 @@
     "migration:create": "deno run -A scripts/generate-migration.ts",
     "migration:status": "deno run -A scripts/migrations.ts status",
     "migration:run": "deno run -A scripts/migrations.ts run",
-    "dump-kv": "deno run -A scripts/dump-kv.ts"
+    "dump-kv": "deno run -A scripts/dump-kv.ts",
+    "setup-github-mcp": "deno run --allow-read --allow-env --allow-run scripts/setup-github-mcp.ts"
   },
   "lint": { "rules": { "tags": ["fresh", "recommended"] } },
   "exclude": [

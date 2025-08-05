@@ -253,27 +253,42 @@ in your deployment environment.
 
 ## Development Tools
 
-### GitHub MCP for Claude Code
+### GitHub Integration for Claude Code
 
-This project includes MCP (Model Context Protocol) configuration for enhanced GitHub integration when using Claude Code. The `.mcp.json` file configures the GitHub MCP server to enable Claude Code to interact directly with this GitHub repository.
+This project supports GitHub MCP (Model Context Protocol) server integration for
+enhanced GitHub operations when using Claude Code.
 
 #### Setup for Developers
 
-To enable GitHub MCP features in Claude Code:
+To enable GitHub MCP features:
 
-1. Create a GitHub Personal Access Token with access to this repository:
-   - Go to GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens (recommended)
-   - Create a token with access to this specific repository
+1. **Create a GitHub Personal Access Token**:
+   - Go to GitHub Settings → Developer settings → Personal access tokens →
+     Fine-grained tokens
+   - Create a token with access to this repository
    - Grant permissions for: Contents, Issues, Pull requests, Metadata
 
-2. Set the environment variable:
+2. **Add the token to your `.env` file**:
    ```bash
-   export GITHUB_PERSONAL_ACCESS_TOKEN=your_github_token_here
+   GITHUB_PERSONAL_ACCESS_TOKEN=your-github-pat-here
    ```
 
-3. Ensure Docker is running (the MCP server runs in a container)
+3. **Run the setup command**:
+   ```bash
+   deno task setup-github-mcp
+   ```
 
-This enables Claude Code to create issues, manage pull requests, search code, and perform other GitHub operations directly within this repository from the development environment.
+   This configures the GitHub MCP server for your project using Claude Code CLI.
+
+4. **Verify the installation**:
+   ```bash
+   claude mcp list
+   ```
+
+**Note**: Ensure Docker is running, as the MCP server runs in a container.
+
+This enables Claude Code to create issues, manage pull requests, search code,
+and perform other GitHub operations directly within this repository.
 
 ## Project Structure
 

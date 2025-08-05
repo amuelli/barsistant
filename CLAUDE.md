@@ -541,6 +541,19 @@ export async function createRecipe(data: RecipeInput) {
 
 - Always run `deno task check` before reporting a task as complete
 
+## GitHub MCP Integration
+
+The project supports GitHub MCP server for enhanced GitHub operations:
+
+- **Setup**: Run `deno task setup-github-mcp` after adding your GitHub PAT to
+  `.env`
+- **Configuration**: The setup script configures Claude Code CLI with the GitHub
+  MCP server
+- **Usage**: Enables creating issues, managing PRs, and other GitHub operations
+  directly from Claude Code
+
+See the README for detailed setup instructions.
+
 ---
 
 For detailed development guidelines, testing requirements, and conventions, see

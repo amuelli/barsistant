@@ -34,18 +34,21 @@ Look for ONLY the most critical missing guidance:
 Based on the analysis, make ONLY essential additions to CLAUDE.md:
 
 **Criteria for additions:**
+
 - Must address a critical gap that caused problems
 - Must be concise (1-2 lines maximum per addition)
 - Must provide actionable guidance
 - Should reference existing utilities or patterns in the codebase
 
 **What NOT to add:**
+
 - Lengthy explanations or tutorials
 - Duplicate information already in other instruction files
 - Detailed code examples (brief snippets only if essential)
 - Extensive new sections
 
 **Focus areas for minimal improvements:**
+
 - Development workflow order/emphasis
 - Critical debugging scenarios (1-2 new items max)
 - Essential tool references (if missing)
