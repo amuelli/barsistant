@@ -9,6 +9,21 @@ import {
 } from "./user.ts";
 
 /**
+ * Legacy user preference type for testing migration
+ */
+type LegacyUserPreferences = {
+  theme: "light" | "dark" | "system";
+  preferredMeasurementUnit: "metric" | "imperial" | "both" | "oz" | "ml";
+};
+
+/**
+ * Legacy user type for testing migration
+ */
+type LegacyUser = Omit<User, "preferences"> & {
+  preferences: LegacyUserPreferences;
+};
+
+/**
  * Test suite for user preference migration functionality
  */
 Deno.test("migrateLegacyPreferences", async (t) => {
@@ -17,7 +32,7 @@ Deno.test("migrateLegacyPreferences", async (t) => {
       theme: "system" as const,
       preferredMeasurementUnit: "imperial" as const,
     };
-    
+
     const migrated = migrateLegacyPreferences(legacyPrefs);
     assertEquals(migrated.theme, "system");
     assertEquals(migrated.preferredMeasurementUnit, "oz");
@@ -28,7 +43,7 @@ Deno.test("migrateLegacyPreferences", async (t) => {
       theme: "dark" as const,
       preferredMeasurementUnit: "metric" as const,
     };
-    
+
     const migrated = migrateLegacyPreferences(legacyPrefs);
     assertEquals(migrated.theme, "dark");
     assertEquals(migrated.preferredMeasurementUnit, "ml");
@@ -39,7 +54,7 @@ Deno.test("migrateLegacyPreferences", async (t) => {
       theme: "light" as const,
       preferredMeasurementUnit: "both" as const,
     };
-    
+
     const migrated = migrateLegacyPreferences(legacyPrefs);
     assertEquals(migrated.theme, "light");
     assertEquals(migrated.preferredMeasurementUnit, "oz");
@@ -50,7 +65,7 @@ Deno.test("migrateLegacyPreferences", async (t) => {
       theme: "system" as const,
       preferredMeasurementUnit: "oz" as const,
     };
-    
+
     const migrated = migrateLegacyPreferences(legacyPrefs);
     assertEquals(migrated.theme, "system");
     assertEquals(migrated.preferredMeasurementUnit, "oz");
@@ -61,7 +76,7 @@ Deno.test("migrateLegacyPreferences", async (t) => {
       theme: "system" as const,
       preferredMeasurementUnit: "ml" as const,
     };
-    
+
     const migrated = migrateLegacyPreferences(legacyPrefs);
     assertEquals(migrated.theme, "system");
     assertEquals(migrated.preferredMeasurementUnit, "ml");
@@ -70,9 +85,10 @@ Deno.test("migrateLegacyPreferences", async (t) => {
   await t.step("should default unknown values to 'oz'", () => {
     const legacyPrefs = {
       theme: "system" as const,
-      preferredMeasurementUnit: "unknown" as any,
+      preferredMeasurementUnit:
+        "unknown" as LegacyUserPreferences["preferredMeasurementUnit"],
     };
-    
+
     const migrated = migrateLegacyPreferences(legacyPrefs);
     assertEquals(migrated.theme, "system");
     assertEquals(migrated.preferredMeasurementUnit, "oz");
@@ -84,14 +100,14 @@ Deno.test("findUserById with migration", async (t) => {
 
   await t.step("setup - create user with legacy preferences", async () => {
     // Create a user manually with legacy preferences
-    const user: User = {
+    const user: LegacyUser = {
       id: generateUserId(),
       email: "legacy@example.com",
       displayName: "Legacy User",
       preferences: {
         theme: "system",
         preferredMeasurementUnit: "imperial", // Legacy format
-      } as any,
+      },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -101,19 +117,22 @@ Deno.test("findUserById with migration", async (t) => {
     await kv.set(["user_emails", user.email], user.id);
   });
 
-  await t.step("should automatically migrate legacy preferences on findUserById", async () => {
-    const user = await findUserById(userId);
-    
-    assertEquals(user?.email, "legacy@example.com");
-    assertEquals(user?.preferences.theme, "system");
-    assertEquals(user?.preferences.preferredMeasurementUnit, "oz"); // Should be migrated
-  });
+  await t.step(
+    "should automatically migrate legacy preferences on findUserById",
+    async () => {
+      const user = await findUserById(userId);
+
+      assertEquals(user?.email, "legacy@example.com");
+      assertEquals(user?.preferences.theme, "system");
+      assertEquals(user?.preferences.preferredMeasurementUnit, "oz"); // Should be migrated
+    },
+  );
 
   await t.step("should persist migrated preferences", async () => {
     // Fetch directly from database to verify migration was saved
     const directResult = await kv.get<User>(["users", userId]);
     const user = directResult.value;
-    
+
     assertEquals(user?.preferences.preferredMeasurementUnit, "oz");
   });
 
@@ -133,32 +152,38 @@ Deno.test("findUserById with migration", async (t) => {
 Deno.test("findUserByEmail with migration", async (t) => {
   let testEmail: string;
 
-  await t.step("setup - create user with legacy 'metric' preference", async () => {
-    testEmail = "metric-user@example.com";
-    
-    const user: User = {
-      id: generateUserId(),
-      email: testEmail,
-      displayName: "Metric User",
-      preferences: {
-        theme: "dark",
-        preferredMeasurementUnit: "metric", // Legacy format
-      } as any,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+  await t.step(
+    "setup - create user with legacy 'metric' preference",
+    async () => {
+      testEmail = "metric-user@example.com";
 
-    await kv.set(["users", user.id], user);
-    await kv.set(["user_emails", user.email], user.id);
-  });
+      const user: LegacyUser = {
+        id: generateUserId(),
+        email: testEmail,
+        displayName: "Metric User",
+        preferences: {
+          theme: "dark",
+          preferredMeasurementUnit: "metric", // Legacy format
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
 
-  await t.step("should automatically migrate to 'ml' via findUserByEmail", async () => {
-    const user = await findUserByEmail(testEmail);
-    
-    assertEquals(user?.email, testEmail);
-    assertEquals(user?.preferences.theme, "dark");
-    assertEquals(user?.preferences.preferredMeasurementUnit, "ml"); // Should be migrated from metric
-  });
+      await kv.set(["users", user.id], user);
+      await kv.set(["user_emails", user.email], user.id);
+    },
+  );
+
+  await t.step(
+    "should automatically migrate to 'ml' via findUserByEmail",
+    async () => {
+      const user = await findUserByEmail(testEmail);
+
+      assertEquals(user?.email, testEmail);
+      assertEquals(user?.preferences.theme, "dark");
+      assertEquals(user?.preferences.preferredMeasurementUnit, "ml"); // Should be migrated from metric
+    },
+  );
 
   await t.step("cleanup", async () => {
     const usersIterator = kv.list({ prefix: ["users"] });

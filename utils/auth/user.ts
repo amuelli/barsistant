@@ -28,14 +28,16 @@ export function createDefaultUserPreferences(): UserPreferences {
 
 /**
  * Migrate legacy user preferences to new format
- * 
+ *
  * Converts old "metric"/"imperial"/"both" preferences to new "oz"/"ml" format:
  * - "imperial" → "oz"
- * - "metric" → "ml" 
+ * - "metric" → "ml"
  * - "both" → "oz" (default to oz for backward compatibility)
  * - "oz"/"ml" → unchanged (already migrated)
  */
-export function migrateLegacyPreferences(legacyPrefs: LegacyUserPreferences): UserPreferences {
+export function migrateLegacyPreferences(
+  legacyPrefs: LegacyUserPreferences,
+): UserPreferences {
   let preferredMeasurementUnit: "oz" | "ml";
 
   switch (legacyPrefs.preferredMeasurementUnit) {
@@ -65,7 +67,7 @@ export function migrateLegacyPreferences(legacyPrefs: LegacyUserPreferences): Us
 
 /**
  * Find a user by email address
- * 
+ *
  * Automatically migrates legacy preferences if needed
  */
 export async function findUserByEmail(email: string): Promise<User | null> {
@@ -83,19 +85,19 @@ export async function findUserByEmail(email: string): Promise<User | null> {
 
 /**
  * Find a user by ID
- * 
+ *
  * Automatically migrates legacy preferences if needed
  */
 export async function findUserById(userId: string): Promise<User | null> {
   const userKey: UserKey = ["users", userId];
   const result = await kv.get<User>(userKey);
-  
+
   if (!result.value) {
     return null;
   }
 
   const user = result.value;
-  
+
   // Check if user has legacy preferences that need migration
   const legacyPrefs = user.preferences as unknown as LegacyUserPreferences;
   if (
@@ -107,11 +109,13 @@ export async function findUserById(userId: string): Promise<User | null> {
     const migratedPrefs = migrateLegacyPreferences(legacyPrefs);
     user.preferences = migratedPrefs;
     user.updatedAt = new Date().toISOString();
-    
+
     // Save the migrated user back to the database
     await kv.set(userKey, user);
-    
-    console.log(`Migrated preferences for user ${userId}: ${legacyPrefs.preferredMeasurementUnit} → ${migratedPrefs.preferredMeasurementUnit}`);
+
+    console.log(
+      `Migrated preferences for user ${userId}: ${legacyPrefs.preferredMeasurementUnit} → ${migratedPrefs.preferredMeasurementUnit}`,
+    );
   }
 
   return user;

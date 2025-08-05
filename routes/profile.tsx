@@ -69,9 +69,8 @@ export const handler = define.handlers<ProfileData>({
       // Update user preferences
       const theme = formData.get("theme") as "light" | "dark" | "system";
       const preferredMeasurementUnit = formData.get("measurementUnit") as
-        | "metric"
-        | "imperial"
-        | "both";
+        | "oz"
+        | "ml";
 
       // Create partial preferences object
       const updatedPreferences: Partial<UserPreferences> = {
@@ -210,25 +209,18 @@ export default define.page<typeof handler>(({ data }) => {
                       class="select select-bordered w-full"
                     >
                       <option
-                        value="metric"
+                        value="oz"
                         selected={user.preferences.preferredMeasurementUnit ===
-                          "metric"}
+                          "oz"}
                       >
-                        Metric
+                        Fluid Ounces (oz)
                       </option>
                       <option
-                        value="imperial"
+                        value="ml"
                         selected={user.preferences.preferredMeasurementUnit ===
-                          "imperial"}
+                          "ml"}
                       >
-                        Imperial
-                      </option>
-                      <option
-                        value="both"
-                        selected={user.preferences.preferredMeasurementUnit ===
-                          "both"}
-                      >
-                        Both
+                        Milliliters (ml)
                       </option>
                     </select>
                   </div>
@@ -271,9 +263,9 @@ export default define.page<typeof handler>(({ data }) => {
                         </span>
                       </label>
                       <div class="text-base-content/80">
-                        {user.preferences.preferredMeasurementUnit.charAt(0)
-                          .toUpperCase() +
-                          user.preferences.preferredMeasurementUnit.slice(1)}
+                        {user.preferences.preferredMeasurementUnit === "oz"
+                          ? "Fluid Ounces (oz)"
+                          : "Milliliters (ml)"}
                       </div>
                     </div>
                   </div>

@@ -7,7 +7,6 @@ import {
   findUserByEmail,
   findUserById,
   generateUserId,
-  migrateLegacyPreferences,
   updateUserLastLogin,
   updateUserPreferences,
 } from "./user.ts";

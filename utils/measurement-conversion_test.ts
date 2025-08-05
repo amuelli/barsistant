@@ -41,15 +41,26 @@ Deno.test("measurement-conversion", async (t) => {
     assertEquals(result.unit, "ml");
   });
 
-  await t.step("convertMeasurement should preserve non-convertible units", () => {
-    const units: MeasurementUnit[] = ["dash", "drop", "barspoon", "tsp", "tbsp", "pinch", "spritz"];
-    
-    units.forEach((unit) => {
-      const result = convertMeasurement(2, unit, "ml");
-      assertEquals(result.quantity, 2);
-      assertEquals(result.unit, unit);
-    });
-  });
+  await t.step(
+    "convertMeasurement should preserve non-convertible units",
+    () => {
+      const units: MeasurementUnit[] = [
+        "dash",
+        "drop",
+        "barspoon",
+        "tsp",
+        "tbsp",
+        "pinch",
+        "spritz",
+      ];
+
+      units.forEach((unit) => {
+        const result = convertMeasurement(2, unit, "ml");
+        assertEquals(result.quantity, 2);
+        assertEquals(result.unit, unit);
+      });
+    },
+  );
 
   await t.step("convertMeasurement should handle same unit conversion", () => {
     const ozToOz = convertMeasurement(2, "oz", "oz");
@@ -61,100 +72,118 @@ Deno.test("measurement-conversion", async (t) => {
     assertEquals(mlToMl.unit, "ml");
   });
 
-  await t.step("convertMeasurement should use correct conversion factor", () => {
-    // Verify the conversion factor is correct (1 oz = 29.5735 ml)
-    assertEquals(OZ_TO_ML_FACTOR, 29.5735);
-    
-    const result = convertMeasurement(1, "oz", "ml");
-    assertEquals(result.quantity, 29.6); // 29.5735 rounded to 1 decimal
-  });
+  await t.step(
+    "convertMeasurement should use correct conversion factor",
+    () => {
+      // Verify the conversion factor is correct (1 oz = 29.5735 ml)
+      assertEquals(OZ_TO_ML_FACTOR, 29.5735);
 
-  await t.step("displayMeasurementForUser should convert based on user preference", () => {
-    const ingredient: RecipeIngredient = {
-      ingredientId: "test-id",
-      name: "Test Ingredient",
-      quantity: 2,
-      unit: "oz",
-      optional: false,
-    };
+      const result = convertMeasurement(1, "oz", "ml");
+      assertEquals(result.quantity, 29.6); // 29.5735 rounded to 1 decimal
+    },
+  );
 
-    // User prefers ml, ingredient is in oz - should convert
-    const mlResult = displayMeasurementForUser(ingredient, "ml");
-    assertEquals(mlResult.quantity, 59.1);
-    assertEquals(mlResult.unit, "ml");
+  await t.step(
+    "displayMeasurementForUser should convert based on user preference",
+    () => {
+      const ingredient: RecipeIngredient = {
+        ingredientId: "test-id",
+        name: "Test Ingredient",
+        quantity: 2,
+        unit: "oz",
+        optional: false,
+      };
 
-    // User prefers oz, ingredient is in oz - should not convert
-    const ozResult = displayMeasurementForUser(ingredient, "oz");
-    assertEquals(ozResult.quantity, 2);
-    assertEquals(ozResult.unit, "oz");
-  });
+      // User prefers ml, ingredient is in oz - should convert
+      const mlResult = displayMeasurementForUser(ingredient, "ml");
+      assertEquals(mlResult.quantity, 59.1);
+      assertEquals(mlResult.unit, "ml");
 
-  await t.step("displayMeasurementForUser should handle ml to oz conversion", () => {
-    const ingredient: RecipeIngredient = {
-      ingredientId: "test-id",
-      name: "Test Ingredient",
-      quantity: 60,
-      unit: "ml",
-      optional: false,
-    };
+      // User prefers oz, ingredient is in oz - should not convert
+      const ozResult = displayMeasurementForUser(ingredient, "oz");
+      assertEquals(ozResult.quantity, 2);
+      assertEquals(ozResult.unit, "oz");
+    },
+  );
 
-    // User prefers oz, ingredient is in ml - should convert
-    const ozResult = displayMeasurementForUser(ingredient, "oz");
-    assertEquals(ozResult.quantity, 2.0);
-    assertEquals(ozResult.unit, "oz");
+  await t.step(
+    "displayMeasurementForUser should handle ml to oz conversion",
+    () => {
+      const ingredient: RecipeIngredient = {
+        ingredientId: "test-id",
+        name: "Test Ingredient",
+        quantity: 60,
+        unit: "ml",
+        optional: false,
+      };
 
-    // User prefers ml, ingredient is in ml - should not convert
-    const mlResult = displayMeasurementForUser(ingredient, "ml");
-    assertEquals(mlResult.quantity, 60);
-    assertEquals(mlResult.unit, "ml");
-  });
+      // User prefers oz, ingredient is in ml - should convert
+      const ozResult = displayMeasurementForUser(ingredient, "oz");
+      assertEquals(ozResult.quantity, 2.0);
+      assertEquals(ozResult.unit, "oz");
 
-  await t.step("displayMeasurementForUser should preserve non-convertible units", () => {
-    const ingredient: RecipeIngredient = {
-      ingredientId: "test-id",
-      name: "Test Ingredient",
-      quantity: 3,
-      unit: "dash",
-      optional: false,
-    };
+      // User prefers ml, ingredient is in ml - should not convert
+      const mlResult = displayMeasurementForUser(ingredient, "ml");
+      assertEquals(mlResult.quantity, 60);
+      assertEquals(mlResult.unit, "ml");
+    },
+  );
 
-    // Non-convertible units should remain unchanged regardless of preference
-    const mlResult = displayMeasurementForUser(ingredient, "ml");
-    assertEquals(mlResult.quantity, 3);
-    assertEquals(mlResult.unit, "dash");
+  await t.step(
+    "displayMeasurementForUser should preserve non-convertible units",
+    () => {
+      const ingredient: RecipeIngredient = {
+        ingredientId: "test-id",
+        name: "Test Ingredient",
+        quantity: 3,
+        unit: "dash",
+        optional: false,
+      };
 
-    const ozResult = displayMeasurementForUser(ingredient, "oz");
-    assertEquals(ozResult.quantity, 3);
-    assertEquals(ozResult.unit, "dash");
-  });
+      // Non-convertible units should remain unchanged regardless of preference
+      const mlResult = displayMeasurementForUser(ingredient, "ml");
+      assertEquals(mlResult.quantity, 3);
+      assertEquals(mlResult.unit, "dash");
 
-  await t.step("displayMeasurementForUser should handle edge cases with precision", () => {
-    const ingredient: RecipeIngredient = {
-      ingredientId: "test-id",
-      name: "Test Ingredient",
-      quantity: 0.25,
-      unit: "oz",
-      optional: false,
-    };
+      const ozResult = displayMeasurementForUser(ingredient, "oz");
+      assertEquals(ozResult.quantity, 3);
+      assertEquals(ozResult.unit, "dash");
+    },
+  );
 
-    // 0.25 oz = 7.39 ml (rounded to 1 decimal)
-    const result = displayMeasurementForUser(ingredient, "ml");
-    assertEquals(result.quantity, 7.4);
-    assertEquals(result.unit, "ml");
-  });
+  await t.step(
+    "displayMeasurementForUser should handle edge cases with precision",
+    () => {
+      const ingredient: RecipeIngredient = {
+        ingredientId: "test-id",
+        name: "Test Ingredient",
+        quantity: 0.25,
+        unit: "oz",
+        optional: false,
+      };
 
-  await t.step("displayMeasurementForUser should handle quantities that round to zero", () => {
-    const ingredient: RecipeIngredient = {
-      ingredientId: "test-id",
-      name: "Test Ingredient",
-      quantity: 0.01,
-      unit: "ml",
-      optional: false,
-    };
+      // 0.25 oz = 7.39 ml (rounded to 1 decimal)
+      const result = displayMeasurementForUser(ingredient, "ml");
+      assertEquals(result.quantity, 7.4);
+      assertEquals(result.unit, "ml");
+    },
+  );
 
-    // 0.01 ml = 0.0003 oz, should round to 0.0
-    const result = displayMeasurementForUser(ingredient, "oz");
-    assertEquals(result.quantity, 0.0);
-    assertEquals(result.unit, "oz");
-  });
+  await t.step(
+    "displayMeasurementForUser should handle quantities that round to zero",
+    () => {
+      const ingredient: RecipeIngredient = {
+        ingredientId: "test-id",
+        name: "Test Ingredient",
+        quantity: 0.01,
+        unit: "ml",
+        optional: false,
+      };
+
+      // 0.01 ml = 0.0003 oz, should round to 0.0
+      const result = displayMeasurementForUser(ingredient, "oz");
+      assertEquals(result.quantity, 0.0);
+      assertEquals(result.unit, "oz");
+    },
+  );
 });
