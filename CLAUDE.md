@@ -327,21 +327,28 @@ await kv.atomic()
 
 ### Agent-Based Development Process
 
-The Barsistant project uses specialized Claude Code agents for development phases. Each agent is configured in `.claude/agents/` with specific expertise:
+The Barsistant project uses specialized Claude Code agents for development
+phases. Each agent is configured in `.claude/agents/` with specific expertise:
 
-- **Issue Planner** (`.claude/agents/issue-planner.md`): Creates comprehensive GitHub issues from development tasks
-- **Feature Developer** (`.claude/agents/feature-developer.md`): Implements features following TDD and project patterns  
-- **PR Manager** (`.claude/agents/pr-manager.md`): Manages pull request creation and quality verification
+- **Issue Planner** (`.claude/agents/issue-planner.md`): Creates comprehensive
+  GitHub issues from development tasks
+- **Feature Developer** (`.claude/agents/feature-developer.md`): Implements
+  features following TDD and project patterns
+- **PR Manager** (`.claude/agents/pr-manager.md`): Manages pull request creation
+  and quality verification
 
 #### Workflow Steps:
 
-1. **Planning**: Use Issue Planner agent to create GitHub issue with detailed requirements
-2. **Branch**: Create feature branch: `feature/123-brief-description` 
-3. **Implementation**: Use Feature Developer agent to implement with TDD approach
+1. **Planning**: Use Issue Planner agent to create GitHub issue with detailed
+   requirements
+2. **Branch**: Create feature branch: `feature/123-brief-description`
+3. **Implementation**: Use Feature Developer agent to implement with TDD
+   approach
 4. **Quality**: Agent verifies all tests pass and code quality standards are met
 5. **Integration**: Use PR Manager agent to create comprehensive pull request
 
 #### Branch Management:
+
 ```bash
 git checkout main && git pull origin main
 git checkout -b feature/123-brief-description
@@ -350,11 +357,15 @@ git push -u origin feature/123-brief-description
 
 ### Agent Usage Examples
 
-See the agent files in `.claude/agents/` for detailed specifications. Common usage patterns:
+See the agent files in `.claude/agents/` for detailed specifications. Common
+usage patterns:
 
-- **Complex Features**: Use Issue Planner → Feature Developer → PR Manager workflow
-- **Bug Fixes**: Issue Planner for root cause analysis → Feature Developer for fix
-- **Performance Optimization**: Issue Planner for bottleneck analysis → Feature Developer for optimization
+- **Complex Features**: Use Issue Planner → Feature Developer → PR Manager
+  workflow
+- **Bug Fixes**: Issue Planner for root cause analysis → Feature Developer for
+  fix
+- **Performance Optimization**: Issue Planner for bottleneck analysis → Feature
+  Developer for optimization
 
 ### Traditional Development Steps (Non-Agent):
 
@@ -374,7 +385,7 @@ For every development task:
 - [ ] Implement following TDD: tests first, then code
 - [ ] Run `deno task test` - all tests must pass
 - [ ] Run `deno task check` - resolve all formatting/lint issues
-- [ ] Verify mobile responsiveness 
+- [ ] Verify mobile responsiveness
 - [ ] Create PR linking to issue: "Closes #123"
 
 ## 🚨 Critical Reminders
@@ -562,12 +573,14 @@ export async function createRecipe(data: RecipeInput) {
 ### When to Use Agents
 
 **Use Specialized Agents For**:
+
 - Complex features requiring research and planning
-- Large implementations with multiple components  
+- Large implementations with multiple components
 - Bug fixes requiring codebase analysis
 - Code reviews for quality assurance
 
 **Use Direct Implementation For**:
+
 - Simple, straightforward changes
 - Minor bug fixes with obvious solutions
 - Documentation updates
