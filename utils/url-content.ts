@@ -1,7 +1,15 @@
 // Utility for fetching and parsing URL content (AI-2, AI-3)
-// Uses Deno's fetch and @b-fuze/deno-dom for HTML processing
+// Uses Deno's fetch and @michaelhthomas/fluxhtml for HTML processing
 
-import { DOMParser, Element, HTMLDocument, Node } from "@b-fuze/deno-dom";
+import {
+  Node,
+  parse,
+  TEXT_NODE,
+  transformSync,
+  walkSync,
+} from "@michaelhthomas/fluxhtml";
+import { querySelector } from "@michaelhthomas/fluxhtml/selector";
+import sanitize from "@michaelhthomas/fluxhtml/transformers/sanitize";
 import {
   extractRecipeFocusedContent,
   truncateContent,
@@ -29,23 +37,49 @@ export async function fetchUrlContent(
 }
 
 /**
- * Extracts the main text content from HTML using deno-dom.
+ * Extracts the main text content from HTML using FluxHTML.
  * Returns null if parsing fails or the content is not HTML.
  * For backward compatibility - consider using prepareHtmlForAI for recipe extraction.
  */
 export function extractTextFromHtml(html: string): string | null {
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  if (!doc) return null;
-  // Simple extraction: get all textContent from <body>
-  const body = doc.querySelector("body");
-  if (!body) return null;
-  // Remove script/style tags for cleaner output
-  body.querySelectorAll("script,style,noscript").forEach((el) => el.remove());
-  return body.textContent?.replace(/\s+/g, " ").trim() || null;
+  if (!html || !html.trim()) return null;
+
+  try {
+    // First, clean the HTML to remove script/style content
+    const cleanedHtml = transformSync(html, [
+      sanitize({
+        dropElements: ["script", "style", "noscript"],
+        allowComments: false,
+      }),
+    ]);
+
+    const doc = parse(cleanedHtml);
+    if (!doc) return null;
+
+    // Find the body element first
+    const body = querySelector(doc, "body");
+    if (!body) return null;
+
+    // Collect text content
+    const textParts: string[] = [];
+    walkSync(body, (node: Node) => {
+      if (node.type === TEXT_NODE) {
+        const text = node.value?.trim();
+        if (text) {
+          textParts.push(text);
+        }
+      }
+      return true; // Continue walking
+    });
+
+    return textParts.join(" ").replace(/\s+/g, " ").trim() || null;
+  } catch {
+    return null;
+  }
 }
 
-// Element selectors that typically contain recipe noise/boilerplate
-const NOISE_SELECTORS = [
+// Element selectors that typically contain recipe noise/boilerplate - kept for reference
+const _NOISE_SELECTORS = [
   "header:not(article header, main header)",
   "footer:not(article footer, main footer)",
   "nav",
@@ -203,110 +237,86 @@ export function prepareHtmlForAI(
       // If extraction fails, fall back to standard processing
     }
 
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    if (!doc) return null;
+    // Use FluxHTML's transformSync with sanitize to clean the HTML
+    let cleanedHtml = transformSync(html, [
+      sanitize({
+        dropElements: [
+          "script",
+          "style",
+          "noscript",
+          "iframe",
+          "nav",
+          "aside",
+          "header",
+          "footer",
+        ],
+        allowComments: false,
+      }),
+    ]);
 
-    const clone = doc.cloneNode(true) as HTMLDocument;
+    // Manually remove HTML comments as a fallback (FluxHTML sanitizer may not handle them)
+    cleanedHtml = cleanedHtml.replace(/<!--[\s\S]*?-->/g, "");
 
-    // Extract page title
-    const title = clone.querySelector("title")?.textContent || "";
+    // Additional cleanup for elements with noise classes/ids BEFORE stripping class attributes
+    const noiseClassPatterns = ["comments", "sidebar", "ad"];
+    for (const pattern of noiseClassPatterns) {
+      // Remove elements with noise classes
+      cleanedHtml = cleanedHtml.replace(
+        new RegExp(
+          `<div[^>]*class="[^"]*${pattern}[^"]*"[^>]*>.*?</div>`,
+          "gis",
+        ),
+        "",
+      );
+      cleanedHtml = cleanedHtml.replace(
+        new RegExp(
+          `<aside[^>]*class="[^"]*${pattern}[^"]*"[^>]*>.*?</aside>`,
+          "gis",
+        ),
+        "",
+      );
+    }
 
-    // Remove noise elements
-    NOISE_SELECTORS.forEach((selector) => {
-      clone.querySelectorAll(selector).forEach((el) => el.remove());
-    });
+    // Manual attribute stripping since FluxHTML sanitizer doesn't seem to handle attribute filtering reliably
+    // Remove style attributes
+    cleanedHtml = cleanedHtml.replace(/\s+style="[^"]*"/gi, "");
 
-    // Remove HTML comments
-    const removeComments = (node: Element | HTMLDocument) => {
-      const toRemove: Node[] = [];
-      for (const child of node.childNodes) {
-        if (child.nodeType === 8) { // Comment node
-          toRemove.push(child);
-        } else if (child.childNodes) {
-          removeComments(child as Element);
-        }
-      }
-      toRemove.forEach((comment) => {
-        if (comment.parentNode) {
-          comment.parentNode.removeChild(comment);
-        }
-      });
-    };
-    removeComments(clone);
+    // Remove data-* attributes
+    cleanedHtml = cleanedHtml.replace(/\s+data-[^=]*="[^"]*"/gi, "");
 
-    // Get the body content
-    const bodyContent = clone.querySelector("body");
-    if (!bodyContent) return null;
+    // Remove class attributes
+    cleanedHtml = cleanedHtml.replace(/\s+class="[^"]*"/gi, "");
 
-    // Strip verbose attributes from all elements to reduce size
-    stripVerboseAttributes(bodyContent);
+    // Remove id attributes
+    cleanedHtml = cleanedHtml.replace(/\s+id="[^"]*"/gi, "");
 
-    // Build optimized content for AI processing
-    let result = `<title>${title}</title>\n\n`;
+    // Remove other non-essential attributes while preserving essential ones
+    cleanedHtml = cleanedHtml.replace(
+      /\s+(?:target|rel|onload|onclick)="[^"]*"/gi,
+      "",
+    );
 
-    // Add the body content
-    result += bodyContent.outerHTML;
+    if (!cleanedHtml) return null;
 
     // Apply size limit if specified
-    if (options?.maxChars && result.length > options.maxChars) {
+    if (options?.maxChars && cleanedHtml.length > options.maxChars) {
       console.log(
-        `Content size (${result.length}) exceeds limit (${options.maxChars}), reducing...`,
+        `Content size (${cleanedHtml.length}) exceeds limit (${options.maxChars}), reducing...`,
       );
 
       // First try to extract just recipe-focused content
-      const recipeFocused = extractRecipeFocusedContent(result);
+      const recipeFocused = extractRecipeFocusedContent(cleanedHtml);
       if (recipeFocused && recipeFocused.length <= options.maxChars) {
         return recipeFocused;
       }
 
       // Otherwise truncate intelligently
-      result = truncateContent(result, options.maxChars);
+      return truncateContent(cleanedHtml, options.maxChars);
     }
 
-    return result;
+    return cleanedHtml;
   } catch (e) {
     console.error("Error preparing HTML for AI:", e);
     return null;
-  }
-}
-
-/**
- * Strips verbose attributes from HTML elements to reduce content size.
- * Preserves only essential attributes like src, href, alt, and title.
- *
- * @param element The DOM element to process recursively
- */
-function stripVerboseAttributes(element: Element): void {
-  // List of attributes to preserve
-  const preserveAttrs = new Set([
-    "src",
-    "data-src",
-    "href",
-    "alt",
-    "title",
-    "type",
-  ]);
-
-  // Process current element
-  if (element.attributes) {
-    const attrsToRemove: string[] = [];
-
-    for (const attr of element.attributes) {
-      if (!preserveAttrs.has(attr.name.toLowerCase())) {
-        attrsToRemove.push(attr.name);
-      }
-    }
-
-    // Remove non-essential attributes
-    for (const attrName of attrsToRemove) {
-      element.removeAttribute(attrName);
-    }
-  }
-
-  // Recursively process child elements
-  for (const child of element.children) {
-    if (child instanceof Element) {
-      stripVerboseAttributes(child);
-    }
   }
 }
