@@ -28,7 +28,7 @@
     "🏝️/": "./islands/",
     "🧱/": "./components/",
     "@ai-sdk/openai": "npm:@ai-sdk/openai@^2.0.0",
-    "@b-fuze/deno-dom": "jsr:@b-fuze/deno-dom@^0.1.49",
+    "@michaelhthomas/fluxhtml": "jsr:@michaelhthomas/fluxhtml@^1.1.0",
     "@bradenmacdonald/s3-lite-client": "jsr:@bradenmacdonald/s3-lite-client@^0.9.1",
     "@fresh/core": "jsr:@fresh/core@^2.0.0-alpha.46",
     "@fresh/plugin-tailwind": "jsr:@fresh/plugin-tailwind@^0.0.1-alpha.9",
@@ -52,7 +52,22 @@
     "lib": ["dom", "dom.asynciterable", "dom.iterable", "deno.ns"],
     "jsx": "precompile",
     "jsxImportSource": "preact",
-    "jsxPrecompileSkipElements": ["a", "img", "source", "body", "html", "head"]
+    "jsxPrecompileSkipElements": [
+      "a",
+      "img",
+      "source",
+      "body",
+      "html",
+      "head",
+      "title",
+      "meta",
+      "script",
+      "link",
+      "style",
+      "base",
+      "noscript",
+      "template"
+    ]
   },
   "unstable": ["kv"],
   "nodeModulesDir": "auto"
