@@ -12,3 +12,4 @@ node_modules/
 
 # MCP configuration (use deno task setup-github-mcp instead)
 .mcp.json
+deno.zip
