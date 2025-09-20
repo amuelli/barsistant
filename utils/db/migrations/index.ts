@@ -76,7 +76,7 @@ export async function discoverMigrations(): Promise<Migration[]> {
 
       // Import migration dynamically
       try {
-        const module = await import(`./${dirEntry.name}`);
+        const module = await import(/* @vite-ignore */ `./${dirEntry.name}`);
         const migration: Migration = module.default || module.migration;
 
         if (

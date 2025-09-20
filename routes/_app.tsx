@@ -42,7 +42,6 @@ function AppContent(
         {state.title
           ? <title>Barsistant - {state.title}</title>
           : <title>Barsistant</title>}
-        <link rel="stylesheet" href="/styles.css" />
         <link rel="manifest" href="/manifest.json"></link>
       </head>
       <body data-theme="barsistant">
