@@ -43,7 +43,7 @@ inventory tracking, favorites, and recipe discovery.
 
 ## Technology Stack
 
-- Fresh (Deno web framework)
+- Fresh 2.0 (Deno web framework) with Vite integration
 - Preact + DaisyUI + Tailwind CSS
 - Deno KV (database)
 - JSR for dependency management
@@ -72,6 +72,7 @@ inventory tracking, favorites, and recipe discovery.
 - No feature can be considered complete without passing tests
 - Tests should verify both success and error paths
 - Regression tests are required for bug fixes
+- **Vite-based builds must be tested for both dev and production**
 
 ## Reference & Documentation
 

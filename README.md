@@ -19,8 +19,8 @@ cocktail recipes with AI-powered recipe extraction capabilities.
 
 ## Technology Stack
 
-- **Framework**: [Fresh](https://fresh.deno.dev/) - Full-stack web framework for
-  Deno
+- **Framework**: [Fresh 2.0](https://fresh.deno.dev/) (with Vite integration) -
+  Full-stack web framework for Deno
 - **UI Components**: [Preact](https://preactjs.com/) and
   [daisyUI](https://daisyui.com/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
@@ -79,9 +79,13 @@ S3_REGION=us-east-1
 # APPROVED_DANGEROUS_MIGRATIONS=migration_name1,migration_name2
 ```
 
+deployments.
+
 ### Running the Application
 
-Start the development server:
+#### Development (with Vite HMR)
+
+Start the development server with Vite-powered hot module reloading for islands:
 
 ```bash
 deno task dev
@@ -89,13 +93,32 @@ deno task dev
 
 The application will be available at `http://localhost:8000`.
 
-You can also use the production server locally (it will still load .env file in
-non-production environments):
+#### Production build
+
+Build the app and start the production server:
 
 ```bash
-deno task build  # Build the app first
-deno task start   # Then start the production server
+deno task build
+deno task start
 ```
+
+#### Vite Configuration
+
+Vite is configured in `vite.config.ts`:
+
+```ts
+import { defineConfig } from "vite";
+import { fresh } from "@fresh/plugin-vite";
+
+export default defineConfig({
+  plugins: [fresh()],
+});
+```
+
+See the [Fresh 2.0 + Vite announcement](https://deno.com/blog/fresh-and-vite)
+and
+[migration guide](https://fresh.deno.dev/docs/canary/examples/migration-guide)
+for more details.
 
 Note: The .env file is automatically loaded in development but not in production
 deployments.
@@ -146,44 +169,54 @@ deno task test path/to/test/file.ts
 > [deno.json](deno.json) task definitions along with other necessary
 > permissions.
 
-## Environment Variables
+### Setting up Resend:
 
-Barsistant requires a `.env` file in the project root for provider-agnostic AI
-integration. The `.env.example` file provides a template with all required and
-optional variables.
+## Development Tools
 
-- `AI_PROVIDER`: The AI provider to use (e.g. `openai`, `anthropic`).
-- `OPENAI_API_KEY`: The API key for the selected provider. This is required for
-  all AI features.
-- `AI_MODEL`: (Optional) The model to use for the selected provider (e.g.
-  `gpt-4o`, `gpt-4`, `claude-3-opus-20240229`). Defaults to `gpt-4o` for OpenAI
-  if not set.
+### Vite-based Workflow
 
-To get started quickly:
+- Use `deno task dev` for local development (with Vite HMR)
+- Use `deno task build` for production builds
+- See `vite.config.ts` for plugin configuration
+
+### GitHub Integration for Claude Code
+
+This project supports GitHub MCP (Model Context Protocol) server integration for
+enhanced GitHub operations when using Claude Code.
+
+#### Setup for Developers
+
+1. **Create a GitHub Personal Access Token**:
+
+- Go to GitHub Settings → Developer settings → Personal access tokens →
+  Fine-grained tokens
+- Create a token with access to this repository
+- Grant permissions for: Contents, Issues, Pull requests, Metadata
+
+2. **Add the token to your `.env` file**:
 
 ```bash
-cp .env.example .env
+GITHUB_PERSONAL_ACCESS_TOKEN=your-github-pat-here
 ```
 
-Then edit the `.env` file with your specific values before running the app or
-tests.
+3. **Run the setup command**:
 
-## Authentication Configuration
+```bash
+deno task setup-github-mcp
+```
 
-Barsistant uses magic link authentication powered by Resend for email delivery.
-To enable authentication:
+This configures the GitHub MCP server for your project using Claude Code CLI.
 
-### Required Environment Variables:
+4. **Verify the installation**:
 
-- `RESEND_API_KEY`: Your Resend API key for sending magic link emails
+```bash
+claude mcp list
+```
 
-### Optional Environment Variables:
+**Note**: Ensure Docker is running, as the MCP server runs in a container.
 
-- `FROM_EMAIL`: Email address for sending magic links (default:
-  `hello@barsistant.com`)
-- `FROM_NAME`: Display name for emails (default: `Barsistant`)
-
-### Setting up Resend:
+This enables Claude Code to create issues, manage pull requests, search code,
+and perform other GitHub operations directly within this repository.
 
 1. Sign up for a free account at [resend.com](https://resend.com)
 2. Create an API key in your Resend dashboard

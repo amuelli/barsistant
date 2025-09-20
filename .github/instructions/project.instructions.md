@@ -7,14 +7,14 @@ applyTo: "**"
 ## Key Conventions
 
 - Use TypeScript with explicit type annotations
-- Follow Deno and Fresh 2.0 conventions (see README.md)
+- Follow Deno, Fresh 2.0, and Vite conventions (see README.md)
 - Use JSR imports (see deno.json)
 - Use async/await, prioritize readability
 - Use Preact with Signals for UI state
 - Keep UI and business logic separated
 - Store shared types in /types
 - Place API routes in /routes/api, utilities in /utils
-- when removing code, don't leave any traces or comments that it was removed,
+- When removing code, don't leave any traces or comments that it was removed,
   just remove it completely
 
 ### Preact Signals Guidelines
@@ -40,68 +40,82 @@ const state = signal({ value: initialValue });
 
 ## Development Workflow
 
-**IMPORTANT**: All development MUST follow the GitHub issue-based workflow:
+**IMPORTANT**: All development MUST follow the GitHub issue-based workflow and
+use the new Vite-based build system:
 
 ### Issue-First Development Process:
 
 1. **Plan First, Then Create GitHub Issue**: Before any development work
-   - Formulate comprehensive plan using TodoWrite tool and code analysis
-   - Research existing code patterns and dependencies
-   - Define TypeScript types and interfaces
-   - Use `mcp__github__create_issue` to create detailed issue documenting the
-     plan
-   - Include scope, acceptance criteria, implementation approach, testing
-     requirements based on your analysis
-   - Apply appropriate labels (feature, bug, enhancement, docs)
-   - Reference any related issues or dependencies
+
+- Formulate comprehensive plan using TodoWrite tool and code analysis
+- Research existing code patterns and dependencies
+- Define TypeScript types and interfaces
+- Use `mcp__github__create_issue` to create detailed issue documenting the plan
+- Include scope, acceptance criteria, implementation approach, testing
+  requirements based on your analysis
+- Apply appropriate labels (feature, bug, enhancement, docs)
+- Reference any related issues or dependencies
 
 2. **Create Feature Branch**: Always branch from main using local git
-   - Use local git commands with naming: `feature/123-brief-description`
-   - Branch name MUST include issue number
-   - Examples: `feature/45-recipe-search`, `fix/67-auth-bug`,
-     `improvement/89-db-performance`
-   - Commands:
-     ```bash
-     git checkout main
-     git pull origin main
-     git checkout -b feature/123-brief-description
-     ```
+
+- Use local git commands with naming: `feature/123-brief-description`
+- Branch name MUST include issue number
+- Examples: `feature/45-recipe-search`, `fix/67-auth-bug`,
+  `improvement/89-db-performance`
+- Commands:
+  ```bash
+  git checkout main
+  git pull origin main
+  git checkout -b feature/123-brief-description
+  ```
 
 3. **Development Implementation**:
-   - Work on one issue at a time
-   - Plan before coding; start with types, then implement core logic
-   - Add error handling and inline documentation
-   - Integrate with existing code
-   - Make regular commits referencing issue number (e.g., "feat: add search
-     functionality (#45)")
+
+- Work on one issue at a time
+- Plan before coding; start with types, then implement core logic
+- Add error handling and inline documentation
+- Integrate with existing code
+- Make regular commits referencing issue number (e.g., "feat: add search
+  functionality (#45)")
 
 4. **Testing & Quality Assurance (MANDATORY)**:
-   - Write unit tests for all backend/logic components
-   - Use Browser MCP for UI verification when applicable
-   - ALWAYS run the full test suite using `deno task test` before considering
-     work complete
-   - Fix any failing tests before proceeding
-   - This is a critical step and cannot be skipped under any circumstances
-   - Tests must pass with the correct permissions and environment settings
+
+- Write unit tests for all backend/logic components
+- Use Browser MCP for UI verification when applicable
+- ALWAYS run the full test suite using `deno task test` before considering work
+  complete
+- Fix any failing tests before proceeding
+- This is a critical step and cannot be skipped under any circumstances
+- Tests must pass with the correct permissions and environment settings
 
 5. **Pre-Pull Request Verification**:
-   - ✓ All code is implemented according to issue requirements
-   - ✓ All tests are passing (`deno task test`)
-   - ✓ All lint checks are passing (`deno task check`)
-   - ✓ Documentation is updated as needed
-   - ✓ No TypeScript errors or warnings
-   - ✓ Feature branch is pushed to remote repository:
-     ```bash
-     git push -u origin feature/123-brief-description
-     ```
+
+- ✓ All code is implemented according to issue requirements
+- ✓ All tests are passing (`deno task test`)
+- ✓ All lint checks are passing (`deno task check`)
+- ✓ Documentation is updated as needed
+- ✓ No TypeScript errors or warnings
+- ✓ Feature branch is pushed to remote repository:
+  ```bash
+  git push -u origin feature/123-brief-description
+  ```
 
 6. **Pull Request Creation**:
-   - Use `mcp__github__create_pull_request` to create PR
-   - Link to issue with "Closes #123" or "Fixes #123" in description
-   - Include comprehensive testing verification in PR description
-   - PR title should clearly describe what was accomplished
+
+- Use `mcp__github__create_pull_request` to create PR
+- Link to issue with "Closes #123" or "Fixes #123" in description
+- Include comprehensive testing verification in PR description
+- PR title should clearly describe what was accomplished
 
 7. **Completion**: Only after PR is created and verified complete
+
+### Vite Build & Dev
+
+- Use `deno task dev` for local development (with HMR)
+- Use `deno task build` for production builds
+- See `vite.config.ts` for plugin configuration
+
+...existing content...
 
 ### Legacy Task Management:
 
