@@ -38,7 +38,7 @@ export async function vectorizeImage(
     const formData = new FormData();
     formData.append(
       "file",
-      new File([imageBuffer], "image.png", { type: "image/png" }),
+      new File([imageBuffer as BlobPart], "image.png", { type: "image/png" }),
     );
 
     // Use raw fetch API for multipart/form-data
