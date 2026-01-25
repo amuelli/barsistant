@@ -48,7 +48,7 @@
     "jsr:@std/ulid@1": "1.0.0",
     "jsr:@std/uuid@^1.0.9": "1.1.0",
     "npm:@ai-sdk/gateway@^3.0.22": "3.0.22_zod@3.25.76",
-    "npm:@ai-sdk/openai@^2.0.89": "2.0.89_zod@3.25.76",
+    "npm:@ai-sdk/openai@^3.0.12": "3.0.18_zod@3.25.76",
     "npm:@babel/core@^7.28.0": "7.28.6",
     "npm:@babel/preset-react@^7.27.1": "7.28.5_@babel+core@7.28.6",
     "npm:@mjackson/node-fetch-server@0.7": "0.7.0",
@@ -303,42 +303,27 @@
     "@ai-sdk/gateway@3.0.22_zod@3.25.76": {
       "integrity": "sha512-NgnlY73JNuooACHqUIz5uMOEWvqR1MMVbb2soGLMozLY1fgwEIF5iJFDAGa5/YArlzw2ATVU7zQu7HkR/FUjgA==",
       "dependencies": [
-        "@ai-sdk/provider@3.0.5",
-        "@ai-sdk/provider-utils@4.0.9_zod@3.25.76",
+        "@ai-sdk/provider",
+        "@ai-sdk/provider-utils",
         "@vercel/oidc",
         "zod@3.25.76"
       ]
     },
-    "@ai-sdk/openai@2.0.89_zod@3.25.76": {
-      "integrity": "sha512-4+qWkBCbL9HPKbgrUO/F2uXZ8GqrYxHa8SWEYIzxEJ9zvWw3ISr3t1/27O1i8MGSym+PzEyHBT48EV4LAwWaEw==",
+    "@ai-sdk/openai@3.0.18_zod@3.25.76": {
+      "integrity": "sha512-uYscTyoaWij9FoPpKRNK8YgtDEuPpQlqREYylJCA8o5YQVQXghV0Dwgk1ehPVpg6USIO4L0C8GqQJ4AMm/Xb1g==",
       "dependencies": [
-        "@ai-sdk/provider@2.0.1",
-        "@ai-sdk/provider-utils@3.0.20_zod@3.25.76",
-        "zod@3.25.76"
-      ]
-    },
-    "@ai-sdk/provider-utils@3.0.20_zod@3.25.76": {
-      "integrity": "sha512-iXHVe0apM2zUEzauqJwqmpC37A5rihrStAih5Ks+JE32iTe4LZ58y17UGBjpQQTCRw9YxMeo2UFLxLpBluyvLQ==",
-      "dependencies": [
-        "@ai-sdk/provider@2.0.1",
-        "@standard-schema/spec",
-        "eventsource-parser",
+        "@ai-sdk/provider",
+        "@ai-sdk/provider-utils",
         "zod@3.25.76"
       ]
     },
     "@ai-sdk/provider-utils@4.0.9_zod@3.25.76": {
       "integrity": "sha512-bB4r6nfhBOpmoS9mePxjRoCy+LnzP3AfhyMGCkGL4Mn9clVNlqEeKj26zEKEtB6yoSVcT1IQ0Zh9fytwMCDnow==",
       "dependencies": [
-        "@ai-sdk/provider@3.0.5",
+        "@ai-sdk/provider",
         "@standard-schema/spec",
         "eventsource-parser",
         "zod@3.25.76"
-      ]
-    },
-    "@ai-sdk/provider@2.0.1": {
-      "integrity": "sha512-KCUwswvsC5VsW2PWFqF8eJgSCu5Ysj7m1TxiHTVA6g7k360bk0RNQENT8KTMAYEs+8fWPD3Uu4dEmzGHc+jGng==",
-      "dependencies": [
-        "json-schema"
       ]
     },
     "@ai-sdk/provider@3.0.5": {
@@ -1310,8 +1295,8 @@
       "integrity": "sha512-LABniBX/0R6Tv+iUK5keUZhZLaZUe4YjP5M2rZ4wAdZ8iKV3EfTAoJxuL1aaWTSJKIilKa9QUEkCgnp89/32bw==",
       "dependencies": [
         "@ai-sdk/gateway",
-        "@ai-sdk/provider@3.0.5",
-        "@ai-sdk/provider-utils@4.0.9_zod@3.25.76",
+        "@ai-sdk/provider",
+        "@ai-sdk/provider-utils",
         "@opentelemetry/api",
         "zod@3.25.76"
       ]
@@ -2075,7 +2060,7 @@
       "jsr:@std/testing@^1.0.17",
       "jsr:@std/ulid@1",
       "npm:@ai-sdk/gateway@^3.0.22",
-      "npm:@ai-sdk/openai@^2.0.89",
+      "npm:@ai-sdk/openai@^3.0.12",
       "npm:@preact/signals@^2.6.1",
       "npm:@tailwindcss/vite@^4.1.18",
       "npm:@vercel/oidc@^3.1.0",

@@ -247,7 +247,7 @@ function mapExtractionToRecipe(
       quantity: ing.quantity,
       unit: ing.unit as MeasurementUnit, // Cast to expected enum
       optional: ing.optional,
-      notes: ing.notes,
+      notes: ing.notes ?? undefined, // Convert null to undefined
       type: validType, // Use validated type
     };
   });
@@ -256,14 +256,14 @@ function mapExtractionToRecipe(
     name: extraction.title,
     description: extraction.description,
     ingredients,
-    garnish: extraction.garnish || [],
+    garnish: extraction.garnish ?? [],
     glassware: extraction.glassware as GlasswareType,
     preparation: extraction.instructions,
     source: {
-      name: extraction.source.name || new URL(sourceUrl).hostname,
+      name: extraction.source.name ?? new URL(sourceUrl).hostname,
       url: sourceUrl,
-      image: extraction.source.image,
+      image: extraction.source.image ?? undefined,
     },
-    tags: extraction.category || [],
+    tags: extraction.category ?? [],
   };
 }

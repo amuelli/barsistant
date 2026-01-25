@@ -45,6 +45,7 @@ function createEmptyExtractionTemplate(): RecipeExtraction {
       url: "",
       name: "",
       author: "",
+      image: null,
     },
   };
 }
