@@ -1,4 +1,4 @@
-import { generateObject, ModelMessage } from "ai";
+import { generateText, type ModelMessage, Output } from "ai";
 import { z } from "zod";
 import { executeAIOperation, getModel } from "./ai-core.ts";
 import { INGREDIENT_TYPES, MEASUREMENT_UNITS } from "../../types/ingredient.ts";
@@ -102,18 +102,20 @@ export async function extractRecipeFromContent(
             `Extract the complete cocktail recipe from the following content. Make sure to extract the image URL if present in img tags:\n\n${processedContent}`,
         },
       ];
-      const result = await generateObject({
+      const result = await generateText({
         model,
         messages,
-        schema: RecipeExtractionSchema,
+        output: Output.object({
+          schema: RecipeExtractionSchema,
+        }),
         maxOutputTokens: 1024,
         temperature: 0.2,
       });
-      if (!result.object) {
+      if (!result.output) {
         throw new Error("No structured object received from AI provider");
       }
 
-      return result.object as RecipeExtraction;
+      return result.output as RecipeExtraction;
     }, "Failed to extract recipe from content");
   } catch (error) {
     // Check if it's a token limit error and retry with even smaller content
