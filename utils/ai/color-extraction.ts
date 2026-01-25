@@ -6,7 +6,7 @@
  */
 
 import { Buffer } from "node:buffer";
-import { Vibrant } from "npm:node-vibrant/browser";
+import { Vibrant } from "node-vibrant/node";
 import { ColorPalette } from "../../types/recipe.ts";
 
 /**
