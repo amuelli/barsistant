@@ -29,6 +29,8 @@ If a clear image of the cocktail is present on the website, extract its direct i
 Return data in the specified JSON structure without any additional commentary.
 `;
 
+// Note: OpenAI strict JSON mode requires ALL properties to be in the `required` array.
+// Use `.nullable()` instead of `.optional()` for fields that can be omitted.
 export const RecipeExtractionSchema = z.object({
   title: z.string().describe("The name of the cocktail recipe"),
   description: z.string().describe(
@@ -38,28 +40,30 @@ export const RecipeExtractionSchema = z.object({
     name: z.string(),
     quantity: z.number(),
     unit: z.enum(MEASUREMENT_UNITS),
-    optional: z.boolean().default(false).describe(
-      "Indicates if the ingredient is optional. If true, the ingredient can be omitted without significantly altering the cocktail.",
+    optional: z.boolean().describe(
+      "Indicates if the ingredient is optional. If true, the ingredient can be omitted without significantly altering the cocktail. Default to false if not specified.",
     ),
     type: z.enum(INGREDIENT_TYPES),
-    notes: z.string().optional().describe(
-      "Any additional notes about the ingredient, such as preparation or specific brand recommendations.",
+    notes: z.string().nullable().describe(
+      "Any additional notes about the ingredient, such as preparation or specific brand recommendations. Use null if no notes.",
     ),
   })),
   instructions: z.array(z.string()).describe(
     "Step-by-step instructions for preparing the cocktail",
   ),
-  garnish: z.array(z.string()).optional(),
+  garnish: z.array(z.string()).nullable().describe(
+    "Garnishes for the cocktail. Use null if no garnish.",
+  ),
   glassware: z.enum(GLASSWARE_TYPES),
-  category: z.array(z.string()).optional().describe(
-    "Categories or tags for the cocktail, such as 'classic', 'modern', 'tiki', 'sour', 'aperitivo', etc. Use an array to allow multiple categories. Make them lowercase and use hyphens instead of spaces. Do not include any special characters or punctuation.",
+  category: z.array(z.string()).nullable().describe(
+    "Categories or tags for the cocktail, such as 'classic', 'modern', 'tiki', 'sour', 'aperitivo', etc. Use an array to allow multiple categories. Make them lowercase and use hyphens instead of spaces. Do not include any special characters or punctuation. Use null if no categories.",
   ),
   source: z.object({
     url: z.string(),
-    name: z.string().optional(),
-    author: z.string().optional(),
-    image: z.url().optional().describe(
-      "Direct URL to a clear image of the cocktail from the website, if available. Prefer the main cocktail photo, not logos or unrelated images. Omit if not available.",
+    name: z.string().nullable().describe("Source name. Use null if unknown."),
+    author: z.string().nullable().describe("Author name. Use null if unknown."),
+    image: z.string().nullable().describe(
+      "Direct URL to a clear image of the cocktail from the website, if available. Prefer the main cocktail photo, not logos or unrelated images. Use null if not available.",
     ),
   }),
 });
