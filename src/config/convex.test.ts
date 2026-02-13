@@ -7,7 +7,15 @@ Deno.test("resolveConvexUrl returns normalized URL for valid NEXT_PUBLIC_CONVEX_
     NEXT_PUBLIC_CONVEX_URL: "https://example.convex.cloud/",
   });
 
-  assertEquals(result, "https://example.convex.cloud/");
+  assertEquals(result, "https://example.convex.cloud");
+});
+
+Deno.test("resolveConvexUrl trims trailing slashes from pathname", () => {
+  const result = resolveConvexUrl({
+    NEXT_PUBLIC_CONVEX_URL: "https://example.convex.cloud/foo///",
+  });
+
+  assertEquals(result, "https://example.convex.cloud/foo");
 });
 
 Deno.test("resolveConvexUrl throws when NEXT_PUBLIC_CONVEX_URL is missing", () => {

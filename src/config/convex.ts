@@ -29,7 +29,9 @@ export function resolveConvexUrl(env: ConvexEnv): string {
     );
   }
 
-  return parsed.toString();
+  // Convex clients append API paths internally; avoid accidental double slashes.
+  const normalizedPath = parsed.pathname.replace(/\/+$/, "");
+  return `${parsed.origin}${normalizedPath}${parsed.search}${parsed.hash}`;
 }
 
 export function getRequiredConvexUrl(): string {
