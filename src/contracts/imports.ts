@@ -10,3 +10,6 @@ export const INVALID_IMPORT_URL_ERROR =
 
 export const UNSUPPORTED_IMPORT_SOURCE_ERROR =
   "Source domain is not supported yet. Supported domains: liquor.com, diffordsguide.com.";
+
+export const IMPORT_SERVICE_UNAVAILABLE_ERROR =
+  "Import service is temporarily unavailable. Please try again.";

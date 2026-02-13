@@ -177,3 +177,11 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Added `convex/schema.ts` with a minimal `importJobs` table (`sourceUrl`, `status`, timestamps, optional `failureReason`) and baseline indexes for `status` and `createdAt`.
 - Added `convex/importJobs.ts` with `createImportJob` mutation to persist a queued import job and return `{ jobId, sourceUrl, status }`.
 - Kept Next.js `POST /api/imports` route behavior unchanged in this iteration; next task should switch route writes from synthetic IDs to this Convex mutation.
+
+## Iteration Update (2026-02-13, imports route Convex mutation wiring)
+
+- Updated `src/app/api/imports/route.ts` to call Convex mutation `importJobs:createImportJob` via a typed function reference (`makeFunctionReference`) instead of synthetic `crypto.randomUUID()` responses.
+- Preserved existing URL/domain validation behavior and added explicit controlled failure response (`503`) with shared `IMPORT_SERVICE_UNAVAILABLE_ERROR` when backend mutation execution is unavailable.
+- Added route-level test seam `setCreateImportJobForTests` and expanded `src/app/api/imports/route.test.ts` coverage to validate successful queued responses and controlled backend-unavailable responses without live Convex dependency.
+- Extended smoke behavior in `scripts/smoke_health.mjs` so import submission asserts queued `202` when `NEXT_PUBLIC_CONVEX_URL` is configured, otherwise asserts controlled unavailable response; this keeps the check gate green in both configured and unconfigured environments.
+- Ran `deno task check` successfully.

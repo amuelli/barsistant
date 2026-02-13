@@ -1,5 +1,6 @@
+import { makeFunctionReference } from "convex/server";
 import {
-  IMPORT_JOB_QUEUED_STATUS,
+  IMPORT_SERVICE_UNAVAILABLE_ERROR,
   INVALID_IMPORT_URL_ERROR,
   SUPPORTED_IMPORT_SOURCE_DOMAINS,
   UNSUPPORTED_IMPORT_SOURCE_ERROR,
@@ -14,6 +15,22 @@ const ALLOWED_SOURCE_HOSTS = new Set(
 type ImportRequest = {
   sourceUrl?: unknown;
 };
+
+type CreateImportJobResult = {
+  jobId: string;
+  sourceUrl: string;
+  status: string;
+};
+
+const createImportJobMutationReference = makeFunctionReference<
+  "mutation",
+  { sourceUrl: string },
+  CreateImportJobResult
+>("importJobs:createImportJob");
+
+let createImportJob: (
+  sourceUrl: string,
+) => Promise<CreateImportJobResult> = defaultCreateImportJob;
 
 export async function POST(request: Request): Promise<Response> {
   const body = await parseJsonBody(request);
@@ -37,14 +54,24 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  return Response.json(
-    {
-      jobId: crypto.randomUUID(),
-      status: IMPORT_JOB_QUEUED_STATUS,
-      sourceUrl: validation.sourceUrl,
-    },
-    { status: 202 },
-  );
+  try {
+    const job = await createImportJob(validation.sourceUrl);
+    return Response.json(
+      {
+        jobId: job.jobId,
+        status: job.status,
+        sourceUrl: job.sourceUrl,
+      },
+      { status: 202 },
+    );
+  } catch {
+    return Response.json(
+      {
+        error: IMPORT_SERVICE_UNAVAILABLE_ERROR,
+      },
+      { status: 503 },
+    );
+  }
 }
 
 async function parseJsonBody(request: Request): Promise<ImportRequest | null> {
@@ -79,4 +106,21 @@ function validateSourceUrl(value: unknown): SourceUrlValidation {
   } catch {
     return { kind: "invalid_url" };
   }
+}
+
+export function setCreateImportJobForTests(
+  fn: ((sourceUrl: string) => Promise<CreateImportJobResult>) | null,
+): void {
+  createImportJob = fn ?? defaultCreateImportJob;
+}
+
+async function defaultCreateImportJob(
+  sourceUrl: string,
+): Promise<CreateImportJobResult> {
+  const { getConvexServerClient } = await import("../../../convex/server.ts");
+
+  return getConvexServerClient().mutation(
+    createImportJobMutationReference,
+    { sourceUrl },
+  );
 }

@@ -1,5 +1,6 @@
 import { APP_SHELL_MARKER } from "../src/contracts/app_shell.ts";
 import {
+  IMPORT_SERVICE_UNAVAILABLE_ERROR,
   IMPORT_JOB_QUEUED_STATUS,
   SUPPORTED_IMPORT_SOURCE_DOMAINS,
 } from "../src/contracts/imports.ts";
@@ -9,6 +10,7 @@ const healthUrl = `http://127.0.0.1:${port}/api/health`;
 const homeUrl = `http://127.0.0.1:${port}/`;
 const importsUrl = `http://127.0.0.1:${port}/api/imports`;
 const smokeImportSourceUrl = `https://${SUPPORTED_IMPORT_SOURCE_DOMAINS[0]}/recipes/smoke-check/`;
+const convexUrl = Deno.env.get("NEXT_PUBLIC_CONVEX_URL")?.trim();
 
 const app = new Deno.Command("deno", {
   args: ["run", "-A", "npm:next", "start", "-p", port],
@@ -19,14 +21,23 @@ const app = new Deno.Command("deno", {
 try {
   await waitForHealthyResponse(healthUrl, 20_000);
   await waitForHomeResponse(homeUrl, APP_SHELL_MARKER, 20_000);
-  await waitForImportSubmissionResponse(
-    importsUrl,
-    smokeImportSourceUrl,
-    IMPORT_JOB_QUEUED_STATUS,
-    20_000,
-  );
+  if (convexUrl) {
+    await waitForImportSubmissionResponse(
+      importsUrl,
+      smokeImportSourceUrl,
+      IMPORT_JOB_QUEUED_STATUS,
+      20_000,
+    );
+  } else {
+    await waitForImportSubmissionUnavailableResponse(
+      importsUrl,
+      smokeImportSourceUrl,
+      IMPORT_SERVICE_UNAVAILABLE_ERROR,
+      20_000,
+    );
+  }
   console.log(
-    `Smoke check passed: ${healthUrl}, ${homeUrl} (marker: ${APP_SHELL_MARKER}), and ${importsUrl} (status: ${IMPORT_JOB_QUEUED_STATUS})`,
+    `Smoke check passed: ${healthUrl}, ${homeUrl} (marker: ${APP_SHELL_MARKER}), and ${importsUrl} (${convexUrl ? `status: ${IMPORT_JOB_QUEUED_STATUS}` : "controlled unavailable response"})`,
   );
 } finally {
   app.kill("SIGTERM");
@@ -115,6 +126,41 @@ async function waitForImportSubmissionResponse(
 
   throw new Error(
     `Timed out waiting for import submission response at ${url}`,
+  );
+}
+
+async function waitForImportSubmissionUnavailableResponse(
+  url,
+  sourceUrl,
+  expectedError,
+  timeoutMs,
+) {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ sourceUrl }),
+      });
+      if (response.status === 503) {
+        const payload = await response.json();
+        if (payload?.error === expectedError) {
+          return;
+        }
+      }
+    } catch {
+      // Server is still booting.
+    }
+
+    await sleep(500);
+  }
+
+  throw new Error(
+    `Timed out waiting for controlled import unavailable response at ${url}`,
   );
 }
 

@@ -2,32 +2,43 @@
 import { assertEquals } from "jsr:@std/assert";
 import {
   IMPORT_JOB_QUEUED_STATUS,
+  IMPORT_SERVICE_UNAVAILABLE_ERROR,
   INVALID_IMPORT_URL_ERROR,
   UNSUPPORTED_IMPORT_SOURCE_ERROR,
 } from "../../../contracts/imports.ts";
-import { POST } from "./route.ts";
+import { POST, setCreateImportJobForTests } from "./route.ts";
 
 Deno.test("imports route accepts a valid source URL and returns queued status", async () => {
-  const request = new Request("http://localhost/api/imports", {
-    method: "POST",
-    body: JSON.stringify({
-      sourceUrl: "https://www.liquor.com/recipes/negroni/",
-    }),
-    headers: {
-      "content-type": "application/json",
-    },
-  });
+  try {
+    setCreateImportJobForTests(async (sourceUrl) => ({
+      jobId: "job_123",
+      sourceUrl,
+      status: IMPORT_JOB_QUEUED_STATUS,
+    }));
 
-  const response = await POST(request);
-  const payload = await response.json();
+    const request = new Request("http://localhost/api/imports", {
+      method: "POST",
+      body: JSON.stringify({
+        sourceUrl: "https://www.liquor.com/recipes/negroni/",
+      }),
+      headers: {
+        "content-type": "application/json",
+      },
+    });
 
-  assertEquals(response.status, 202);
-  assertEquals(payload.status, IMPORT_JOB_QUEUED_STATUS);
-  assertEquals(
-    payload.sourceUrl,
-    "https://www.liquor.com/recipes/negroni/",
-  );
-  assertEquals(typeof payload.jobId, "string");
+    const response = await POST(request);
+    const payload = await response.json();
+
+    assertEquals(response.status, 202);
+    assertEquals(payload.status, IMPORT_JOB_QUEUED_STATUS);
+    assertEquals(
+      payload.sourceUrl,
+      "https://www.liquor.com/recipes/negroni/",
+    );
+    assertEquals(payload.jobId, "job_123");
+  } finally {
+    setCreateImportJobForTests(null);
+  }
 });
 
 Deno.test("imports route rejects an invalid URL", async () => {
@@ -86,4 +97,32 @@ Deno.test("imports route rejects malformed JSON payloads with a validation messa
   assertEquals(payload, {
     error: INVALID_IMPORT_URL_ERROR,
   });
+});
+
+Deno.test("imports route returns a controlled error when Convex import write fails", async () => {
+  try {
+    setCreateImportJobForTests(async () => {
+      throw new Error("backend unavailable");
+    });
+
+    const request = new Request("http://localhost/api/imports", {
+      method: "POST",
+      body: JSON.stringify({
+        sourceUrl: "https://www.liquor.com/recipes/negroni/",
+      }),
+      headers: {
+        "content-type": "application/json",
+      },
+    });
+
+    const response = await POST(request);
+    const payload = await response.json();
+
+    assertEquals(response.status, 503);
+    assertEquals(payload, {
+      error: IMPORT_SERVICE_UNAVAILABLE_ERROR,
+    });
+  } finally {
+    setCreateImportJobForTests(null);
+  }
 });
