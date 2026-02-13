@@ -21,5 +21,9 @@
     "test": "deno test --allow-read=src/app --allow-env=NODE_ENV",
     "typecheck": "deno check",
     "check": "deno task fmt && deno task lint && deno task test && deno task typecheck && deno task build && deno task smoke:health"
+  },
+  "deploy": {
+    "org": "amuelli",
+    "app": "barsistant"
   }
 }

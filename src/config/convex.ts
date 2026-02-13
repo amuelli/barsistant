@@ -1,5 +1,6 @@
 const NEXT_PUBLIC_CONVEX_URL_ENV = "NEXT_PUBLIC_CONVEX_URL";
 type ConvexEnv = { NEXT_PUBLIC_CONVEX_URL?: string };
+declare const process: { env: ConvexEnv };
 
 export function resolveConvexUrl(env: ConvexEnv): string {
   const raw = env.NEXT_PUBLIC_CONVEX_URL;
@@ -32,6 +33,7 @@ export function resolveConvexUrl(env: ConvexEnv): string {
 }
 
 export function getRequiredConvexUrl(): string {
-  const runtime = globalThis as { process?: { env?: ConvexEnv } };
-  return resolveConvexUrl(runtime.process?.env ?? {});
+  return resolveConvexUrl({
+    NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
+  });
 }
