@@ -35,8 +35,9 @@ Health check endpoint:
 curl http://localhost:3000/api/health
 ```
 
-Startup smoke check (expects built app, then verifies `/api/health` and `/`
-including the `barsistant-shell-v1` app-shell marker):
+Startup smoke check (expects built app, then verifies `/api/health`, `/`
+including the `barsistant-shell-v1` app-shell marker, and `POST /api/imports`
+returns `202 queued`):
 
 ```bash
 deno task smoke:health
