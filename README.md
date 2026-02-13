@@ -42,5 +42,6 @@ deno task fmt
 deno task lint
 deno task test
 deno task typecheck
+deno task smoke:health
 deno task check
 ```
