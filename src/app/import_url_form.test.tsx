@@ -1,7 +1,9 @@
 /// <reference lib="deno.ns" />
-import { assertEquals } from "jsr:@std/assert";
+import { assertEquals, assertStringIncludes } from "jsr:@std/assert";
 import type { GenericId } from "convex/values";
+import { renderToStaticMarkup } from "react-dom/server";
 import {
+  ImportUrlForm,
   setCreateImportJobForTests,
   setReadImportJobStatusForTests,
   submitImportUrl,
@@ -13,6 +15,17 @@ import {
 } from "../contracts/imports.ts";
 
 const TEST_JOB_ID = "job123" as GenericId<"importJobs">;
+
+Deno.test("ImportUrlForm renders baseline submit controls and helper copy", () => {
+  const html = renderToStaticMarkup(<ImportUrlForm />);
+
+  assertStringIncludes(html, 'for="sourceUrl"');
+  assertStringIncludes(html, "Recipe URL");
+  assertStringIncludes(html, 'id="sourceUrl"');
+  assertStringIncludes(html, 'type="url"');
+  assertStringIncludes(html, "Import URL");
+  assertStringIncludes(html, "https://example.com/cocktail-recipe");
+});
 
 Deno.test("submitImportUrl returns persisted status when submit and readback succeed", async () => {
   try {

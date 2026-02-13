@@ -425,3 +425,9 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Updated `src/app/import_url_form.tsx` readback adapter seam/default path to accept `GenericId<"importJobs">` directly, removing the local cast at query call sites.
 - Kept runtime import UX and route behavior unchanged; this slice is development-infrastructure hardening for stronger end-to-end Convex contract typing.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, import form baseline UI render contract coverage)
+
+- Added a behavior-level server-rendered UI contract test in `src/app/import_url_form.test.tsx` to assert baseline import form controls/copy are present (`label`/`input[type=url]`/submit button/placeholder).
+- Kept runtime import form logic unchanged; this iteration strengthens development-infrastructure coverage beyond submit-flow logic by guarding core form rendering contract.
+- Ran `deno task check` successfully.
