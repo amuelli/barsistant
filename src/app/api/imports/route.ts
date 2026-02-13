@@ -1,12 +1,13 @@
-const QUEUED_STATUS = "queued";
-const ALLOWED_SOURCE_HOSTS = new Set([
-  "liquor.com",
-  "www.liquor.com",
-  "diffordsguide.com",
-  "www.diffordsguide.com",
-]);
-const ALLOWLIST_ERROR =
-  "Source domain is not supported yet. Supported domains: liquor.com, diffordsguide.com.";
+import {
+  IMPORT_JOB_QUEUED_STATUS,
+  INVALID_IMPORT_URL_ERROR,
+  SUPPORTED_IMPORT_SOURCE_DOMAINS,
+  UNSUPPORTED_IMPORT_SOURCE_ERROR,
+} from "../../../contracts/imports.ts";
+
+const ALLOWED_SOURCE_HOSTS = new Set(
+  SUPPORTED_IMPORT_SOURCE_DOMAINS.flatMap((domain) => [domain, `www.${domain}`]),
+);
 
 type ImportRequest = {
   sourceUrl?: unknown;
@@ -19,7 +20,7 @@ export async function POST(request: Request): Promise<Response> {
   if (validation.kind === "invalid_url") {
     return Response.json(
       {
-        error: "Provide a valid sourceUrl using http or https.",
+        error: INVALID_IMPORT_URL_ERROR,
       },
       { status: 400 },
     );
@@ -28,7 +29,7 @@ export async function POST(request: Request): Promise<Response> {
   if (validation.kind === "unsupported_domain") {
     return Response.json(
       {
-        error: ALLOWLIST_ERROR,
+        error: UNSUPPORTED_IMPORT_SOURCE_ERROR,
       },
       { status: 400 },
     );
@@ -37,7 +38,7 @@ export async function POST(request: Request): Promise<Response> {
   return Response.json(
     {
       jobId: crypto.randomUUID(),
-      status: QUEUED_STATUS,
+      status: IMPORT_JOB_QUEUED_STATUS,
       sourceUrl: validation.sourceUrl,
     },
     { status: 202 },
