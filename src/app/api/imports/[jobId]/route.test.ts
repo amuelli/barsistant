@@ -33,6 +33,31 @@ Deno.test("import job route returns persisted job status when found", async () =
   }
 });
 
+Deno.test("import job route accepts async route params and returns persisted status when found", async () => {
+  try {
+    setGetImportJobForTests(async (jobId) => ({
+      jobId,
+      sourceUrl: "https://www.diffordsguide.com/cocktails/recipe/1234/negroni",
+      status: IMPORT_JOB_QUEUED_STATUS,
+    }));
+
+    const response = await GET(
+      new Request("http://localhost/api/imports/job123"),
+      { params: Promise.resolve({ jobId: "job123" }) },
+    );
+    const payload = await response.json();
+
+    assertEquals(response.status, 200);
+    assertEquals(payload, {
+      jobId: "job123",
+      sourceUrl: "https://www.diffordsguide.com/cocktails/recipe/1234/negroni",
+      status: IMPORT_JOB_QUEUED_STATUS,
+    });
+  } finally {
+    setGetImportJobForTests(null);
+  }
+});
+
 Deno.test("import job route returns not found for unknown job id", async () => {
   try {
     setGetImportJobForTests(async () => null);

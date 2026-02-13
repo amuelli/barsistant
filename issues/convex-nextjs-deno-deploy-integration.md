@@ -332,3 +332,9 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Extended `scripts/smoke_health.mjs` configured-path behavior to assert `GET /api/imports/<unknown-valid-id>` returns controlled `404` with `IMPORT_JOB_NOT_FOUND_ERROR`.
 - Kept unconfigured Convex behavior unchanged (`POST /api/imports` still asserts controlled `503`) and retained the cross-environment invalid-id `400` assertion.
 - Updated `README.md` smoke-check documentation to include the configured-path unknown-job `404 import_job_not_found` expectation.
+
+## Iteration Update (2026-02-13, import status route async-params contract guard)
+
+- Added behavior-level coverage in `src/app/api/imports/[jobId]/route.test.ts` to assert `GET /api/imports/[jobId]` handles Next App Router's async `context.params` shape (`Promise<{ jobId: string }>`), returning the persisted queued contract when the job exists.
+- Kept route runtime behavior unchanged; this iteration is development-infrastructure test hardening for route handler compatibility.
+- Ran `deno task check` successfully.
