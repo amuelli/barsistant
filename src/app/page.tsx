@@ -43,7 +43,8 @@ export default function Home() {
           </h2>
           <p className="mt-2 text-zinc-600">
             Submit a recipe URL to exercise the first end-to-end import path.
-            Current behavior returns a queued placeholder response.
+            Current behavior persists a queued import job and reads back status
+            from backend data.
           </p>
           <ImportUrlForm />
         </section>

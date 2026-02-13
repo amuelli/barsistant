@@ -35,7 +35,23 @@ export function ImportUrlForm() {
         return;
       }
 
-      setResult(payload);
+      const submission = payload as ImportResponse;
+
+      try {
+        const statusResponse = await fetch(`/api/imports/${submission.jobId}`);
+        const statusPayload = await statusResponse.json();
+
+        if (!statusResponse.ok) {
+          setResult(submission);
+          setError("Import queued, but status refresh failed.");
+        } else {
+          setResult(statusPayload as ImportResponse);
+        }
+      } catch {
+        setResult(submission);
+        setError("Import queued, but status refresh failed.");
+      }
+
       setSourceUrl("");
     } catch {
       setError("Network error while submitting import.");

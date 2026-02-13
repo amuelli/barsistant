@@ -221,3 +221,12 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Kept missing-Convex-env behavior unchanged (`POST /api/imports` controlled `503`) so smoke remains green in unconfigured environments.
 - Updated README smoke-check wording to document the new configured-path readback assertion.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, UI status readback tracer bullet)
+
+- Updated `src/app/import_url_form.tsx` to perform a follow-up `GET /api/imports/[jobId]` after successful submit so visible status is read from persisted backend data.
+- Added controlled fallback behavior: when status readback fails, the UI keeps the queued submission result and surfaces `Import queued, but status refresh failed.`.
+- Updated `src/app/page.tsx` tracer-bullet copy to remove outdated placeholder-response wording and reflect persisted/readback behavior.
+- Added `src/app/import_url_form.test.tsx` source-level contract coverage to lock POST submit + GET status readback wiring.
+- Ran `deno task check` successfully.
+
