@@ -3,14 +3,14 @@ import {
   IMPORT_SERVICE_UNAVAILABLE_ERROR,
   INVALID_IMPORT_JOB_ID_ERROR,
 } from "../../../../contracts/imports.ts";
+import type { FunctionReturnType } from "convex/server";
 import type { GenericId } from "convex/values";
 import { api } from "../../../../convex/api.ts";
 
-type ImportJobResult = {
-  jobId: string;
-  sourceUrl: string;
-  status: string;
-};
+type ImportJobResult = Exclude<
+  FunctionReturnType<typeof api.importJobs.getImportJob>,
+  null
+>;
 
 type Params = {
   jobId: string;

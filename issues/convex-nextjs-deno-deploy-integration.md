@@ -319,3 +319,10 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Extended `src/app/providers.test.tsx` with a behavior-level browser-runtime test that verifies `AppProviders` wraps children in `ConvexProvider` and wires the shared `getConvexClient()` instance when `window` is present.
 - Kept runtime provider implementation unchanged; this iteration tightens development-infrastructure test coverage for provider contract parity across server and browser paths.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, route contracts bound to Convex return types)
+
+- Updated `POST /api/imports` and `GET /api/imports/[jobId]` route-local result types to derive from Convex function references via `FunctionReturnType` instead of duplicated handwritten shapes.
+- Kept runtime route behavior and HTTP contracts unchanged while strengthening compile-time drift detection between route adapters and Convex mutation/query return payloads.
+- Updated `src/app/api/imports/route.test.ts` test seam fixture to use `GenericId<"importJobs">`-compatible `jobId` typing.
+- Ran `deno task check` successfully.

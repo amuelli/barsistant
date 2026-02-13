@@ -1,5 +1,6 @@
 /// <reference lib="deno.ns" />
 import { assertEquals } from "jsr:@std/assert";
+import type { GenericId } from "convex/values";
 import {
   IMPORT_JOB_QUEUED_STATUS,
   IMPORT_SERVICE_UNAVAILABLE_ERROR,
@@ -11,7 +12,7 @@ import { POST, setCreateImportJobForTests } from "./route.ts";
 Deno.test("imports route accepts a valid source URL and returns queued status", async () => {
   try {
     setCreateImportJobForTests(async (sourceUrl) => ({
-      jobId: "job_123",
+      jobId: "job123" as GenericId<"importJobs">,
       sourceUrl,
       status: IMPORT_JOB_QUEUED_STATUS,
     }));
@@ -35,7 +36,7 @@ Deno.test("imports route accepts a valid source URL and returns queued status", 
       payload.sourceUrl,
       "https://www.liquor.com/recipes/negroni/",
     );
-    assertEquals(payload.jobId, "job_123");
+    assertEquals(payload.jobId, "job123");
   } finally {
     setCreateImportJobForTests(null);
   }

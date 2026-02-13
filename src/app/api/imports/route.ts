@@ -4,6 +4,7 @@ import {
   SUPPORTED_IMPORT_SOURCE_DOMAINS,
   UNSUPPORTED_IMPORT_SOURCE_ERROR,
 } from "../../../contracts/imports.ts";
+import type { FunctionReturnType } from "convex/server";
 import { api } from "../../../convex/api.ts";
 
 const ALLOWED_SOURCE_HOSTS = new Set(
@@ -16,11 +17,9 @@ type ImportRequest = {
   sourceUrl?: unknown;
 };
 
-type CreateImportJobResult = {
-  jobId: string;
-  sourceUrl: string;
-  status: string;
-};
+type CreateImportJobResult = FunctionReturnType<
+  typeof api.importJobs.createImportJob
+>;
 
 let createImportJob: (
   sourceUrl: string,
