@@ -440,3 +440,10 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
   - test seam `setReadImportJobStatusForTests` is guarded to require `GenericId<"importJobs">` (plain string rejected at type-check time).
 - Kept runtime import form behavior unchanged; this is development-infrastructure hardening for earlier API-drift detection.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, transitional import route contract compile-time guards)
+
+- Added `src/app/api/imports/route.typecheck.ts` to enforce compile-time alignment between the POST route's test seam and `api.importJobs.createImportJob` return contract (including typed `jobId` guard).
+- Added `src/app/api/imports/[jobId]/route.typecheck.ts` to enforce compile-time alignment between the status route seam and `api.importJobs.getImportJob` nullable result contract while preserving string route-param boundary typing.
+- Kept runtime route behavior unchanged; this iteration is development-infrastructure hardening to catch API drift earlier on transitional route adapters.
+- Ran `deno task check` successfully.
