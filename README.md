@@ -76,7 +76,8 @@ including the `barsistant-shell-v1` app-shell marker, and import endpoints:
 the persisted queued job when `NEXT_PUBLIC_CONVEX_URL` is configured; in that
 configured path `GET /api/imports/<unknown-valid-id>` must also return
 `404 import_job_not_found`. Otherwise `POST /api/imports` returns a controlled
-`503 import_service_unavailable`. Regardless of Convex configuration,
+`503 import_service_unavailable`, and `GET /api/imports/<valid-id>` also returns
+controlled `503 import_service_unavailable`. Regardless of Convex configuration,
 `GET /api/imports/invalid-id` must return `400 invalid_import_job_id`):
 
 ```bash

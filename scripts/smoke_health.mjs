@@ -12,6 +12,7 @@ const healthUrl = `http://127.0.0.1:${port}/api/health`;
 const homeUrl = `http://127.0.0.1:${port}/`;
 const importsUrl = `http://127.0.0.1:${port}/api/imports`;
 const importJobStatusBaseUrl = `http://127.0.0.1:${port}/api/imports`;
+const unavailableImportJobStatusUrl = `${importJobStatusBaseUrl}/job123`;
 const invalidImportJobStatusUrl = `${importJobStatusBaseUrl}/invalid-id`;
 const unknownImportJobStatusUrl =
   `${importJobStatusBaseUrl}/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz`;
@@ -51,6 +52,11 @@ try {
       IMPORT_SERVICE_UNAVAILABLE_ERROR,
       20_000,
     );
+    await waitForImportJobStatusUnavailableResponse(
+      unavailableImportJobStatusUrl,
+      IMPORT_SERVICE_UNAVAILABLE_ERROR,
+      20_000,
+    );
   }
   await waitForInvalidImportJobIdResponse(
     invalidImportJobStatusUrl,
@@ -58,7 +64,7 @@ try {
     20_000,
   );
   console.log(
-    `Smoke check passed: ${healthUrl}, ${homeUrl} (marker: ${APP_SHELL_MARKER}), ${importsUrl} (${convexUrl ? `status: ${IMPORT_JOB_QUEUED_STATUS} + unknown-job 404 contract` : "controlled unavailable response"}), and invalid import job id contract`,
+    `Smoke check passed: ${healthUrl}, ${homeUrl} (marker: ${APP_SHELL_MARKER}), ${importsUrl} (${convexUrl ? `status: ${IMPORT_JOB_QUEUED_STATUS} + unknown-job 404 contract` : "controlled unavailable response for submit + status"}), and invalid import job id contract`,
   );
 } finally {
   app.kill("SIGTERM");
@@ -235,6 +241,34 @@ async function waitForImportSubmissionUnavailableResponse(
 
   throw new Error(
     `Timed out waiting for controlled import unavailable response at ${url}`,
+  );
+}
+
+async function waitForImportJobStatusUnavailableResponse(
+  url,
+  expectedError,
+  timeoutMs,
+) {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(url);
+      if (response.status === 503) {
+        const payload = await response.json();
+        if (payload?.error === expectedError) {
+          return;
+        }
+      }
+    } catch {
+      // Server is still booting.
+    }
+
+    await sleep(500);
+  }
+
+  throw new Error(
+    `Timed out waiting for controlled import status unavailable response at ${url}`,
   );
 }
 

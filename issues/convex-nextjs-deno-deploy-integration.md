@@ -377,3 +377,9 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
   - rejects unsupported domains (including non-allowlisted subdomains).
 - Kept runtime validation implementation unchanged; this is development-infrastructure coverage to guard app/route validation parity.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, smoke gate validates status-route unavailable contract)
+
+- Extended `scripts/smoke_health.mjs` unconfigured-Convex behavior to assert `GET /api/imports/<valid-id>` returns controlled `503` with `IMPORT_SERVICE_UNAVAILABLE_ERROR` (in addition to existing `POST /api/imports` unavailable assertion).
+- Kept configured-Convex smoke behavior unchanged (`202 queued`, persisted status readback, unknown-job `404`, invalid-id `400`).
+- Updated `README.md` smoke-check documentation to include the unconfigured status-route unavailable expectation.
