@@ -392,3 +392,10 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
   - `getImportJob` returns the persisted `{ jobId, sourceUrl, status }` contract for found jobs.
 - Kept runtime Convex function implementations unchanged; this iteration is development-infrastructure coverage to close direct function contract testing gaps alongside existing route/UI tests.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, import form null-readback fallback coverage)
+
+- Extended `src/app/import_url_form.test.tsx` with behavior coverage for the direct Convex readback `null` path after a successful submit.
+- Asserted the user-facing fallback contract remains consistent with the thrown-readback path: retain queued submission result and surface `Import queued, but status refresh failed.`.
+- Kept runtime implementation unchanged; this slice closes an untested branch in import-form submission/readback logic.
+- Ran `deno task check` successfully.

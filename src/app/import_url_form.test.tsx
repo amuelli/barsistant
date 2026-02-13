@@ -115,3 +115,31 @@ Deno.test("submitImportUrl keeps queued result and surfaces refresh error when s
     setReadImportJobStatusForTests(null);
   }
 });
+
+Deno.test("submitImportUrl keeps queued result and surfaces refresh error when status readback returns null", async () => {
+  try {
+    setCreateImportJobForTests(async (sourceUrl) => ({
+      jobId: TEST_JOB_ID,
+      sourceUrl,
+      status: "queued",
+    }));
+    setReadImportJobStatusForTests(async () => null);
+
+    const outcome = await submitImportUrl(
+      "https://www.liquor.com/recipes/negroni/",
+    );
+
+    assertEquals(outcome, {
+      result: {
+        jobId: TEST_JOB_ID,
+        sourceUrl: "https://www.liquor.com/recipes/negroni/",
+        status: "queued",
+      },
+      error: "Import queued, but status refresh failed.",
+      clearSourceUrl: true,
+    });
+  } finally {
+    setCreateImportJobForTests(null);
+    setReadImportJobStatusForTests(null);
+  }
+});
