@@ -8,6 +8,7 @@ import {
   setReadImportJobStatusForTests,
   submitImportUrl,
 } from "./import_url_form.tsx";
+import { resetConvexClientForTests } from "../convex/client.ts";
 import {
   IMPORT_SERVICE_UNAVAILABLE_ERROR,
   INVALID_IMPORT_URL_ERROR,
@@ -96,6 +97,31 @@ Deno.test("submitImportUrl returns controlled unavailable error when backend wri
     });
   } finally {
     setCreateImportJobForTests(null);
+  }
+});
+
+Deno.test("submitImportUrl returns controlled unavailable error when Convex URL is missing on default path", async () => {
+  const runtime = globalThis as {
+    process?: { env?: { NEXT_PUBLIC_CONVEX_URL?: string } };
+  };
+  const previousProcess = runtime.process;
+
+  try {
+    runtime.process = { env: {} };
+    resetConvexClientForTests();
+
+    const outcome = await submitImportUrl(
+      "https://www.liquor.com/recipes/negroni/",
+    );
+
+    assertEquals(outcome, {
+      result: null,
+      error: IMPORT_SERVICE_UNAVAILABLE_ERROR,
+      clearSourceUrl: false,
+    });
+  } finally {
+    resetConvexClientForTests();
+    runtime.process = previousProcess;
   }
 });
 

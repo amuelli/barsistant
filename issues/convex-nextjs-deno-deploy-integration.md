@@ -447,3 +447,10 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Added `src/app/api/imports/[jobId]/route.typecheck.ts` to enforce compile-time alignment between the status route seam and `api.importJobs.getImportJob` nullable result contract while preserving string route-param boundary typing.
 - Kept runtime route behavior unchanged; this iteration is development-infrastructure hardening to catch API drift earlier on transitional route adapters.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, import form default-path missing-config guard)
+
+- Extended `src/app/import_url_form.test.tsx` with a behavior-level test that exercises `submitImportUrl` on the default app-path adapters (no seams) when `NEXT_PUBLIC_CONVEX_URL` is missing.
+- Asserted the direct Convex submit path returns the controlled user-facing unavailable contract (`IMPORT_SERVICE_UNAVAILABLE_ERROR`) rather than an uncaught bootstrap/config exception.
+- Kept runtime implementation unchanged; this iteration strengthens development-infrastructure confidence for misconfiguration handling in the app-path mutation flow.
+- Ran `deno task check` successfully.
