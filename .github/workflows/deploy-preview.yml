@@ -1,0 +1,75 @@
+name: Deploy Preview
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+  workflow_dispatch:
+
+jobs:
+  deploy-preview:
+    name: Deploy preview lane
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    environment: preview
+    concurrency:
+      group: deploy-preview-${{ github.event.pull_request.number || github.run_id }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install npm scripts needed by Next.js
+        run: deno install --allow-scripts=npm:sharp
+
+      - name: Validate required preview deployment config
+        env:
+          CONVEX_DEPLOY_KEY_PREVIEW: ${{ secrets.CONVEX_DEPLOY_KEY_PREVIEW }}
+          DENO_DEPLOY_TOKEN_PREVIEW: ${{ secrets.DENO_DEPLOY_TOKEN_PREVIEW }}
+          DENO_DEPLOY_ORG: ${{ vars.DENO_DEPLOY_ORG }}
+          DENO_DEPLOY_APP_PREVIEW: ${{ vars.DENO_DEPLOY_APP_PREVIEW }}
+        run: |
+          test -n "$CONVEX_DEPLOY_KEY_PREVIEW" || { echo "Missing secret: CONVEX_DEPLOY_KEY_PREVIEW"; exit 1; }
+          test -n "$DENO_DEPLOY_TOKEN_PREVIEW" || { echo "Missing secret: DENO_DEPLOY_TOKEN_PREVIEW"; exit 1; }
+          test -n "$DENO_DEPLOY_ORG" || { echo "Missing repo/environment variable: DENO_DEPLOY_ORG"; exit 1; }
+          test -n "$DENO_DEPLOY_APP_PREVIEW" || { echo "Missing repo/environment variable: DENO_DEPLOY_APP_PREVIEW"; exit 1; }
+
+      - name: Run quality gate
+        run: deno task check
+
+      - name: Deploy Convex preview backend
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY_PREVIEW }}
+        run: deno run -A npm:convex deploy
+
+      - name: Deploy Deno preview app
+        id: deploy_preview
+        env:
+          DENO_DEPLOY_TOKEN_PREVIEW: ${{ secrets.DENO_DEPLOY_TOKEN_PREVIEW }}
+          DENO_DEPLOY_ORG: ${{ vars.DENO_DEPLOY_ORG }}
+          DENO_DEPLOY_APP_PREVIEW: ${{ vars.DENO_DEPLOY_APP_PREVIEW }}
+        run: |
+          set -euo pipefail
+          deploy_log="$(mktemp)"
+          deno deploy --token "$DENO_DEPLOY_TOKEN_PREVIEW" --org "$DENO_DEPLOY_ORG" --app "$DENO_DEPLOY_APP_PREVIEW" 2>&1 | tee "$deploy_log"
+          preview_url="$(grep -Eo 'https://[^ ]+\.deno\.dev[^ ]*' "$deploy_log" | tail -n1)"
+          test -n "$preview_url" || { echo "Failed to discover preview URL from deploy output"; exit 1; }
+          echo "preview_url=$preview_url" >> "$GITHUB_OUTPUT"
+          echo "Preview URL: $preview_url"
+
+      - name: Smoke check preview deployment
+        env:
+          PREVIEW_URL: ${{ steps.deploy_preview.outputs.preview_url }}
+        run: |
+          set -euo pipefail
+          health_body="$(curl -fsSL "$PREVIEW_URL/api/health")"
+          echo "$health_body" | grep -q '"status":"ok"'

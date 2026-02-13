@@ -188,3 +188,7 @@ operations.
 - Added `.github/workflows/deploy-production.yml` with `main` trigger and manual dispatch.
 - Enforced deployment order for production lane: `deno task check` -> Convex deploy (`CONVEX_DEPLOY_KEY_PRODUCTION`) -> Deno Deploy app rollout (`DENO_DEPLOY_TOKEN_PRODUCTION`, `DENO_DEPLOY_ORG`, `DENO_DEPLOY_APP_PRODUCTION`).
 - Added explicit preflight validation for required production secrets/variables to improve failure clarity and environment isolation.
+- Added `.github/workflows/deploy-preview.yml` with `pull_request` (opened/synchronize/reopened/ready_for_review) and manual dispatch triggers.
+- Enforced preview deployment order as `deno task check` -> Convex preview deploy (`CONVEX_DEPLOY_KEY_PREVIEW`) -> Deno preview deploy (`DENO_DEPLOY_TOKEN_PREVIEW`, `DENO_DEPLOY_ORG`, `DENO_DEPLOY_APP_PREVIEW`).
+- Added preview-specific preflight validation plus preview URL extraction from `deno deploy` output and post-deploy smoke validation against `${previewUrl}/api/health`.
+- Added per-PR workflow concurrency grouping so repeated updates to the same PR cancel in-flight preview runs while still allowing parallel runs across different PRs.
