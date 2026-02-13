@@ -9,5 +9,9 @@ type AppProvidersProps = {
 };
 
 export function AppProviders({ children }: AppProvidersProps) {
+  if (typeof window === "undefined") {
+    return <>{children}</>;
+  }
+
   return <ConvexProvider client={getConvexClient()}>{children}</ConvexProvider>;
 }
