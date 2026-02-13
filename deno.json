@@ -11,12 +11,14 @@
   ],
   "tasks": {
     "dev": "deno run -A npm:next dev",
+    "convex:dev": "deno run -A npm:convex dev",
+    "convex:codegen": "deno run -A npm:convex codegen",
     "build": "deno run -A npm:next build",
     "start": "deno run -A npm:next start",
     "smoke:health": "deno run -A scripts/smoke_health.mjs",
     "fmt": "deno fmt --check src deno.json README.md",
     "lint": "deno run -A npm:eslint .",
-    "test": "deno test --allow-read=src/app",
+    "test": "deno test --allow-read=src/app --allow-env=NODE_ENV",
     "typecheck": "deno check",
     "check": "deno task fmt && deno task lint && deno task test && deno task typecheck && deno task build && deno task smoke:health"
   }

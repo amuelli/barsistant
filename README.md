@@ -7,12 +7,23 @@ to run it.
 
 ```bash
 deno install --allow-scripts=npm:sharp
-npm install convex
-npx convex dev
+deno install
 ```
 
-`npx convex dev` will create the `convex/` directory and update `.env.local`
-with `NEXT_PUBLIC_CONVEX_URL` and `CONVEX_DEPLOYMENT`.
+Run Convex in a second terminal during local development:
+
+```bash
+deno task convex:dev
+```
+
+Use this once after adding/updating Convex functions to refresh generated types:
+
+```bash
+deno task convex:codegen
+```
+
+`deno task convex:dev` will create the `convex/` directory and update
+`.env.local` with `NEXT_PUBLIC_CONVEX_URL` and `CONVEX_DEPLOYMENT`.
 
 ## Run
 
