@@ -1,6 +1,7 @@
 import { APP_SHELL_MARKER } from "../src/contracts/app_shell.ts";
 import {
   IMPORT_SERVICE_UNAVAILABLE_ERROR,
+  INVALID_IMPORT_JOB_ID_ERROR,
   IMPORT_JOB_QUEUED_STATUS,
   SUPPORTED_IMPORT_SOURCE_DOMAINS,
 } from "../src/contracts/imports.ts";
@@ -10,6 +11,7 @@ const healthUrl = `http://127.0.0.1:${port}/api/health`;
 const homeUrl = `http://127.0.0.1:${port}/`;
 const importsUrl = `http://127.0.0.1:${port}/api/imports`;
 const importJobStatusBaseUrl = `http://127.0.0.1:${port}/api/imports`;
+const invalidImportJobStatusUrl = `${importJobStatusBaseUrl}/invalid-id`;
 const smokeImportSourceUrl = `https://${SUPPORTED_IMPORT_SOURCE_DOMAINS[0]}/recipes/smoke-check/`;
 const convexUrl = Deno.env.get("NEXT_PUBLIC_CONVEX_URL")?.trim();
 
@@ -42,8 +44,13 @@ try {
       20_000,
     );
   }
+  await waitForInvalidImportJobIdResponse(
+    invalidImportJobStatusUrl,
+    INVALID_IMPORT_JOB_ID_ERROR,
+    20_000,
+  );
   console.log(
-    `Smoke check passed: ${healthUrl}, ${homeUrl} (marker: ${APP_SHELL_MARKER}), and ${importsUrl} (${convexUrl ? `status: ${IMPORT_JOB_QUEUED_STATUS}` : "controlled unavailable response"})`,
+    `Smoke check passed: ${healthUrl}, ${homeUrl} (marker: ${APP_SHELL_MARKER}), ${importsUrl} (${convexUrl ? `status: ${IMPORT_JOB_QUEUED_STATUS}` : "controlled unavailable response"}), and invalid import job id contract`,
   );
 } finally {
   app.kill("SIGTERM");
@@ -196,6 +203,30 @@ async function waitForImportSubmissionUnavailableResponse(
 
   throw new Error(
     `Timed out waiting for controlled import unavailable response at ${url}`,
+  );
+}
+
+async function waitForInvalidImportJobIdResponse(url, expectedError, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(url);
+      if (response.status === 400) {
+        const payload = await response.json();
+        if (payload?.error === expectedError) {
+          return;
+        }
+      }
+    } catch {
+      // Server is still booting.
+    }
+
+    await sleep(500);
+  }
+
+  throw new Error(
+    `Timed out waiting for invalid import job id response at ${url}`,
   );
 }
 

@@ -278,4 +278,10 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
   - expected public references (`importJobs.createImportJob`, `importJobs.getImportJob`) must remain valid,
   - unknown modules/functions must remain rejected at type-check time.
 - Kept runtime behavior unchanged; this is a development-infrastructure guard to catch API drift/regression early while direct generated `convex/_generated/api` typing remains unresolved in the Deno check path.
+
+## Iteration Update (2026-02-13, smoke gate validates invalid job-id contract)
+
+- Extended `scripts/smoke_health.mjs` to assert `GET /api/imports/invalid-id` returns controlled `400` with `INVALID_IMPORT_JOB_ID_ERROR` in both configured and unconfigured Convex environments.
+- Updated `README.md` smoke-check documentation to include the invalid job-id contract expectation alongside existing queued/unavailable submission behavior.
+- Kept route runtime behavior unchanged; this iteration strengthens operator-facing smoke coverage for explicit failure surfaces.
 - Ran `deno task check` successfully.
