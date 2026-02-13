@@ -293,3 +293,10 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
   - successful POST + GET status readback outcome,
   - controlled fallback outcome when status readback fails after a successful submit.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, layout test infrastructure de-brittle)
+
+- Replaced `src/app/layout.test.tsx` source-string assertions with an element-structure behavior test that validates `html/body` contract and `AppProviders` wrapping via a pure view component.
+- Extracted `src/app/root_layout_view.tsx` and updated `src/app/layout.tsx` to delegate rendering so tests can execute without importing `globals.css` (unsupported in current Deno test module loading).
+- Kept runtime layout behavior unchanged while improving test reliability and reducing false positives from text-only source checks.
+- Ran `deno task check` successfully.

@@ -1,14 +1,18 @@
 /// <reference lib="deno.ns" />
-import { assertStringIncludes } from "jsr:@std/assert";
+import { assertEquals, assertStrictEquals } from "jsr:@std/assert";
+import { AppProviders } from "./providers.tsx";
+import { RootLayoutView } from "./root_layout_view.tsx";
 
-Deno.test("root layout wraps children in AppProviders", async () => {
-  const layoutSource = await Deno.readTextFile(
-    new URL("./layout.tsx", import.meta.url),
-  );
+Deno.test("root layout wraps children in AppProviders", () => {
+  const child = <main data-testid="child">child</main>;
+  const root = RootLayoutView({ children: child });
+  const body = root.props.children;
+  const providers = body.props.children;
 
-  assertStringIncludes(
-    layoutSource,
-    'import { AppProviders } from "./providers.tsx";',
-  );
-  assertStringIncludes(layoutSource, "<AppProviders>{children}</AppProviders>");
+  assertEquals(root.type, "html");
+  assertEquals(root.props.lang, "en");
+  assertEquals(body.type, "body");
+  assertEquals(body.props.className, "antialiased");
+  assertStrictEquals(providers.type, AppProviders);
+  assertStrictEquals(providers.props.children, child);
 });

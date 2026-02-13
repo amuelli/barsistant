@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { AppProviders } from "./providers.tsx";
+import { RootLayoutView } from "./root_layout_view.tsx";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -12,11 +12,5 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en">
-      <body className="antialiased">
-        <AppProviders>{children}</AppProviders>
-      </body>
-    </html>
-  );
+  return <RootLayoutView>{children}</RootLayoutView>;
 }
