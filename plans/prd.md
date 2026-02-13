@@ -97,7 +97,9 @@ Primary value proposition:
   - Phase 1 (MVP foundation): create a simple Next.js app on Deno and deploy it successfully.
     This phase validates runtime, build/deploy path, and baseline app shell only.
   - Phase 2: integrate Convex (schema, auth baseline, data access pattern) into the deployed app
-    without introducing full import complexity yet.
+    without introducing full import complexity yet. Default to direct Convex
+    reads/writes from app code instead of proxying internal app data through
+    Next API routes.
   - Phase 3: add URL import, parsing/normalization, draft-on-low-confidence, recipe browsing,
     search/filter, edit/notes, and import status tracking.
   - Phase 4: AI-generated illustrations, offline mode, stronger categorization, optional bulk
@@ -139,6 +141,9 @@ Primary value proposition:
     original per-ingredient quantities/units alongside normalized values.
 
 - API and Contract Decisions:
+  - Internal app data path uses Convex generated functions directly (client
+    hooks and Convex Next.js server helpers). Next API routes are reserved for
+    explicit external boundary concerns.
   - URL import endpoint accepts source URL and validates against configured domain allowlist for v1.
   - Import status endpoint/stream exposes job lifecycle and recoverable failure states.
   - Recipe write operations are idempotent for retries.

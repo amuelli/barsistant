@@ -17,8 +17,9 @@ with a minimal first slice that proves end-to-end viability on Deno Deploy:
 - Convex dependency and generated client setup is added to the project.
 - The Next.js app is wrapped with a Convex client provider so UI can read/write
   Convex-backed state.
-- The import submission flow writes a real import job record to Convex instead
-  of returning a purely synthetic queued response.
+- The import submission flow writes a real import job record to Convex with
+  direct Convex function usage as the default application path; Next API routes
+  are only transitional or for true edge-only concerns.
 - Environment variable and deployment configuration are aligned so local
   development and Deno Deploy both connect to the correct Convex deployment.
 
@@ -49,9 +50,10 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
     missing, so misconfiguration is detected quickly.
 11. As a future feature owner, I want clear backend boundaries (import jobs vs.
     parsing pipeline), so that later phases can evolve without rework.
-12. As a future feature owner, I want the integration pattern to support both
-    client-driven reads and server-driven writes where needed, so scaling the
-    architecture does not require a rewrite.
+12. As a future feature owner, I want the integration pattern to use direct
+    Convex reads/writes by default and reserve Next API routes for narrow
+    boundary concerns only, so scaling the architecture does not require a
+    rewrite.
 
 ## Polishing Requirements
 
@@ -70,12 +72,17 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Runtime integration:
   Add Convex JavaScript/React dependencies and initialize a shared Convex client
   for browser usage via a top-level provider.
+- Application data access pattern:
+  Prefer direct Convex generated API usage from app code (`useQuery`,
+  `useMutation`, and Convex Next.js server helpers) rather than proxying
+  Convex through Next API routes.
 - Data model:
   Introduce an import job entity that stores source URL, status, timestamps, and
   optional failure reason. Keep schema intentionally minimal for phase 1.
 - API behavior:
   Replace synthetic import queue responses with a real Convex mutation that
-  persists and returns the created job contract.
+  persists and returns the created job contract. Avoid introducing internal
+  route-level proxy layers unless there is an explicit boundary requirement.
 - Validation boundary:
   Keep URL/domain validation behavior contract-compatible; validation can remain
   at app edge before mutation execution.
@@ -101,8 +108,9 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
   Validate externally observable behavior (HTTP responses, persisted job
   visibility, rendered states, error surfaces), not internal implementation.
 - Module coverage:
-  1) Import submission API contract tests: valid URL creates persisted queued job;
-     invalid/unsupported inputs still return expected client-facing errors.
+  1) Import submission contract tests against Convex function behavior and
+     app-level outcomes: valid URL creates persisted queued job; invalid or
+     unsupported inputs still return expected client-facing errors.
   2) UI integration tests: submitting a URL results in visible queued state that
      reflects stored backend data.
   3) Configuration tests: missing or malformed Convex environment config fails in
@@ -110,7 +118,7 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
   4) Smoke checks: startup + health + import submission path remain green with
      Convex enabled.
 - Prior art:
-  Existing route-focused tests and smoke checks should be extended to preserve
+  Existing smoke checks and user-flow tests should be extended to preserve
   current confidence style while shifting expected behavior from synthetic queue
   responses to persisted backend-backed responses.
 
@@ -236,3 +244,19 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Re-validated that direct route typing via `convex/_generated/api.js` still fails `deno check` in this setup (`api` resolves to `{}` for route type-checks), so the typed bridge remains required for now.
 - Added `src/convex/api.test.ts` to assert the bridge exposes the expected import job function references (`createImportJob`, `getImportJob`) and to guard against accidental bridge drift/removal without a replacement.
 - Kept route wiring and response contracts unchanged while improving confidence in the current type-safety workaround.
+
+## Clarification Update (2026-02-13, intended Convex architecture)
+
+- Clarified that route-level Convex calls documented in prior iteration notes are
+  implementation steps for an early tracer bullet, not the target product
+  architecture.
+- Confirmed intended steady-state approach: app data access should use Convex
+  generated APIs directly (client hooks and Next.js Convex server helpers),
+  with Next API routes used only where external boundary constraints require
+  them.
+
+## Iteration Update (2026-02-13, unified local startup flow)
+
+- Added `deno task dev:full` backed by `scripts/dev_full.mjs` to run Next.js and Convex together in one command for local development.
+- Implemented signal-aware process shutdown in `scripts/dev_full.mjs` so stopping the wrapper cleanly terminates both child processes.
+- Updated `README.md` setup instructions to make the unified startup flow the default path while preserving separate `deno task convex:dev` guidance.
