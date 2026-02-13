@@ -1,6 +1,7 @@
 const port = Deno.env.get("SMOKE_PORT") ?? "3401";
 const healthUrl = `http://127.0.0.1:${port}/api/health`;
 const homeUrl = `http://127.0.0.1:${port}/`;
+const appShellMarker = "barsistant-shell-v1";
 
 const app = new Deno.Command("deno", {
   args: ["run", "-A", "npm:next", "start", "-p", port],
@@ -10,8 +11,10 @@ const app = new Deno.Command("deno", {
 
 try {
   await waitForHealthyResponse(healthUrl, 20_000);
-  await waitForHomeResponse(homeUrl, 20_000);
-  console.log(`Smoke check passed: ${healthUrl} and ${homeUrl}`);
+  await waitForHomeResponse(homeUrl, appShellMarker, 20_000);
+  console.log(
+    `Smoke check passed: ${healthUrl} and ${homeUrl} (marker: ${appShellMarker})`,
+  );
 } finally {
   app.kill("SIGTERM");
   await app.status.catch(() => null);
@@ -39,7 +42,7 @@ async function waitForHealthyResponse(url, timeoutMs) {
   throw new Error(`Timed out waiting for health response at ${url}`);
 }
 
-async function waitForHomeResponse(url, timeoutMs) {
+async function waitForHomeResponse(url, marker, timeoutMs) {
   const deadline = Date.now() + timeoutMs;
 
   while (Date.now() < deadline) {
@@ -47,7 +50,10 @@ async function waitForHomeResponse(url, timeoutMs) {
       const response = await fetch(url);
       const contentType = response.headers.get("content-type") ?? "";
       if (response.ok && contentType.includes("text/html")) {
-        return;
+        const body = await response.text();
+        if (body.includes(marker)) {
+          return;
+        }
       }
     } catch {
       // Server is still booting.
@@ -56,7 +62,9 @@ async function waitForHomeResponse(url, timeoutMs) {
     await sleep(500);
   }
 
-  throw new Error(`Timed out waiting for HTML response at ${url}`);
+  throw new Error(
+    `Timed out waiting for HTML shell marker "${marker}" at ${url}`,
+  );
 }
 
 function sleep(ms) {
