@@ -73,10 +73,11 @@ curl http://localhost:3000/api/health
 Startup smoke check (expects built app, then verifies `/api/health`, `/`
 including the `barsistant-shell-v1` app-shell marker, and import endpoints:
 `POST /api/imports` returns `202 queued` and `GET /api/imports/[jobId]` returns
-the persisted queued job when `NEXT_PUBLIC_CONVEX_URL` is configured; otherwise
-`POST /api/imports` returns a controlled `503 import_service_unavailable`.
-Regardless of Convex configuration, `GET /api/imports/invalid-id` must return
-`400 invalid_import_job_id`):
+the persisted queued job when `NEXT_PUBLIC_CONVEX_URL` is configured; in that
+configured path `GET /api/imports/<unknown-valid-id>` must also return
+`404 import_job_not_found`. Otherwise `POST /api/imports` returns a controlled
+`503 import_service_unavailable`. Regardless of Convex configuration,
+`GET /api/imports/invalid-id` must return `400 invalid_import_job_id`):
 
 ```bash
 deno task smoke:health

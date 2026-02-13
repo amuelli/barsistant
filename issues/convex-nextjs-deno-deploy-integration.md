@@ -326,3 +326,9 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Kept runtime route behavior and HTTP contracts unchanged while strengthening compile-time drift detection between route adapters and Convex mutation/query return payloads.
 - Updated `src/app/api/imports/route.test.ts` test seam fixture to use `GenericId<"importJobs">`-compatible `jobId` typing.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, smoke gate validates unknown job 404 contract)
+
+- Extended `scripts/smoke_health.mjs` configured-path behavior to assert `GET /api/imports/<unknown-valid-id>` returns controlled `404` with `IMPORT_JOB_NOT_FOUND_ERROR`.
+- Kept unconfigured Convex behavior unchanged (`POST /api/imports` still asserts controlled `503`) and retained the cross-environment invalid-id `400` assertion.
+- Updated `README.md` smoke-check documentation to include the configured-path unknown-job `404 import_job_not_found` expectation.
