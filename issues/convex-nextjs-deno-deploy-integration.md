@@ -230,3 +230,9 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Added `src/app/import_url_form.test.tsx` source-level contract coverage to lock POST submit + GET status readback wiring.
 - Ran `deno task check` successfully.
 
+
+## Iteration Update (2026-02-13, Convex API bridge regression guard)
+
+- Re-validated that direct route typing via `convex/_generated/api.js` still fails `deno check` in this setup (`api` resolves to `{}` for route type-checks), so the typed bridge remains required for now.
+- Added `src/convex/api.test.ts` to assert the bridge exposes the expected import job function references (`createImportJob`, `getImportJob`) and to guard against accidental bridge drift/removal without a replacement.
+- Kept route wiring and response contracts unchanged while improving confidence in the current type-safety workaround.
