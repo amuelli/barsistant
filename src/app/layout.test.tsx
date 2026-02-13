@@ -6,6 +6,9 @@ Deno.test("root layout wraps children in AppProviders", async () => {
     new URL("./layout.tsx", import.meta.url),
   );
 
-  assertStringIncludes(layoutSource, "import { AppProviders } from \"./providers.tsx\";");
+  assertStringIncludes(
+    layoutSource,
+    'import { AppProviders } from "./providers.tsx";',
+  );
   assertStringIncludes(layoutSource, "<AppProviders>{children}</AppProviders>");
 });

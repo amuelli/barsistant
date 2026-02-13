@@ -1,9 +1,6 @@
 /// <reference lib="deno.ns" />
 import { assert, assertThrows } from "jsr:@std/assert";
-import {
-  getConvexClient,
-  resetConvexClientForTests,
-} from "./client.ts";
+import { getConvexClient, resetConvexClientForTests } from "./client.ts";
 
 Deno.test("getConvexClient reuses one client instance", () => {
   const runtime = globalThis as {

@@ -6,7 +6,9 @@ import {
 } from "../../../contracts/imports.ts";
 
 const ALLOWED_SOURCE_HOSTS = new Set(
-  SUPPORTED_IMPORT_SOURCE_DOMAINS.flatMap((domain) => [domain, `www.${domain}`]),
+  SUPPORTED_IMPORT_SOURCE_DOMAINS.flatMap((
+    domain,
+  ) => [domain, `www.${domain}`]),
 );
 
 type ImportRequest = {
