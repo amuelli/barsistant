@@ -461,3 +461,9 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Asserted user-facing fallback contract remains controlled: keep queued submission result and surface `Import queued, but status refresh failed.` instead of propagating bootstrap/config exceptions.
 - Kept runtime implementation unchanged; this iteration is development-infrastructure test hardening for app-path readback misconfiguration handling.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, import form malformed-config guard)
+
+- Extended `src/app/import_url_form.test.tsx` with a behavior-level test that exercises `submitImportUrl` on the default direct Convex path when `NEXT_PUBLIC_CONVEX_URL` is malformed.
+- Asserted submit still returns the controlled user-facing unavailable contract (`IMPORT_SERVICE_UNAVAILABLE_ERROR`) instead of propagating a Convex bootstrap/config exception.
+- Kept runtime implementation unchanged; this iteration is development-infrastructure confidence hardening for malformed client runtime configuration.

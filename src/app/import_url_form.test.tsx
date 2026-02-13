@@ -125,6 +125,35 @@ Deno.test("submitImportUrl returns controlled unavailable error when Convex URL 
   }
 });
 
+Deno.test("submitImportUrl returns controlled unavailable error when Convex URL is malformed on default path", async () => {
+  const runtime = globalThis as {
+    process?: { env?: { NEXT_PUBLIC_CONVEX_URL?: string } };
+  };
+  const previousProcess = runtime.process;
+
+  try {
+    runtime.process = {
+      env: {
+        NEXT_PUBLIC_CONVEX_URL: "not-a-valid-url",
+      },
+    };
+    resetConvexClientForTests();
+
+    const outcome = await submitImportUrl(
+      "https://www.liquor.com/recipes/negroni/",
+    );
+
+    assertEquals(outcome, {
+      result: null,
+      error: IMPORT_SERVICE_UNAVAILABLE_ERROR,
+      clearSourceUrl: false,
+    });
+  } finally {
+    resetConvexClientForTests();
+    runtime.process = previousProcess;
+  }
+});
+
 Deno.test("submitImportUrl keeps queued result and surfaces refresh error when status readback fails", async () => {
   try {
     setCreateImportJobForTests(async (sourceUrl) => ({
