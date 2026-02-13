@@ -197,3 +197,11 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Added route contract tests in `src/app/api/imports/[jobId]/route.test.ts` covering found/not-found/invalid-id/backend-unavailable behaviors via an injected query seam.
 - Extended import contract constants in `src/contracts/imports.ts` for `IMPORT_JOB_NOT_FOUND_ERROR` and `INVALID_IMPORT_JOB_ID_ERROR`.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, Convex runtime/deploy docs alignment)
+
+- Updated `README.md` to document explicit Convex runtime configuration for local development and Deno Deploy (`NEXT_PUBLIC_CONVEX_URL` required, `CONVEX_DEPLOYMENT` optional helper).
+- Clarified that `.env.local` is populated via `deno task convex:dev` and Deno Deploy must set `NEXT_PUBLIC_CONVEX_URL` for `/api/imports` and `/api/imports/[jobId]`.
+- Updated smoke-check documentation to reflect dual expected outcomes: `202 queued` when configured, controlled `503 import_service_unavailable` when Convex env is missing.
+- Investigated adopting generated `convex/_generated/api` route typing this iteration; blocked in current Deno check path because generated `api` resolves to `{}` in this setup. Deferred to a dedicated follow-up task after codegen/type-resolution strategy is stabilized.
+- Ran `deno task check` successfully.
