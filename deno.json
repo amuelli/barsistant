@@ -16,7 +16,7 @@
     "smoke:health": "deno run -A scripts/smoke_health.mjs",
     "fmt": "deno fmt --check src deno.json README.md",
     "lint": "deno run -A npm:eslint .",
-    "test": "deno test",
+    "test": "deno test --allow-read=src/app",
     "typecheck": "deno check",
     "check": "deno task fmt && deno task lint && deno task test && deno task typecheck && deno task build && deno task smoke:health"
   }
