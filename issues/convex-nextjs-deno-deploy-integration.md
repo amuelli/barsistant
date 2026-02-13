@@ -383,3 +383,12 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Extended `scripts/smoke_health.mjs` unconfigured-Convex behavior to assert `GET /api/imports/<valid-id>` returns controlled `503` with `IMPORT_SERVICE_UNAVAILABLE_ERROR` (in addition to existing `POST /api/imports` unavailable assertion).
 - Kept configured-Convex smoke behavior unchanged (`202 queued`, persisted status readback, unknown-job `404`, invalid-id `400`).
 - Updated `README.md` smoke-check documentation to include the unconfigured status-route unavailable expectation.
+
+## Iteration Update (2026-02-13, direct Convex importJobs function behavior coverage)
+
+- Added `convex/importJobs.test.ts` with behavior-level tests for the Convex backend module itself:
+  - `createImportJob` persists queued records with timestamp fields and returns the queued contract,
+  - `getImportJob` returns `null` for missing jobs,
+  - `getImportJob` returns the persisted `{ jobId, sourceUrl, status }` contract for found jobs.
+- Kept runtime Convex function implementations unchanged; this iteration is development-infrastructure coverage to close direct function contract testing gaps alongside existing route/UI tests.
+- Ran `deno task check` successfully.
