@@ -153,3 +153,9 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Added `src/config/convex.ts` with `resolveConvexUrl` and `getRequiredConvexUrl` to enforce explicit runtime validation for `NEXT_PUBLIC_CONVEX_URL`.
 - Added `src/config/convex.test.ts` coverage for valid URL, missing env var, malformed URL, and unsupported protocol failure behavior.
 - Ran `deno check` successfully after adding the configuration guard.
+
+## Iteration Update (2026-02-13, Convex client bootstrap)
+
+- Added `convex` dependency to project dependencies.
+- Added `src/convex/client.ts` shared singleton factory (`getConvexClient`) wired to `getRequiredConvexUrl` for fail-fast config validation at client init.
+- Added `src/convex/client.test.ts` coverage for singleton reuse and missing `NEXT_PUBLIC_CONVEX_URL` failure.
