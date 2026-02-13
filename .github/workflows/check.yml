@@ -21,5 +21,20 @@ jobs:
       - name: Install npm scripts needed by Next.js
         run: deno install --allow-scripts=npm:sharp
 
-      - name: Run lint, typecheck, and build
-        run: deno task check
+      - name: Check formatting
+        run: deno task fmt
+
+      - name: Run lint
+        run: deno task lint
+
+      - name: Run tests
+        run: deno task test
+
+      - name: Run typecheck
+        run: deno task typecheck
+
+      - name: Build app
+        run: deno task build
+
+      - name: Run startup smoke health check
+        run: deno task smoke:health
