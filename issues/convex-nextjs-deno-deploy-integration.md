@@ -313,3 +313,9 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Added explicit checks for app-shell marker contract (`data-app-shell` equals `APP_SHELL_MARKER`) and tracer-bullet wiring (`ImportUrlForm` presence) without reading file text.
 - Kept runtime page behavior unchanged; this iteration is test-quality infrastructure only.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, providers browser-path behavior guard)
+
+- Extended `src/app/providers.test.tsx` with a behavior-level browser-runtime test that verifies `AppProviders` wraps children in `ConvexProvider` and wires the shared `getConvexClient()` instance when `window` is present.
+- Kept runtime provider implementation unchanged; this iteration tightens development-infrastructure test coverage for provider contract parity across server and browser paths.
+- Ran `deno task check` successfully.
