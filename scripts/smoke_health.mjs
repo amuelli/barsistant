@@ -1,7 +1,8 @@
+import { APP_SHELL_MARKER } from "../src/contracts/app_shell.ts";
+
 const port = Deno.env.get("SMOKE_PORT") ?? "3401";
 const healthUrl = `http://127.0.0.1:${port}/api/health`;
 const homeUrl = `http://127.0.0.1:${port}/`;
-const appShellMarker = "barsistant-shell-v1";
 
 const app = new Deno.Command("deno", {
   args: ["run", "-A", "npm:next", "start", "-p", port],
@@ -11,9 +12,9 @@ const app = new Deno.Command("deno", {
 
 try {
   await waitForHealthyResponse(healthUrl, 20_000);
-  await waitForHomeResponse(homeUrl, appShellMarker, 20_000);
+  await waitForHomeResponse(homeUrl, APP_SHELL_MARKER, 20_000);
   console.log(
-    `Smoke check passed: ${healthUrl} and ${homeUrl} (marker: ${appShellMarker})`,
+    `Smoke check passed: ${healthUrl} and ${homeUrl} (marker: ${APP_SHELL_MARKER})`,
   );
 } finally {
   app.kill("SIGTERM");

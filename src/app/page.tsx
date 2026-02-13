@@ -1,11 +1,12 @@
 import Image from "next/image";
+import { APP_SHELL_MARKER } from "../contracts/app_shell.ts";
 
 export default function Home() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
       <main
         className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start"
-        data-app-shell="barsistant-shell-v1"
+        data-app-shell={APP_SHELL_MARKER}
       >
         <Image
           className="dark:invert"
