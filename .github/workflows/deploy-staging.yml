@@ -46,3 +46,12 @@ jobs:
 
       - name: Deploy Deno staging app
         run: deno deploy --token "${{ secrets.DENO_DEPLOY_TOKEN_STAGING }}" --org "${{ vars.DENO_DEPLOY_ORG }}" --app "${{ vars.DENO_DEPLOY_APP_STAGING }}" --prod
+
+      - name: Smoke check staging deployment
+        env:
+          DENO_DEPLOY_APP_STAGING: ${{ vars.DENO_DEPLOY_APP_STAGING }}
+        run: |
+          set -euo pipefail
+          staging_url="https://${DENO_DEPLOY_APP_STAGING}.deno.dev"
+          health_body="$(curl -fsSL "$staging_url/api/health")"
+          echo "$health_body" | grep -q '"status":"ok"'

@@ -192,3 +192,4 @@ operations.
 - Enforced preview deployment order as `deno task check` -> Convex preview deploy (`CONVEX_DEPLOY_KEY_PREVIEW`) -> Deno preview deploy (`DENO_DEPLOY_TOKEN_PREVIEW`, `DENO_DEPLOY_ORG`, `DENO_DEPLOY_APP_PREVIEW`).
 - Added preview-specific preflight validation plus preview URL extraction from `deno deploy` output and post-deploy smoke validation against `${previewUrl}/api/health`.
 - Added per-PR workflow concurrency grouping so repeated updates to the same PR cancel in-flight preview runs while still allowing parallel runs across different PRs.
+- Added post-deploy staging smoke validation against `https://${DENO_DEPLOY_APP_STAGING}.deno.dev/api/health` so staging lane now verifies runtime health after rollout.
