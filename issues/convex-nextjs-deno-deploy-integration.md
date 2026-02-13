@@ -212,3 +212,12 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Added `src/convex/api.ts` typed bridge based on `ApiFromModules` + Convex module exports to enforce function-name/arg/return contracts in Deno type-checks despite current `convex/_generated/api.d.ts` resolution collapsing to `{}`.
 - Updated import-job GET route query call to cast validated `jobId` to `GenericId<"importJobs">` at the route boundary so the Convex query arg contract is enforced.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, smoke gate covers import status readback)
+
+- Extended `scripts/smoke_health.mjs` configured-path behavior to assert both:
+  - `POST /api/imports` returns a queued persisted job contract, and
+  - `GET /api/imports/[jobId]` returns the same persisted queued job payload.
+- Kept missing-Convex-env behavior unchanged (`POST /api/imports` controlled `503`) so smoke remains green in unconfigured environments.
+- Updated README smoke-check wording to document the new configured-path readback assertion.
+- Ran `deno task check` successfully.

@@ -9,6 +9,7 @@ const port = Deno.env.get("SMOKE_PORT") ?? "3401";
 const healthUrl = `http://127.0.0.1:${port}/api/health`;
 const homeUrl = `http://127.0.0.1:${port}/`;
 const importsUrl = `http://127.0.0.1:${port}/api/imports`;
+const importJobStatusBaseUrl = `http://127.0.0.1:${port}/api/imports`;
 const smokeImportSourceUrl = `https://${SUPPORTED_IMPORT_SOURCE_DOMAINS[0]}/recipes/smoke-check/`;
 const convexUrl = Deno.env.get("NEXT_PUBLIC_CONVEX_URL")?.trim();
 
@@ -22,10 +23,15 @@ try {
   await waitForHealthyResponse(healthUrl, 20_000);
   await waitForHomeResponse(homeUrl, APP_SHELL_MARKER, 20_000);
   if (convexUrl) {
-    await waitForImportSubmissionResponse(
+    const submittedJob = await waitForImportSubmissionResponse(
       importsUrl,
       smokeImportSourceUrl,
       IMPORT_JOB_QUEUED_STATUS,
+      20_000,
+    );
+    await waitForImportJobStatusResponse(
+      `${importJobStatusBaseUrl}/${submittedJob.jobId}`,
+      submittedJob,
       20_000,
     );
   } else {
@@ -112,7 +118,36 @@ async function waitForImportSubmissionResponse(
         const payload = await response.json();
         if (
           typeof payload?.jobId === "string" &&
-          payload?.status === expectedStatus
+          payload?.status === expectedStatus &&
+          payload?.sourceUrl === sourceUrl
+        ) {
+          return payload;
+        }
+      }
+    } catch {
+      // Server is still booting.
+    }
+
+    await sleep(500);
+  }
+
+  throw new Error(
+    `Timed out waiting for import submission response at ${url}`,
+  );
+}
+
+async function waitForImportJobStatusResponse(url, expectedJob, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(url);
+      if (response.status === 200) {
+        const payload = await response.json();
+        if (
+          payload?.jobId === expectedJob.jobId &&
+          payload?.sourceUrl === expectedJob.sourceUrl &&
+          payload?.status === expectedJob.status
         ) {
           return;
         }
@@ -125,7 +160,7 @@ async function waitForImportSubmissionResponse(
   }
 
   throw new Error(
-    `Timed out waiting for import submission response at ${url}`,
+    `Timed out waiting for import job status response at ${url}`,
   );
 }
 

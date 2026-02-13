@@ -65,9 +65,10 @@ curl http://localhost:3000/api/health
 ```
 
 Startup smoke check (expects built app, then verifies `/api/health`, `/`
-including the `barsistant-shell-v1` app-shell marker, and `POST /api/imports`
-returns `202 queued` when `NEXT_PUBLIC_CONVEX_URL` is configured, otherwise a
-controlled `503 import_service_unavailable`):
+including the `barsistant-shell-v1` app-shell marker, and import endpoints:
+`POST /api/imports` returns `202 queued` and `GET /api/imports/[jobId]` returns
+the persisted queued job when `NEXT_PUBLIC_CONVEX_URL` is configured; otherwise
+`POST /api/imports` returns a controlled `503 import_service_unavailable`):
 
 ```bash
 deno task smoke:health
