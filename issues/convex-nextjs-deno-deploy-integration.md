@@ -265,3 +265,9 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 
 - Updated `deno task check` to run `deno task convex:codegen` first so generated Convex bindings are refreshed before format/lint/test/type/build/smoke checks.
 - Re-validated direct route typing from `convex/_generated/api.js`; it still resolves to `{}` under the current Deno check path, so `src/convex/api.ts` bridge remains required.
+
+## Iteration Update (2026-02-13, server Convex client test coverage + env allowlist)
+
+- Added `src/convex/server.test.ts` coverage for `getConvexServerClient` singleton reuse and missing `NEXT_PUBLIC_CONVEX_URL` failure behavior.
+- Updated `deno task test` env allowlist in `deno.json` to include `WS_NO_BUFFER_UTIL` and `WS_NO_UTF_8_VALIDATE`, required by Convex's Node-side WebSocket dependency path during module initialization in this Deno test runtime.
+- Ran `deno task check` successfully.

@@ -19,7 +19,7 @@
     "smoke:health": "deno run -A scripts/smoke_health.mjs",
     "fmt": "deno fmt --check src deno.json README.md",
     "lint": "deno run -A npm:eslint .",
-    "test": "deno test --allow-read=src/app --allow-env=NODE_ENV",
+    "test": "deno test --allow-read=src/app --allow-env=NODE_ENV,WS_NO_BUFFER_UTIL,WS_NO_UTF_8_VALIDATE",
     "typecheck": "deno check",
     "check": "deno task convex:codegen && deno task fmt && deno task lint && deno task test && deno task typecheck && deno task build && deno task smoke:health"
   },
