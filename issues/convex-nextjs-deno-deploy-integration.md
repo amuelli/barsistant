@@ -165,3 +165,9 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Added `src/app/providers.tsx` with a client-side `AppProviders` wrapper that mounts `ConvexProvider` using shared `getConvexClient`.
 - Updated `src/app/layout.tsx` to wrap app children in `AppProviders`, establishing global Convex runtime context for upcoming query/mutation slices.
 - Added `src/app/layout.test.tsx` source-level contract coverage to ensure provider wiring remains present.
+
+## Iteration Update (2026-02-13, server-side Convex client bootstrap)
+
+- Added `src/convex/server.ts` with `getConvexServerClient` and `resetConvexServerClientForTests` using `ConvexHttpClient` + `getRequiredConvexUrl` to establish fail-fast server-write client wiring for upcoming route mutation integration.
+- Kept current import route behavior unchanged (still synthetic queued response) to preserve existing smoke and API contract while preparing server-driven write plumbing.
+- Ran `deno task check` successfully.
