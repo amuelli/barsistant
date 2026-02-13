@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { GenericId } from "convex/values";
 
 type ImportResponse = {
   jobId: string;
@@ -13,6 +14,10 @@ type SubmitImportOutcome = {
   error: string | null;
   clearSourceUrl: boolean;
 };
+
+let readImportJobStatus: (
+  jobId: string,
+) => Promise<ImportResponse | null> = defaultReadImportJobStatus;
 
 export async function submitImportUrl(
   sourceUrl: string,
@@ -39,10 +44,8 @@ export async function submitImportUrl(
     const submission = payload as ImportResponse;
 
     try {
-      const statusResponse = await fetchFn(`/api/imports/${submission.jobId}`);
-      const statusPayload = await statusResponse.json();
-
-      if (!statusResponse.ok) {
+      const status = await readImportJobStatus(submission.jobId);
+      if (!status) {
         return {
           result: submission,
           error: "Import queued, but status refresh failed.",
@@ -51,7 +54,7 @@ export async function submitImportUrl(
       }
 
       return {
-        result: statusPayload as ImportResponse,
+        result: status,
         error: null,
         clearSourceUrl: true,
       };
@@ -69,6 +72,26 @@ export async function submitImportUrl(
       clearSourceUrl: false,
     };
   }
+}
+
+export function setReadImportJobStatusForTests(
+  fn: ((jobId: string) => Promise<ImportResponse | null>) | null,
+): void {
+  readImportJobStatus = fn ?? defaultReadImportJobStatus;
+}
+
+async function defaultReadImportJobStatus(
+  jobId: string,
+): Promise<ImportResponse | null> {
+  const [{ getConvexClient }, { api }] = await Promise.all([
+    import("../convex/client.ts"),
+    import("../convex/api.ts"),
+  ]);
+
+  return getConvexClient().query(
+    api.importJobs.getImportJob,
+    { jobId: jobId as GenericId<"importJobs"> },
+  ) as Promise<ImportResponse | null>;
 }
 
 export function ImportUrlForm() {

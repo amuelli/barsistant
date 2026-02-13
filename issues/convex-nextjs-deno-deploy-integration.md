@@ -345,3 +345,10 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Extended `src/convex/server.test.ts` with unsupported protocol coverage so `getConvexServerClient()` explicitly fails when `NEXT_PUBLIC_CONVEX_URL` is non-HTTP(S).
 - Kept runtime Convex client/server bootstrap behavior unchanged; this iteration is development-infrastructure coverage only to tighten misconfiguration feedback guarantees.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, import form direct Convex status readback tracer bullet)
+
+- Updated `src/app/import_url_form.tsx` so post-submit status readback now uses direct Convex query access (`getConvexClient().query(api.importJobs.getImportJob, ...)`) instead of the transitional `GET /api/imports/[jobId]` route.
+- Kept `POST /api/imports` as the submission boundary for this slice while moving the read path to the intended app-level Convex access pattern.
+- Added `setReadImportJobStatusForTests` seam and updated `src/app/import_url_form.test.tsx` behavioral coverage to validate successful direct readback and controlled fallback messaging when readback fails.
+- Ran `deno task check` successfully.

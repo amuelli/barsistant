@@ -1,9 +1,18 @@
 /// <reference lib="deno.ns" />
 import { assertEquals } from "jsr:@std/assert";
-import { submitImportUrl } from "./import_url_form.tsx";
+import {
+  setReadImportJobStatusForTests,
+  submitImportUrl,
+} from "./import_url_form.tsx";
 
 Deno.test("submitImportUrl returns persisted status when submit and readback succeed", async () => {
   const calls: string[] = [];
+  setReadImportJobStatusForTests(async (jobId) => ({
+    jobId,
+    sourceUrl: "https://www.liquor.com/recipes/negroni/",
+    status: "queued",
+  }));
+
   const fetchMock: typeof fetch = ((input: string | URL | Request) => {
     const url = typeof input === "string"
       ? input
@@ -24,20 +33,6 @@ Deno.test("submitImportUrl returns persisted status when submit and readback suc
         ),
       );
     }
-
-    if (url === "/api/imports/job123") {
-      return Promise.resolve(
-        Response.json(
-          {
-            jobId: "job123",
-            sourceUrl: "https://www.liquor.com/recipes/negroni/",
-            status: "queued",
-          },
-          { status: 200 },
-        ),
-      );
-    }
-
     throw new Error(`Unexpected URL: ${url}`);
   }) as typeof fetch;
 
@@ -55,10 +50,15 @@ Deno.test("submitImportUrl returns persisted status when submit and readback suc
     error: null,
     clearSourceUrl: true,
   });
-  assertEquals(calls, ["/api/imports", "/api/imports/job123"]);
+  assertEquals(calls, ["/api/imports"]);
+  setReadImportJobStatusForTests(null);
 });
 
 Deno.test("submitImportUrl keeps queued result and surfaces refresh error when status readback fails", async () => {
+  setReadImportJobStatusForTests(async () => {
+    throw new Error("status unavailable");
+  });
+
   const fetchMock: typeof fetch = ((input: string | URL | Request) => {
     const url = typeof input === "string"
       ? input
@@ -78,16 +78,6 @@ Deno.test("submitImportUrl keeps queued result and surfaces refresh error when s
         ),
       );
     }
-
-    if (url === "/api/imports/job123") {
-      return Promise.resolve(
-        Response.json(
-          { error: "backend_unavailable" },
-          { status: 503 },
-        ),
-      );
-    }
-
     throw new Error(`Unexpected URL: ${url}`);
   }) as typeof fetch;
 
@@ -105,4 +95,5 @@ Deno.test("submitImportUrl keeps queued result and surfaces refresh error when s
     error: "Import queued, but status refresh failed.",
     clearSourceUrl: true,
   });
+  setReadImportJobStatusForTests(null);
 });
