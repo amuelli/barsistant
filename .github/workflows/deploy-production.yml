@@ -1,0 +1,48 @@
+name: Deploy Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy-production:
+    name: Deploy production lane
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install npm scripts needed by Next.js
+        run: deno install --allow-scripts=npm:sharp
+
+      - name: Validate required production deployment config
+        env:
+          CONVEX_DEPLOY_KEY_PRODUCTION: ${{ secrets.CONVEX_DEPLOY_KEY_PRODUCTION }}
+          DENO_DEPLOY_TOKEN_PRODUCTION: ${{ secrets.DENO_DEPLOY_TOKEN_PRODUCTION }}
+          DENO_DEPLOY_ORG: ${{ vars.DENO_DEPLOY_ORG }}
+          DENO_DEPLOY_APP_PRODUCTION: ${{ vars.DENO_DEPLOY_APP_PRODUCTION }}
+        run: |
+          test -n "$CONVEX_DEPLOY_KEY_PRODUCTION" || { echo "Missing secret: CONVEX_DEPLOY_KEY_PRODUCTION"; exit 1; }
+          test -n "$DENO_DEPLOY_TOKEN_PRODUCTION" || { echo "Missing secret: DENO_DEPLOY_TOKEN_PRODUCTION"; exit 1; }
+          test -n "$DENO_DEPLOY_ORG" || { echo "Missing repo/environment variable: DENO_DEPLOY_ORG"; exit 1; }
+          test -n "$DENO_DEPLOY_APP_PRODUCTION" || { echo "Missing repo/environment variable: DENO_DEPLOY_APP_PRODUCTION"; exit 1; }
+
+      - name: Run quality gate
+        run: deno task check
+
+      - name: Deploy Convex production backend
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY_PRODUCTION }}
+        run: deno run -A npm:convex deploy
+
+      - name: Deploy Deno production app
+        run: deno deploy --token "${{ secrets.DENO_DEPLOY_TOKEN_PRODUCTION }}" --org "${{ vars.DENO_DEPLOY_ORG }}" --app "${{ vars.DENO_DEPLOY_APP_PRODUCTION }}" --prod

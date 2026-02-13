@@ -185,3 +185,6 @@ operations.
 - Added `.github/workflows/deploy-staging.yml` with `develop` trigger and manual dispatch.
 - Enforced deployment order for staging lane: `deno task check` -> Convex deploy (`CONVEX_DEPLOY_KEY_STAGING`) -> Deno Deploy app rollout (`DENO_DEPLOY_TOKEN_STAGING`, `DENO_DEPLOY_ORG`, `DENO_DEPLOY_APP_STAGING`).
 - Added explicit preflight validation for required staging secrets/variables to improve failure clarity.
+- Added `.github/workflows/deploy-production.yml` with `main` trigger and manual dispatch.
+- Enforced deployment order for production lane: `deno task check` -> Convex deploy (`CONVEX_DEPLOY_KEY_PRODUCTION`) -> Deno Deploy app rollout (`DENO_DEPLOY_TOKEN_PRODUCTION`, `DENO_DEPLOY_ORG`, `DENO_DEPLOY_APP_PRODUCTION`).
+- Added explicit preflight validation for required production secrets/variables to improve failure clarity and environment isolation.
