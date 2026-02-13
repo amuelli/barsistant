@@ -412,3 +412,9 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
   focused on baseline health + import availability mode.
 - Updated `README.md` smoke-check wording to match the narrowed smoke contract.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, CI check gate runs Convex codegen)
+
+- Updated `.github/workflows/check.yml` to run `deno task convex:codegen` before fmt/lint/test/type/build/smoke steps.
+- Kept existing step-level check workflow structure (did not collapse to a single `deno task check` command) while aligning CI behavior with local check-gate expectations for generated Convex bindings.
+- Ran `deno task check` successfully.

@@ -21,6 +21,9 @@ jobs:
       - name: Install npm scripts needed by Next.js
         run: deno install --allow-scripts=npm:sharp
 
+      - name: Refresh Convex generated bindings
+        run: deno task convex:codegen
+
       - name: Check formatting
         run: deno task fmt
 
