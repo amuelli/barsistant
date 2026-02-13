@@ -50,3 +50,29 @@ Deno.test("getConvexServerClient throws when NEXT_PUBLIC_CONVEX_URL is missing",
     runtime.process = previousProcess;
   }
 });
+
+Deno.test(
+  "getConvexServerClient throws when NEXT_PUBLIC_CONVEX_URL uses unsupported protocol",
+  () => {
+    const runtime = globalThis as {
+      process?: { env?: { NEXT_PUBLIC_CONVEX_URL?: string } };
+    };
+    const previousProcess = runtime.process;
+
+    try {
+      runtime.process = {
+        env: { NEXT_PUBLIC_CONVEX_URL: "ftp://example.com" },
+      };
+      resetConvexServerClientForTests();
+
+      assertThrows(
+        () => getConvexServerClient(),
+        Error,
+        "NEXT_PUBLIC_CONVEX_URL must use http or https",
+      );
+    } finally {
+      resetConvexServerClientForTests();
+      runtime.process = previousProcess;
+    }
+  },
+);

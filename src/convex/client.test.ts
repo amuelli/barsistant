@@ -47,3 +47,27 @@ Deno.test("getConvexClient throws when NEXT_PUBLIC_CONVEX_URL is missing", () =>
     runtime.process = previousProcess;
   }
 });
+
+Deno.test(
+  "getConvexClient throws when NEXT_PUBLIC_CONVEX_URL is malformed",
+  () => {
+    const runtime = globalThis as {
+      process?: { env?: { NEXT_PUBLIC_CONVEX_URL?: string } };
+    };
+    const previousProcess = runtime.process;
+
+    try {
+      runtime.process = { env: { NEXT_PUBLIC_CONVEX_URL: "not-a-url" } };
+      resetConvexClientForTests();
+
+      assertThrows(
+        () => getConvexClient(),
+        Error,
+        "NEXT_PUBLIC_CONVEX_URL must be a valid absolute URL",
+      );
+    } finally {
+      resetConvexClientForTests();
+      runtime.process = previousProcess;
+    }
+  },
+);

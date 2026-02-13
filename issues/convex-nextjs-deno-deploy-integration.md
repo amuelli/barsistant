@@ -338,3 +338,10 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Added behavior-level coverage in `src/app/api/imports/[jobId]/route.test.ts` to assert `GET /api/imports/[jobId]` handles Next App Router's async `context.params` shape (`Promise<{ jobId: string }>`), returning the persisted queued contract when the job exists.
 - Kept route runtime behavior unchanged; this iteration is development-infrastructure test hardening for route handler compatibility.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, Convex bootstrap misconfiguration test hardening)
+
+- Extended `src/convex/client.test.ts` with malformed URL coverage so `getConvexClient()` explicitly fails when `NEXT_PUBLIC_CONVEX_URL` is not a valid absolute URL.
+- Extended `src/convex/server.test.ts` with unsupported protocol coverage so `getConvexServerClient()` explicitly fails when `NEXT_PUBLIC_CONVEX_URL` is non-HTTP(S).
+- Kept runtime Convex client/server bootstrap behavior unchanged; this iteration is development-infrastructure coverage only to tighten misconfiguration feedback guarantees.
+- Ran `deno task check` successfully.
