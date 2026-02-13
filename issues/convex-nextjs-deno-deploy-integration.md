@@ -285,3 +285,11 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Updated `README.md` smoke-check documentation to include the invalid job-id contract expectation alongside existing queued/unavailable submission behavior.
 - Kept route runtime behavior unchanged; this iteration strengthens operator-facing smoke coverage for explicit failure surfaces.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, import form behavior-test infrastructure)
+
+- Refactored `src/app/import_url_form.tsx` to extract submit/readback flow into exported `submitImportUrl`, preserving existing user-facing error/status behavior while making the flow testable as logic.
+- Replaced `src/app/import_url_form.test.tsx` source-string assertions with behavioral tests that mock fetch and validate:
+  - successful POST + GET status readback outcome,
+  - controlled fallback outcome when status readback fails after a successful submit.
+- Ran `deno task check` successfully.

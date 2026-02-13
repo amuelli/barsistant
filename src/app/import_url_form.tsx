@@ -8,6 +8,69 @@ type ImportResponse = {
   status: string;
 };
 
+type SubmitImportOutcome = {
+  result: ImportResponse | null;
+  error: string | null;
+  clearSourceUrl: boolean;
+};
+
+export async function submitImportUrl(
+  sourceUrl: string,
+  fetchFn: typeof fetch = fetch,
+): Promise<SubmitImportOutcome> {
+  try {
+    const response = await fetchFn("/api/imports", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ sourceUrl }),
+    });
+    const payload = await response.json();
+
+    if (!response.ok) {
+      return {
+        result: null,
+        error: payload.error ?? "Import submission failed.",
+        clearSourceUrl: false,
+      };
+    }
+
+    const submission = payload as ImportResponse;
+
+    try {
+      const statusResponse = await fetchFn(`/api/imports/${submission.jobId}`);
+      const statusPayload = await statusResponse.json();
+
+      if (!statusResponse.ok) {
+        return {
+          result: submission,
+          error: "Import queued, but status refresh failed.",
+          clearSourceUrl: true,
+        };
+      }
+
+      return {
+        result: statusPayload as ImportResponse,
+        error: null,
+        clearSourceUrl: true,
+      };
+    } catch {
+      return {
+        result: submission,
+        error: "Import queued, but status refresh failed.",
+        clearSourceUrl: true,
+      };
+    }
+  } catch {
+    return {
+      result: null,
+      error: "Network error while submitting import.",
+      clearSourceUrl: false,
+    };
+  }
+}
+
 export function ImportUrlForm() {
   const [sourceUrl, setSourceUrl] = useState("");
   const [result, setResult] = useState<ImportResponse | null>(null);
@@ -20,44 +83,13 @@ export function ImportUrlForm() {
     setError(null);
     setResult(null);
 
-    try {
-      const response = await fetch("/api/imports", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({ sourceUrl }),
-      });
-      const payload = await response.json();
-
-      if (!response.ok) {
-        setError(payload.error ?? "Import submission failed.");
-        return;
-      }
-
-      const submission = payload as ImportResponse;
-
-      try {
-        const statusResponse = await fetch(`/api/imports/${submission.jobId}`);
-        const statusPayload = await statusResponse.json();
-
-        if (!statusResponse.ok) {
-          setResult(submission);
-          setError("Import queued, but status refresh failed.");
-        } else {
-          setResult(statusPayload as ImportResponse);
-        }
-      } catch {
-        setResult(submission);
-        setError("Import queued, but status refresh failed.");
-      }
-
+    const outcome = await submitImportUrl(sourceUrl);
+    setResult(outcome.result);
+    setError(outcome.error);
+    if (outcome.clearSourceUrl) {
       setSourceUrl("");
-    } catch {
-      setError("Network error while submitting import.");
-    } finally {
-      setIsSubmitting(false);
     }
+    setIsSubmitting(false);
   }
 
   return (
