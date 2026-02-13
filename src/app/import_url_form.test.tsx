@@ -182,3 +182,41 @@ Deno.test("submitImportUrl keeps queued result and surfaces refresh error when s
     setReadImportJobStatusForTests(null);
   }
 });
+
+Deno.test("submitImportUrl keeps queued result when default readback path is misconfigured", async () => {
+  const runtime = globalThis as {
+    process?: { env?: { NEXT_PUBLIC_CONVEX_URL?: string } };
+  };
+  const previousProcess = runtime.process;
+
+  try {
+    setCreateImportJobForTests(async (sourceUrl) => ({
+      jobId: TEST_JOB_ID,
+      sourceUrl,
+      status: "queued",
+    }));
+    setReadImportJobStatusForTests(null);
+
+    runtime.process = { env: {} };
+    resetConvexClientForTests();
+
+    const outcome = await submitImportUrl(
+      "https://www.liquor.com/recipes/negroni/",
+    );
+
+    assertEquals(outcome, {
+      result: {
+        jobId: TEST_JOB_ID,
+        sourceUrl: "https://www.liquor.com/recipes/negroni/",
+        status: "queued",
+      },
+      error: "Import queued, but status refresh failed.",
+      clearSourceUrl: true,
+    });
+  } finally {
+    setCreateImportJobForTests(null);
+    setReadImportJobStatusForTests(null);
+    resetConvexClientForTests();
+    runtime.process = previousProcess;
+  }
+});

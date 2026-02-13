@@ -454,3 +454,10 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Asserted the direct Convex submit path returns the controlled user-facing unavailable contract (`IMPORT_SERVICE_UNAVAILABLE_ERROR`) rather than an uncaught bootstrap/config exception.
 - Kept runtime implementation unchanged; this iteration strengthens development-infrastructure confidence for misconfiguration handling in the app-path mutation flow.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, import form default-readback misconfiguration guard)
+
+- Extended `src/app/import_url_form.test.tsx` with behavior coverage for a mixed adapter path where submit is seam-controlled but status readback uses the default direct Convex client path while `NEXT_PUBLIC_CONVEX_URL` is missing.
+- Asserted user-facing fallback contract remains controlled: keep queued submission result and surface `Import queued, but status refresh failed.` instead of propagating bootstrap/config exceptions.
+- Kept runtime implementation unchanged; this iteration is development-infrastructure test hardening for app-path readback misconfiguration handling.
+- Ran `deno task check` successfully.
