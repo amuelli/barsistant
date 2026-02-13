@@ -1,6 +1,7 @@
 # Barsistant (Next.js + Deno)
 
-This project is set up with Next.js at the repository root and uses Deno tasks to run it.
+This project is set up with Next.js at the repository root and uses Deno tasks
+to run it.
 
 ## Setup
 
@@ -10,7 +11,8 @@ npm install convex
 npx convex dev
 ```
 
-`npx convex dev` will create the `convex/` directory and update `.env.local` with `NEXT_PUBLIC_CONVEX_URL` and `CONVEX_DEPLOYMENT`.
+`npx convex dev` will create the `convex/` directory and update `.env.local`
+with `NEXT_PUBLIC_CONVEX_URL` and `CONVEX_DEPLOYMENT`.
 
 ## Run
 
@@ -30,6 +32,7 @@ deno task start
 ## Lint and Check
 
 ```bash
+deno task fmt
 deno task lint
 deno task test
 deno task typecheck
