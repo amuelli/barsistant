@@ -271,3 +271,11 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Added `src/convex/server.test.ts` coverage for `getConvexServerClient` singleton reuse and missing `NEXT_PUBLIC_CONVEX_URL` failure behavior.
 - Updated `deno task test` env allowlist in `deno.json` to include `WS_NO_BUFFER_UTIL` and `WS_NO_UTF_8_VALIDATE`, required by Convex's Node-side WebSocket dependency path during module initialization in this Deno test runtime.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, Convex API bridge compile-time strictness guard)
+
+- Added `src/convex/api.typecheck.ts` to enforce compile-time contract behavior for the route-facing Convex bridge (`src/convex/api.ts`):
+  - expected public references (`importJobs.createImportJob`, `importJobs.getImportJob`) must remain valid,
+  - unknown modules/functions must remain rejected at type-check time.
+- Kept runtime behavior unchanged; this is a development-infrastructure guard to catch API drift/regression early while direct generated `convex/_generated/api` typing remains unresolved in the Deno check path.
+- Ran `deno task check` successfully.
