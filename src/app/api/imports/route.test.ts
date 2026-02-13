@@ -44,3 +44,24 @@ Deno.test("imports route rejects an invalid URL", async () => {
     error: "Provide a valid sourceUrl using http or https.",
   });
 });
+
+Deno.test("imports route rejects unsupported domains with an actionable message", async () => {
+  const request = new Request("http://localhost/api/imports", {
+    method: "POST",
+    body: JSON.stringify({
+      sourceUrl: "https://example.com/negroni",
+    }),
+    headers: {
+      "content-type": "application/json",
+    },
+  });
+
+  const response = await POST(request);
+  const payload = await response.json();
+
+  assertEquals(response.status, 400);
+  assertEquals(payload, {
+    error:
+      "Source domain is not supported yet. Supported domains: liquor.com, diffordsguide.com.",
+  });
+});
