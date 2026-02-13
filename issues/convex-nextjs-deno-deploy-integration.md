@@ -159,3 +159,9 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Added `convex` dependency to project dependencies.
 - Added `src/convex/client.ts` shared singleton factory (`getConvexClient`) wired to `getRequiredConvexUrl` for fail-fast config validation at client init.
 - Added `src/convex/client.test.ts` coverage for singleton reuse and missing `NEXT_PUBLIC_CONVEX_URL` failure.
+
+## Iteration Update (2026-02-13, Convex provider wiring)
+
+- Added `src/app/providers.tsx` with a client-side `AppProviders` wrapper that mounts `ConvexProvider` using shared `getConvexClient`.
+- Updated `src/app/layout.tsx` to wrap app children in `AppProviders`, establishing global Convex runtime context for upcoming query/mutation slices.
+- Added `src/app/layout.test.tsx` source-level contract coverage to ensure provider wiring remains present.
