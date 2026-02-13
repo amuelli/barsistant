@@ -1,0 +1,25 @@
+name: Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install npm scripts needed by Next.js
+        run: deno install --allow-scripts=npm:sharp
+
+      - name: Run lint, typecheck, and build
+        run: deno task check
