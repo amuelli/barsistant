@@ -306,3 +306,10 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Replaced `src/app/providers.test.tsx` source-string assertions with a behavior-level element test that directly verifies server prerender fallback (`AppProviders` returns children unchanged when `window` is unavailable).
 - Kept runtime provider behavior unchanged; this iteration only improves test quality and reduces brittleness from file-text matching.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, page app-shell test infrastructure de-brittle)
+
+- Replaced `src/app/page.test.tsx` source-file string assertions with behavior-level JSX structure assertions against the `Home` component output.
+- Added explicit checks for app-shell marker contract (`data-app-shell` equals `APP_SHELL_MARKER`) and tracer-bullet wiring (`ImportUrlForm` presence) without reading file text.
+- Kept runtime page behavior unchanged; this iteration is test-quality infrastructure only.
+- Ran `deno task check` successfully.

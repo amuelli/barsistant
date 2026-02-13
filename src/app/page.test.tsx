@@ -1,12 +1,22 @@
 /// <reference lib="deno.ns" />
-import { assertStringIncludes } from "jsr:@std/assert";
-import { APP_SHELL_JSX_ATTRIBUTE } from "../contracts/app_shell.ts";
+import { assertEquals, assertStrictEquals } from "jsr:@std/assert";
+import { APP_SHELL_MARKER } from "../contracts/app_shell.ts";
+import { ImportUrlForm } from "./import_url_form.tsx";
+import Home from "./page.tsx";
 
-Deno.test("home app shell exposes the expected marker contract", async () => {
-  const pageSource = await Deno.readTextFile(
-    new URL("./page.tsx", import.meta.url),
+Deno.test("home app shell exposes marker and tracer-bullet structure", () => {
+  const root = Home();
+  const main = root.props.children;
+  const tracerSection = main.props.children[2];
+  const tracerHeading = tracerSection.props.children[0];
+  const importForm = tracerSection.props.children[2];
+
+  assertEquals(root.type, "div");
+  assertEquals(main.type, "main");
+  assertEquals(main.props["data-app-shell"], APP_SHELL_MARKER);
+  assertEquals(
+    tracerHeading.props.children,
+    "Tracer bullet: URL import submission",
   );
-
-  assertStringIncludes(pageSource, APP_SHELL_JSX_ATTRIBUTE);
-  assertStringIncludes(pageSource, "Tracer bullet: URL import submission");
+  assertStrictEquals(importForm.type, ImportUrlForm);
 });
