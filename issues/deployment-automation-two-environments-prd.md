@@ -179,3 +179,9 @@ operations.
   - add and validate `deploy-preview.yml`,
   - add and validate `deploy-staging.yml`,
   - add and validate `deploy-production.yml` in `.github/workflows/`.
+
+## Iteration Notes
+
+- Added `.github/workflows/deploy-staging.yml` with `develop` trigger and manual dispatch.
+- Enforced deployment order for staging lane: `deno task check` -> Convex deploy (`CONVEX_DEPLOY_KEY_STAGING`) -> Deno Deploy app rollout (`DENO_DEPLOY_TOKEN_STAGING`, `DENO_DEPLOY_ORG`, `DENO_DEPLOY_APP_STAGING`).
+- Added explicit preflight validation for required staging secrets/variables to improve failure clarity.

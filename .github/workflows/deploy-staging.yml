@@ -1,0 +1,48 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+jobs:
+  deploy-staging:
+    name: Deploy staging lane
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install npm scripts needed by Next.js
+        run: deno install --allow-scripts=npm:sharp
+
+      - name: Validate required staging deployment config
+        env:
+          CONVEX_DEPLOY_KEY_STAGING: ${{ secrets.CONVEX_DEPLOY_KEY_STAGING }}
+          DENO_DEPLOY_TOKEN_STAGING: ${{ secrets.DENO_DEPLOY_TOKEN_STAGING }}
+          DENO_DEPLOY_ORG: ${{ vars.DENO_DEPLOY_ORG }}
+          DENO_DEPLOY_APP_STAGING: ${{ vars.DENO_DEPLOY_APP_STAGING }}
+        run: |
+          test -n "$CONVEX_DEPLOY_KEY_STAGING" || { echo "Missing secret: CONVEX_DEPLOY_KEY_STAGING"; exit 1; }
+          test -n "$DENO_DEPLOY_TOKEN_STAGING" || { echo "Missing secret: DENO_DEPLOY_TOKEN_STAGING"; exit 1; }
+          test -n "$DENO_DEPLOY_ORG" || { echo "Missing repo/environment variable: DENO_DEPLOY_ORG"; exit 1; }
+          test -n "$DENO_DEPLOY_APP_STAGING" || { echo "Missing repo/environment variable: DENO_DEPLOY_APP_STAGING"; exit 1; }
+
+      - name: Run quality gate
+        run: deno task check
+
+      - name: Deploy Convex staging backend
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY_STAGING }}
+        run: deno run -A npm:convex deploy
+
+      - name: Deploy Deno staging app
+        run: deno deploy --token "${{ secrets.DENO_DEPLOY_TOKEN_STAGING }}" --org "${{ vars.DENO_DEPLOY_ORG }}" --app "${{ vars.DENO_DEPLOY_APP_STAGING }}" --prod
