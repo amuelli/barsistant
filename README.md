@@ -6,7 +6,11 @@ This project is set up with Next.js at the repository root and uses Deno tasks t
 
 ```bash
 deno install --allow-scripts=npm:sharp
+npm install convex
+npx convex dev
 ```
+
+`npx convex dev` will create the `convex/` directory and update `.env.local` with `NEXT_PUBLIC_CONVEX_URL` and `CONVEX_DEPLOYMENT`.
 
 ## Run
 
