@@ -171,3 +171,9 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Added `src/convex/server.ts` with `getConvexServerClient` and `resetConvexServerClientForTests` using `ConvexHttpClient` + `getRequiredConvexUrl` to establish fail-fast server-write client wiring for upcoming route mutation integration.
 - Kept current import route behavior unchanged (still synthetic queued response) to preserve existing smoke and API contract while preparing server-driven write plumbing.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, Convex import job backend scaffold)
+
+- Added `convex/schema.ts` with a minimal `importJobs` table (`sourceUrl`, `status`, timestamps, optional `failureReason`) and baseline indexes for `status` and `createdAt`.
+- Added `convex/importJobs.ts` with `createImportJob` mutation to persist a queued import job and return `{ jobId, sourceUrl, status }`.
+- Kept Next.js `POST /api/imports` route behavior unchanged in this iteration; next task should switch route writes from synthetic IDs to this Convex mutation.
