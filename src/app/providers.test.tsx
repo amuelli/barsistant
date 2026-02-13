@@ -1,11 +1,11 @@
 /// <reference lib="deno.ns" />
-import { assertStringIncludes } from "jsr:@std/assert";
+import { assertEquals, assertStrictEquals } from "jsr:@std/assert";
+import { AppProviders } from "./providers.tsx";
 
-Deno.test("AppProviders skips Convex client initialization during server prerender", async () => {
-  const providersSource = await Deno.readTextFile(
-    new URL("./providers.tsx", import.meta.url),
-  );
+Deno.test("AppProviders returns children unchanged during server prerender", () => {
+  const child = <main data-testid="child">child</main>;
+  const root = AppProviders({ children: child });
 
-  assertStringIncludes(providersSource, 'if (typeof window === "undefined")');
-  assertStringIncludes(providersSource, "return <>{children}</>;");
+  assertStrictEquals(root.type, Symbol.for("react.fragment"));
+  assertEquals(root.props.children, child);
 });

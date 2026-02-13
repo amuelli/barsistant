@@ -300,3 +300,9 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Extracted `src/app/root_layout_view.tsx` and updated `src/app/layout.tsx` to delegate rendering so tests can execute without importing `globals.css` (unsupported in current Deno test module loading).
 - Kept runtime layout behavior unchanged while improving test reliability and reducing false positives from text-only source checks.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, providers test infrastructure de-brittle)
+
+- Replaced `src/app/providers.test.tsx` source-string assertions with a behavior-level element test that directly verifies server prerender fallback (`AppProviders` returns children unchanged when `window` is unavailable).
+- Kept runtime provider behavior unchanged; this iteration only improves test quality and reduces brittleness from file-text matching.
+- Ran `deno task check` successfully.
