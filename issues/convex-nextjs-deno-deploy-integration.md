@@ -260,3 +260,8 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Added `deno task dev:full` backed by `scripts/dev_full.mjs` to run Next.js and Convex together in one command for local development.
 - Implemented signal-aware process shutdown in `scripts/dev_full.mjs` so stopping the wrapper cleanly terminates both child processes.
 - Updated `README.md` setup instructions to make the unified startup flow the default path while preserving separate `deno task convex:dev` guidance.
+
+## Iteration Update (2026-02-13, Convex codegen added to check gate)
+
+- Updated `deno task check` to run `deno task convex:codegen` first so generated Convex bindings are refreshed before format/lint/test/type/build/smoke checks.
+- Re-validated direct route typing from `convex/_generated/api.js`; it still resolves to `{}` under the current Deno check path, so `src/convex/api.ts` bridge remains required.

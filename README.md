@@ -10,7 +10,13 @@ deno install --allow-scripts=npm:sharp
 deno install
 ```
 
-Run Convex in a second terminal during local development:
+Use this to run Next.js and Convex together for local development:
+
+```bash
+deno task dev:full
+```
+
+If you need to run Convex separately, use:
 
 ```bash
 deno task convex:dev

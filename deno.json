@@ -11,6 +11,7 @@
   ],
   "tasks": {
     "dev": "deno run -A npm:next dev",
+    "dev:full": "deno run -A scripts/dev_full.mjs",
     "convex:dev": "deno run -A npm:convex dev",
     "convex:codegen": "deno run -A npm:convex codegen",
     "build": "deno run -A npm:next build",
@@ -20,7 +21,7 @@
     "lint": "deno run -A npm:eslint .",
     "test": "deno test --allow-read=src/app --allow-env=NODE_ENV",
     "typecheck": "deno check",
-    "check": "deno task fmt && deno task lint && deno task test && deno task typecheck && deno task build && deno task smoke:health"
+    "check": "deno task convex:codegen && deno task fmt && deno task lint && deno task test && deno task typecheck && deno task build && deno task smoke:health"
   },
   "deploy": {
     "org": "amuelli",
