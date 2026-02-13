@@ -1,4 +1,9 @@
 {
+  "exclude": [
+    ".agents/",
+    ".next/",
+    "node_modules/"
+  ],
   "unstable": [
     "bare-node-builtins",
     "detect-cjs",
