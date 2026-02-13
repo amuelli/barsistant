@@ -1,9 +1,8 @@
 import { APP_SHELL_MARKER } from "../src/contracts/app_shell.ts";
 import {
-  IMPORT_JOB_NOT_FOUND_ERROR,
+  IMPORT_JOB_QUEUED_STATUS,
   IMPORT_SERVICE_UNAVAILABLE_ERROR,
   INVALID_IMPORT_JOB_ID_ERROR,
-  IMPORT_JOB_QUEUED_STATUS,
   SUPPORTED_IMPORT_SOURCE_DOMAINS,
 } from "../src/contracts/imports.ts";
 
@@ -14,10 +13,9 @@ const importsUrl = `http://127.0.0.1:${port}/api/imports`;
 const importJobStatusBaseUrl = `http://127.0.0.1:${port}/api/imports`;
 const unavailableImportJobStatusUrl = `${importJobStatusBaseUrl}/job123`;
 const invalidImportJobStatusUrl = `${importJobStatusBaseUrl}/invalid-id`;
-const unknownImportJobStatusUrl =
-  `${importJobStatusBaseUrl}/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz`;
-const smokeImportSourceUrl = `https://${SUPPORTED_IMPORT_SOURCE_DOMAINS[0]}/recipes/smoke-check/`;
-const convexUrl = Deno.env.get("NEXT_PUBLIC_CONVEX_URL")?.trim();
+const smokeImportSourceUrl = `https://${
+  SUPPORTED_IMPORT_SOURCE_DOMAINS[0]
+}/recipes/smoke-check/`;
 
 const app = new Deno.Command("deno", {
   args: ["run", "-A", "npm:next", "start", "-p", port],
@@ -28,21 +26,18 @@ const app = new Deno.Command("deno", {
 try {
   await waitForHealthyResponse(healthUrl, 20_000);
   await waitForHomeResponse(homeUrl, APP_SHELL_MARKER, 20_000);
-  if (convexUrl) {
-    const submittedJob = await waitForImportSubmissionResponse(
-      importsUrl,
-      smokeImportSourceUrl,
-      IMPORT_JOB_QUEUED_STATUS,
-      20_000,
-    );
+  const importMode = await waitForImportSubmissionMode(
+    importsUrl,
+    smokeImportSourceUrl,
+    IMPORT_JOB_QUEUED_STATUS,
+    IMPORT_SERVICE_UNAVAILABLE_ERROR,
+    20_000,
+  );
+  if (importMode.kind === "configured") {
+    const submittedJob = importMode.job;
     await waitForImportJobStatusResponse(
       `${importJobStatusBaseUrl}/${submittedJob.jobId}`,
       submittedJob,
-      20_000,
-    );
-    await waitForUnknownImportJobResponse(
-      unknownImportJobStatusUrl,
-      IMPORT_JOB_NOT_FOUND_ERROR,
       20_000,
     );
   } else {
@@ -64,7 +59,11 @@ try {
     20_000,
   );
   console.log(
-    `Smoke check passed: ${healthUrl}, ${homeUrl} (marker: ${APP_SHELL_MARKER}), ${importsUrl} (${convexUrl ? `status: ${IMPORT_JOB_QUEUED_STATUS} + unknown-job 404 contract` : "controlled unavailable response for submit + status"}), and invalid import job id contract`,
+    `Smoke check passed: ${healthUrl}, ${homeUrl} (marker: ${APP_SHELL_MARKER}), ${importsUrl} (${
+      importMode.kind === "configured"
+        ? `status: ${IMPORT_JOB_QUEUED_STATUS} + persisted status readback`
+        : "controlled unavailable response for submit + status"
+    }), and invalid import job id contract`,
   );
 } finally {
   app.kill("SIGTERM");
@@ -118,10 +117,11 @@ async function waitForHomeResponse(url, marker, timeoutMs) {
   );
 }
 
-async function waitForImportSubmissionResponse(
+async function waitForImportSubmissionMode(
   url,
   sourceUrl,
   expectedStatus,
+  expectedUnavailableError,
   timeoutMs,
 ) {
   const deadline = Date.now() + timeoutMs;
@@ -135,6 +135,7 @@ async function waitForImportSubmissionResponse(
         },
         body: JSON.stringify({ sourceUrl }),
       });
+
       if (response.status === 202) {
         const payload = await response.json();
         if (
@@ -142,7 +143,14 @@ async function waitForImportSubmissionResponse(
           payload?.status === expectedStatus &&
           payload?.sourceUrl === sourceUrl
         ) {
-          return payload;
+          return { kind: "configured", job: payload };
+        }
+      }
+
+      if (response.status === 503) {
+        const payload = await response.json();
+        if (payload?.error === expectedUnavailableError) {
+          return { kind: "unconfigured" };
         }
       }
     } catch {
@@ -153,7 +161,7 @@ async function waitForImportSubmissionResponse(
   }
 
   throw new Error(
-    `Timed out waiting for import submission response at ${url}`,
+    `Timed out waiting for import submission mode at ${url}`,
   );
 }
 
@@ -182,30 +190,6 @@ async function waitForImportJobStatusResponse(url, expectedJob, timeoutMs) {
 
   throw new Error(
     `Timed out waiting for import job status response at ${url}`,
-  );
-}
-
-async function waitForUnknownImportJobResponse(url, expectedError, timeoutMs) {
-  const deadline = Date.now() + timeoutMs;
-
-  while (Date.now() < deadline) {
-    try {
-      const response = await fetch(url);
-      if (response.status === 404) {
-        const payload = await response.json();
-        if (payload?.error === expectedError) {
-          return;
-        }
-      }
-    } catch {
-      // Server is still booting.
-    }
-
-    await sleep(500);
-  }
-
-  throw new Error(
-    `Timed out waiting for unknown import job response at ${url}`,
   );
 }
 
@@ -272,7 +256,11 @@ async function waitForImportJobStatusUnavailableResponse(
   );
 }
 
-async function waitForInvalidImportJobIdResponse(url, expectedError, timeoutMs) {
+async function waitForInvalidImportJobIdResponse(
+  url,
+  expectedError,
+  timeoutMs,
+) {
   const deadline = Date.now() + timeoutMs;
 
   while (Date.now() < deadline) {

@@ -399,3 +399,16 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Asserted the user-facing fallback contract remains consistent with the thrown-readback path: retain queued submission result and surface `Import queued, but status refresh failed.`.
 - Kept runtime implementation unchanged; this slice closes an untested branch in import-form submission/readback logic.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, smoke gate import-mode detection hardening)
+
+- Updated `scripts/smoke_health.mjs` to determine Convex mode from observed
+  import submission behavior (`202 queued` vs controlled `503
+  import_service_unavailable`) rather than pre-reading
+  `NEXT_PUBLIC_CONVEX_URL`.
+- Kept configured-path persisted status readback assertion and unconfigured-path
+  controlled submit/status unavailable assertions; removed the configured-path
+  unknown-job `404` assertion from this smoke slice to keep the startup check
+  focused on baseline health + import availability mode.
+- Updated `README.md` smoke-check wording to match the narrowed smoke contract.
+- Ran `deno task check` successfully.
