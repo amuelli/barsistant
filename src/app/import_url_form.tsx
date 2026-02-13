@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 import type { GenericId } from "convex/values";
+import {
+  IMPORT_SERVICE_UNAVAILABLE_ERROR,
+  INVALID_IMPORT_URL_ERROR,
+  UNSUPPORTED_IMPORT_SOURCE_ERROR,
+} from "../contracts/imports.ts";
+import { validateSourceUrl } from "../imports/source_url_validation.ts";
 
 type ImportResponse = {
   jobId: string;
@@ -15,69 +21,94 @@ type SubmitImportOutcome = {
   clearSourceUrl: boolean;
 };
 
+let createImportJob: (
+  sourceUrl: string,
+) => Promise<ImportResponse> = defaultCreateImportJob;
+
 let readImportJobStatus: (
   jobId: string,
 ) => Promise<ImportResponse | null> = defaultReadImportJobStatus;
 
 export async function submitImportUrl(
   sourceUrl: string,
-  fetchFn: typeof fetch = fetch,
 ): Promise<SubmitImportOutcome> {
+  const validation = validateSourceUrl(sourceUrl);
+
+  if (validation.kind === "invalid_url") {
+    return {
+      result: null,
+      error: INVALID_IMPORT_URL_ERROR,
+      clearSourceUrl: false,
+    };
+  }
+
+  if (validation.kind === "unsupported_domain") {
+    return {
+      result: null,
+      error: UNSUPPORTED_IMPORT_SOURCE_ERROR,
+      clearSourceUrl: false,
+    };
+  }
+
+  let submission: ImportResponse;
   try {
-    const response = await fetchFn("/api/imports", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({ sourceUrl }),
-    });
-    const payload = await response.json();
+    submission = await createImportJob(validation.sourceUrl);
+  } catch {
+    return {
+      result: null,
+      error: IMPORT_SERVICE_UNAVAILABLE_ERROR,
+      clearSourceUrl: false,
+    };
+  }
 
-    if (!response.ok) {
-      return {
-        result: null,
-        error: payload.error ?? "Import submission failed.",
-        clearSourceUrl: false,
-      };
-    }
-
-    const submission = payload as ImportResponse;
-
-    try {
-      const status = await readImportJobStatus(submission.jobId);
-      if (!status) {
-        return {
-          result: submission,
-          error: "Import queued, but status refresh failed.",
-          clearSourceUrl: true,
-        };
-      }
-
-      return {
-        result: status,
-        error: null,
-        clearSourceUrl: true,
-      };
-    } catch {
+  try {
+    const status = await readImportJobStatus(submission.jobId);
+    if (!status) {
       return {
         result: submission,
         error: "Import queued, but status refresh failed.",
         clearSourceUrl: true,
       };
     }
+
+    return {
+      result: status,
+      error: null,
+      clearSourceUrl: true,
+    };
   } catch {
     return {
-      result: null,
-      error: "Network error while submitting import.",
-      clearSourceUrl: false,
+      result: submission,
+      error: "Import queued, but status refresh failed.",
+      clearSourceUrl: true,
     };
   }
+}
+
+export function setCreateImportJobForTests(
+  fn: ((sourceUrl: string) => Promise<ImportResponse>) | null,
+): void {
+  createImportJob = fn ?? defaultCreateImportJob;
 }
 
 export function setReadImportJobStatusForTests(
   fn: ((jobId: string) => Promise<ImportResponse | null>) | null,
 ): void {
   readImportJobStatus = fn ?? defaultReadImportJobStatus;
+}
+
+async function defaultCreateImportJob(
+  sourceUrl: string,
+): Promise<ImportResponse> {
+  const [{ getConvexClient }, { api }] = await Promise.all([
+    import("../convex/client.ts"),
+    import("../convex/api.ts"),
+  ]);
+
+  return getConvexClient().mutation(
+    api.importJobs.createImportJob,
+    { sourceUrl },
+  ) as Promise<ImportResponse>;
 }
 
 async function defaultReadImportJobStatus(

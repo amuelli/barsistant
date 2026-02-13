@@ -352,3 +352,10 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Kept `POST /api/imports` as the submission boundary for this slice while moving the read path to the intended app-level Convex access pattern.
 - Added `setReadImportJobStatusForTests` seam and updated `src/app/import_url_form.test.tsx` behavioral coverage to validate successful direct readback and controlled fallback messaging when readback fails.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, import form direct Convex mutation submit tracer bullet)
+
+- Updated `src/app/import_url_form.tsx` so URL submission now writes directly via Convex mutation (`getConvexClient().mutation(api.importJobs.createImportJob, ...)`) instead of posting through transitional `POST /api/imports`.
+- Added shared app/route URL validation module at `src/imports/source_url_validation.ts` and reused it in `POST /api/imports` to keep validation semantics and supported-domain behavior contract-compatible across both paths.
+- Added `setCreateImportJobForTests` seam and expanded `src/app/import_url_form.test.tsx` behavioral coverage for invalid URL, unsupported domain, controlled backend-unavailable write failure, successful submit+readback, and readback-fallback outcomes.
+- Ran `deno task check` successfully.

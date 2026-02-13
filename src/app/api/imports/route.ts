@@ -1,17 +1,11 @@
 import {
   IMPORT_SERVICE_UNAVAILABLE_ERROR,
   INVALID_IMPORT_URL_ERROR,
-  SUPPORTED_IMPORT_SOURCE_DOMAINS,
   UNSUPPORTED_IMPORT_SOURCE_ERROR,
 } from "../../../contracts/imports.ts";
+import { validateSourceUrl } from "../../../imports/source_url_validation.ts";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "../../../convex/api.ts";
-
-const ALLOWED_SOURCE_HOSTS = new Set(
-  SUPPORTED_IMPORT_SOURCE_DOMAINS.flatMap((
-    domain,
-  ) => [domain, `www.${domain}`]),
-);
 
 type ImportRequest = {
   sourceUrl?: unknown;
@@ -72,32 +66,6 @@ async function parseJsonBody(request: Request): Promise<ImportRequest | null> {
     return await request.json();
   } catch {
     return null;
-  }
-}
-
-type SourceUrlValidation =
-  | { kind: "ok"; sourceUrl: string }
-  | { kind: "invalid_url" }
-  | { kind: "unsupported_domain" };
-
-function validateSourceUrl(value: unknown): SourceUrlValidation {
-  if (typeof value !== "string" || value.trim().length === 0) {
-    return { kind: "invalid_url" };
-  }
-
-  const trimmed = value.trim();
-
-  try {
-    const parsed = new URL(trimmed);
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      return { kind: "invalid_url" };
-    }
-    if (!ALLOWED_SOURCE_HOSTS.has(parsed.hostname)) {
-      return { kind: "unsupported_domain" };
-    }
-    return { kind: "ok", sourceUrl: parsed.toString() };
-  } catch {
-    return { kind: "invalid_url" };
   }
 }
 
