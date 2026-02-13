@@ -1,10 +1,10 @@
-import { makeFunctionReference } from "convex/server";
 import {
   IMPORT_SERVICE_UNAVAILABLE_ERROR,
   INVALID_IMPORT_URL_ERROR,
   SUPPORTED_IMPORT_SOURCE_DOMAINS,
   UNSUPPORTED_IMPORT_SOURCE_ERROR,
 } from "../../../contracts/imports.ts";
+import { api } from "../../../convex/api.ts";
 
 const ALLOWED_SOURCE_HOSTS = new Set(
   SUPPORTED_IMPORT_SOURCE_DOMAINS.flatMap((
@@ -21,12 +21,6 @@ type CreateImportJobResult = {
   sourceUrl: string;
   status: string;
 };
-
-const createImportJobMutationReference = makeFunctionReference<
-  "mutation",
-  { sourceUrl: string },
-  CreateImportJobResult
->("importJobs:createImportJob");
 
 let createImportJob: (
   sourceUrl: string,
@@ -120,7 +114,7 @@ async function defaultCreateImportJob(
   const { getConvexServerClient } = await import("../../../convex/server.ts");
 
   return getConvexServerClient().mutation(
-    createImportJobMutationReference,
+    api.importJobs.createImportJob,
     { sourceUrl },
   );
 }

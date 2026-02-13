@@ -1,9 +1,10 @@
-import { makeFunctionReference } from "convex/server";
 import {
   IMPORT_JOB_NOT_FOUND_ERROR,
   IMPORT_SERVICE_UNAVAILABLE_ERROR,
   INVALID_IMPORT_JOB_ID_ERROR,
 } from "../../../../contracts/imports.ts";
+import type { GenericId } from "convex/values";
+import { api } from "../../../../convex/api.ts";
 
 type ImportJobResult = {
   jobId: string;
@@ -18,12 +19,6 @@ type Params = {
 type RouteContext = {
   params: Params | Promise<Params>;
 };
-
-const getImportJobQueryReference = makeFunctionReference<
-  "query",
-  { jobId: string },
-  ImportJobResult | null
->("importJobs:getImportJob");
 
 let getImportJob: (jobId: string) => Promise<ImportJobResult | null> =
   defaultGetImportJob;
@@ -83,7 +78,7 @@ async function defaultGetImportJob(
     "../../../../convex/server.ts"
   );
   return getConvexServerClient().query(
-    getImportJobQueryReference,
-    { jobId },
+    api.importJobs.getImportJob,
+    { jobId: jobId as GenericId<"importJobs"> },
   );
 }

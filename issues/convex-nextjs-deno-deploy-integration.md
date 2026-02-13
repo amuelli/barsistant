@@ -205,3 +205,10 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Updated smoke-check documentation to reflect dual expected outcomes: `202 queued` when configured, controlled `503 import_service_unavailable` when Convex env is missing.
 - Investigated adopting generated `convex/_generated/api` route typing this iteration; blocked in current Deno check path because generated `api` resolves to `{}` in this setup. Deferred to a dedicated follow-up task after codegen/type-resolution strategy is stabilized.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, typed Convex API bridge for route references)
+
+- Replaced route-level `makeFunctionReference` usage in `POST /api/imports` and `GET /api/imports/[jobId]` with shared `src/convex/api.ts` generated-runtime API references (`api.importJobs.createImportJob`, `api.importJobs.getImportJob`).
+- Added `src/convex/api.ts` typed bridge based on `ApiFromModules` + Convex module exports to enforce function-name/arg/return contracts in Deno type-checks despite current `convex/_generated/api.d.ts` resolution collapsing to `{}`.
+- Updated import-job GET route query call to cast validated `jobId` to `GenericId<"importJobs">` at the route boundary so the Convex query arg contract is enforced.
+- Ran `deno task check` successfully.
