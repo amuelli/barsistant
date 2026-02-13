@@ -13,3 +13,7 @@ export const UNSUPPORTED_IMPORT_SOURCE_ERROR =
 
 export const IMPORT_SERVICE_UNAVAILABLE_ERROR =
   "Import service is temporarily unavailable. Please try again.";
+
+export const IMPORT_JOB_NOT_FOUND_ERROR = "Import job was not found.";
+
+export const INVALID_IMPORT_JOB_ID_ERROR = "Provide a valid import job id.";

@@ -185,3 +185,15 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Added route-level test seam `setCreateImportJobForTests` and expanded `src/app/api/imports/route.test.ts` coverage to validate successful queued responses and controlled backend-unavailable responses without live Convex dependency.
 - Extended smoke behavior in `scripts/smoke_health.mjs` so import submission asserts queued `202` when `NEXT_PUBLIC_CONVEX_URL` is configured, otherwise asserts controlled unavailable response; this keeps the check gate green in both configured and unconfigured environments.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, import job status read tracer bullet)
+
+- Added `convex/importJobs.ts` query `getImportJob` to read a single persisted import job by id and return `{ jobId, sourceUrl, status }` or `null`.
+- Added `GET /api/imports/[jobId]` route at `src/app/api/imports/[jobId]/route.ts` wired to Convex query `importJobs:getImportJob` with controlled response surfaces:
+  - `200` for found jobs,
+  - `404` for unknown jobs,
+  - `400` for invalid job id format,
+  - `503` for backend unavailable/misconfigured conditions.
+- Added route contract tests in `src/app/api/imports/[jobId]/route.test.ts` covering found/not-found/invalid-id/backend-unavailable behaviors via an injected query seam.
+- Extended import contract constants in `src/contracts/imports.ts` for `IMPORT_JOB_NOT_FOUND_ERROR` and `INVALID_IMPORT_JOB_ID_ERROR`.
+- Ran `deno task check` successfully.
