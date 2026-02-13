@@ -1,4 +1,5 @@
 import { APP_SHELL_MARKER } from "../contracts/app_shell.ts";
+import { ImportUrlForm } from "./import_url_form.tsx";
 
 export default function Home() {
   return (
@@ -34,6 +35,17 @@ export default function Home() {
           >
             Verify API health
           </a>
+        </section>
+
+        <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-zinc-900">
+            Tracer bullet: URL import submission
+          </h2>
+          <p className="mt-2 text-zinc-600">
+            Submit a recipe URL to exercise the first end-to-end import path.
+            Current behavior returns a queued placeholder response.
+          </p>
+          <ImportUrlForm />
         </section>
       </main>
     </div>

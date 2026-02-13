@@ -8,4 +8,5 @@ Deno.test("home app shell exposes the expected marker contract", async () => {
   );
 
   assertStringIncludes(pageSource, APP_SHELL_JSX_ATTRIBUTE);
+  assertStringIncludes(pageSource, "Tracer bullet: URL import submission");
 });
