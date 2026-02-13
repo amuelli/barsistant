@@ -1,5 +1,6 @@
 /// <reference lib="deno.ns" />
 import { assertEquals } from "jsr:@std/assert";
+import type { GenericId } from "convex/values";
 import {
   setCreateImportJobForTests,
   setReadImportJobStatusForTests,
@@ -11,10 +12,12 @@ import {
   UNSUPPORTED_IMPORT_SOURCE_ERROR,
 } from "../contracts/imports.ts";
 
+const TEST_JOB_ID = "job123" as GenericId<"importJobs">;
+
 Deno.test("submitImportUrl returns persisted status when submit and readback succeed", async () => {
   try {
     setCreateImportJobForTests(async (sourceUrl) => ({
-      jobId: "job123",
+      jobId: TEST_JOB_ID,
       sourceUrl,
       status: "queued",
     }));
@@ -30,7 +33,7 @@ Deno.test("submitImportUrl returns persisted status when submit and readback suc
 
     assertEquals(outcome, {
       result: {
-        jobId: "job123",
+        jobId: TEST_JOB_ID,
         sourceUrl: "https://www.liquor.com/recipes/negroni/",
         status: "queued",
       },
@@ -86,7 +89,7 @@ Deno.test("submitImportUrl returns controlled unavailable error when backend wri
 Deno.test("submitImportUrl keeps queued result and surfaces refresh error when status readback fails", async () => {
   try {
     setCreateImportJobForTests(async (sourceUrl) => ({
-      jobId: "job123",
+      jobId: TEST_JOB_ID,
       sourceUrl,
       status: "queued",
     }));
@@ -100,7 +103,7 @@ Deno.test("submitImportUrl keeps queued result and surfaces refresh error when s
 
     assertEquals(outcome, {
       result: {
-        jobId: "job123",
+        jobId: TEST_JOB_ID,
         sourceUrl: "https://www.liquor.com/recipes/negroni/",
         status: "queued",
       },

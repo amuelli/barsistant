@@ -359,3 +359,11 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Added shared app/route URL validation module at `src/imports/source_url_validation.ts` and reused it in `POST /api/imports` to keep validation semantics and supported-domain behavior contract-compatible across both paths.
 - Added `setCreateImportJobForTests` seam and expanded `src/app/import_url_form.test.tsx` behavioral coverage for invalid URL, unsupported domain, controlled backend-unavailable write failure, successful submit+readback, and readback-fallback outcomes.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, import form adapter types bound to Convex contracts)
+
+- Updated `src/app/import_url_form.tsx` to derive submit/read adapter result types from Convex function references via `FunctionReturnType` (`api.importJobs.createImportJob` and `api.importJobs.getImportJob`) instead of handwritten response shapes.
+- Removed route-adapter-style casts on default client mutation/query calls in the import form flow so return typing is enforced directly from Convex API contracts.
+- Updated `src/app/import_url_form.test.tsx` fixtures to use `GenericId<"importJobs">`-compatible job IDs to match tighter seam typing while preserving existing behavior assertions.
+- Kept runtime submit/read UX behavior unchanged; this slice is development-infrastructure hardening for API drift detection.
+- Ran `deno task check` successfully.

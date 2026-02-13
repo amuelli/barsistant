@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { FunctionReturnType } from "convex/server";
 import type { GenericId } from "convex/values";
 import {
   IMPORT_SERVICE_UNAVAILABLE_ERROR,
@@ -9,11 +10,17 @@ import {
 } from "../contracts/imports.ts";
 import { validateSourceUrl } from "../imports/source_url_validation.ts";
 
-type ImportResponse = {
-  jobId: string;
-  sourceUrl: string;
-  status: string;
-};
+type ConvexApi = typeof import("../convex/api.ts")["api"];
+
+type CreateImportJobResult = FunctionReturnType<
+  ConvexApi["importJobs"]["createImportJob"]
+>;
+
+type ReadImportJobStatusResult = FunctionReturnType<
+  ConvexApi["importJobs"]["getImportJob"]
+>;
+
+type ImportResponse = Exclude<ReadImportJobStatusResult, null>;
 
 type SubmitImportOutcome = {
   result: ImportResponse | null;
@@ -23,11 +30,11 @@ type SubmitImportOutcome = {
 
 let createImportJob: (
   sourceUrl: string,
-) => Promise<ImportResponse> = defaultCreateImportJob;
+) => Promise<CreateImportJobResult> = defaultCreateImportJob;
 
 let readImportJobStatus: (
   jobId: string,
-) => Promise<ImportResponse | null> = defaultReadImportJobStatus;
+) => Promise<ReadImportJobStatusResult> = defaultReadImportJobStatus;
 
 export async function submitImportUrl(
   sourceUrl: string,
@@ -86,20 +93,20 @@ export async function submitImportUrl(
 }
 
 export function setCreateImportJobForTests(
-  fn: ((sourceUrl: string) => Promise<ImportResponse>) | null,
+  fn: ((sourceUrl: string) => Promise<CreateImportJobResult>) | null,
 ): void {
   createImportJob = fn ?? defaultCreateImportJob;
 }
 
 export function setReadImportJobStatusForTests(
-  fn: ((jobId: string) => Promise<ImportResponse | null>) | null,
+  fn: ((jobId: string) => Promise<ReadImportJobStatusResult>) | null,
 ): void {
   readImportJobStatus = fn ?? defaultReadImportJobStatus;
 }
 
 async function defaultCreateImportJob(
   sourceUrl: string,
-): Promise<ImportResponse> {
+): Promise<CreateImportJobResult> {
   const [{ getConvexClient }, { api }] = await Promise.all([
     import("../convex/client.ts"),
     import("../convex/api.ts"),
@@ -108,12 +115,12 @@ async function defaultCreateImportJob(
   return getConvexClient().mutation(
     api.importJobs.createImportJob,
     { sourceUrl },
-  ) as Promise<ImportResponse>;
+  );
 }
 
 async function defaultReadImportJobStatus(
   jobId: string,
-): Promise<ImportResponse | null> {
+): Promise<ReadImportJobStatusResult> {
   const [{ getConvexClient }, { api }] = await Promise.all([
     import("../convex/client.ts"),
     import("../convex/api.ts"),
@@ -122,7 +129,7 @@ async function defaultReadImportJobStatus(
   return getConvexClient().query(
     api.importJobs.getImportJob,
     { jobId: jobId as GenericId<"importJobs"> },
-  ) as Promise<ImportResponse | null>;
+  );
 }
 
 export function ImportUrlForm() {
