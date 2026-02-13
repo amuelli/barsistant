@@ -29,6 +29,12 @@ deno task build
 deno task start
 ```
 
+Health check endpoint:
+
+```bash
+curl http://localhost:3000/api/health
+```
+
 ## Lint and Check
 
 ```bash
