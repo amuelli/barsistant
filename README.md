@@ -31,5 +31,6 @@ deno task start
 
 ```bash
 deno task lint
+deno task typecheck
 deno task check
 ```

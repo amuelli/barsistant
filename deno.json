@@ -14,6 +14,7 @@
     "build": "deno run -A npm:next build",
     "start": "deno run -A npm:next start",
     "lint": "deno run -A npm:eslint .",
-    "check": "deno task lint && deno task build"
+    "typecheck": "deno check",
+    "check": "deno task lint && deno task typecheck && deno task build"
   }
 }
