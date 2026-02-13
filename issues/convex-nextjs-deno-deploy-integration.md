@@ -431,3 +431,12 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Added a behavior-level server-rendered UI contract test in `src/app/import_url_form.test.tsx` to assert baseline import form controls/copy are present (`label`/`input[type=url]`/submit button/placeholder).
 - Kept runtime import form logic unchanged; this iteration strengthens development-infrastructure coverage beyond submit-flow logic by guarding core form rendering contract.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, import form Convex contract compile-time guard)
+
+- Added `src/app/import_url_form.typecheck.ts` to enforce compile-time alignment between app-path import form adapters and Convex API contracts:
+  - `submitImportUrl` outcomes must carry Convex-compatible `jobId` typing,
+  - readback result typing remains tied to `api.importJobs.getImportJob`,
+  - test seam `setReadImportJobStatusForTests` is guarded to require `GenericId<"importJobs">` (plain string rejected at type-check time).
+- Kept runtime import form behavior unchanged; this is development-infrastructure hardening for earlier API-drift detection.
+- Ran `deno task check` successfully.
