@@ -1,5 +1,6 @@
 const port = Deno.env.get("SMOKE_PORT") ?? "3401";
 const healthUrl = `http://127.0.0.1:${port}/api/health`;
+const homeUrl = `http://127.0.0.1:${port}/`;
 
 const app = new Deno.Command("deno", {
   args: ["run", "-A", "npm:next", "start", "-p", port],
@@ -9,7 +10,8 @@ const app = new Deno.Command("deno", {
 
 try {
   await waitForHealthyResponse(healthUrl, 20_000);
-  console.log(`Smoke check passed: ${healthUrl}`);
+  await waitForHomeResponse(homeUrl, 20_000);
+  console.log(`Smoke check passed: ${healthUrl} and ${homeUrl}`);
 } finally {
   app.kill("SIGTERM");
   await app.status.catch(() => null);
@@ -35,6 +37,26 @@ async function waitForHealthyResponse(url, timeoutMs) {
   }
 
   throw new Error(`Timed out waiting for health response at ${url}`);
+}
+
+async function waitForHomeResponse(url, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(url);
+      const contentType = response.headers.get("content-type") ?? "";
+      if (response.ok && contentType.includes("text/html")) {
+        return;
+      }
+    } catch {
+      // Server is still booting.
+    }
+
+    await sleep(500);
+  }
+
+  throw new Error(`Timed out waiting for HTML response at ${url}`);
 }
 
 function sleep(ms) {

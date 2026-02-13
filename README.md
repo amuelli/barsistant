@@ -35,6 +35,12 @@ Health check endpoint:
 curl http://localhost:3000/api/health
 ```
 
+Startup smoke check (expects built app, then verifies `/api/health` and `/`):
+
+```bash
+deno task smoke:health
+```
+
 ## Lint and Check
 
 ```bash
