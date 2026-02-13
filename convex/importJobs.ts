@@ -8,7 +8,7 @@ export const createImportJob = mutationGeneric({
     sourceUrl: v.string(),
   },
   returns: v.object({
-    jobId: v.string(),
+    jobId: v.id("importJobs"),
     sourceUrl: v.string(),
     status: v.string(),
   }),

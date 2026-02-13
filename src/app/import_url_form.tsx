@@ -33,7 +33,7 @@ let createImportJob: (
 ) => Promise<CreateImportJobResult> = defaultCreateImportJob;
 
 let readImportJobStatus: (
-  jobId: string,
+  jobId: GenericId<"importJobs">,
 ) => Promise<ReadImportJobStatusResult> = defaultReadImportJobStatus;
 
 export async function submitImportUrl(
@@ -99,7 +99,9 @@ export function setCreateImportJobForTests(
 }
 
 export function setReadImportJobStatusForTests(
-  fn: ((jobId: string) => Promise<ReadImportJobStatusResult>) | null,
+  fn:
+    | ((jobId: GenericId<"importJobs">) => Promise<ReadImportJobStatusResult>)
+    | null,
 ): void {
   readImportJobStatus = fn ?? defaultReadImportJobStatus;
 }
@@ -119,7 +121,7 @@ async function defaultCreateImportJob(
 }
 
 async function defaultReadImportJobStatus(
-  jobId: string,
+  jobId: GenericId<"importJobs">,
 ): Promise<ReadImportJobStatusResult> {
   const [{ getConvexClient }, { api }] = await Promise.all([
     import("../convex/client.ts"),
@@ -128,7 +130,7 @@ async function defaultReadImportJobStatus(
 
   return getConvexClient().query(
     api.importJobs.getImportJob,
-    { jobId: jobId as GenericId<"importJobs"> },
+    { jobId },
   );
 }
 

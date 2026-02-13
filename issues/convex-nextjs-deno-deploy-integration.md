@@ -418,3 +418,10 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Updated `.github/workflows/check.yml` to run `deno task convex:codegen` before fmt/lint/test/type/build/smoke steps.
 - Kept existing step-level check workflow structure (did not collapse to a single `deno task check` command) while aligning CI behavior with local check-gate expectations for generated Convex bindings.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, import job id contract tightened to Convex id type)
+
+- Updated `convex/importJobs.ts` so `createImportJob` returns `jobId` as `v.id("importJobs")` (instead of `v.string()`), aligning mutation and query contracts on the same typed id boundary.
+- Updated `src/app/import_url_form.tsx` readback adapter seam/default path to accept `GenericId<"importJobs">` directly, removing the local cast at query call sites.
+- Kept runtime import UX and route behavior unchanged; this slice is development-infrastructure hardening for stronger end-to-end Convex contract typing.
+- Ran `deno task check` successfully.
