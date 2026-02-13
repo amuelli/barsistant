@@ -367,3 +367,13 @@ incremental feature depth (job processing, parsing pipeline, auth, etc.).
 - Updated `src/app/import_url_form.test.tsx` fixtures to use `GenericId<"importJobs">`-compatible job IDs to match tighter seam typing while preserving existing behavior assertions.
 - Kept runtime submit/read UX behavior unchanged; this slice is development-infrastructure hardening for API drift detection.
 - Ran `deno task check` successfully.
+
+## Iteration Update (2026-02-13, source URL validation module behavior coverage)
+
+- Added `src/imports/source_url_validation.test.ts` with direct behavior tests for shared URL validation semantics:
+  - accepts configured supported domains (apex + `www`),
+  - normalizes accepted URL output,
+  - rejects invalid URL/protocol inputs,
+  - rejects unsupported domains (including non-allowlisted subdomains).
+- Kept runtime validation implementation unchanged; this is development-infrastructure coverage to guard app/route validation parity.
+- Ran `deno task check` successfully.
