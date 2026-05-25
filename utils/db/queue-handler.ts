@@ -1,6 +1,5 @@
 /// <reference lib="deno.unstable" />
 
-import { getKv } from "./db.ts";
 import type { GenerateRecipeRasterImageJob } from "./recipe-raster-image-job.ts";
 import {
   handleGenerateRecipeRasterImageJob,
@@ -11,37 +10,83 @@ import {
   handleGenerateRecipeVectorImageJob,
   isGenerateRecipeVectorImageJob,
 } from "./recipe-vector-image-job.ts";
+import { getJobStore, type JobRecord, type JobStore } from "./job-store.ts";
 
-export async function startQueueHandler() {
-  console.log("[queue-handler] Deno KV queue listener registered and active");
-  const kv = await getKv();
-  kv.listenQueue(async (msg: unknown) => {
-    console.log("[queue-handler] Received message", msg);
-
-    if (isGenerateRecipeRasterImageJob(msg)) {
-      await handleGenerateRecipeRasterImageJob(msg);
-      return;
-    }
-
-    if (isGenerateRecipeVectorImageJob(msg)) {
-      await handleGenerateRecipeVectorImageJob(msg);
-      return;
-    }
-
-    // ...add more message types here as needed...
-    console.error("[queue-handler] Unknown queue message type", msg);
-  });
-}
-
-/**
- * Enqueue a job to the Deno KV queue
- * Only accepts known job types for type safety
- */
 export type QueueJob =
   | GenerateRecipeRasterImageJob
   | GenerateRecipeVectorImageJob;
 
 export async function enqueueJob(job: QueueJob): Promise<void> {
-  const kv = await getKv();
-  await kv.enqueue(job);
+  const store = await getJobStore();
+  await store.createJob(job.type, job);
+}
+
+type JobHandler = (payload: unknown) => Promise<void>;
+type HandlerMap = Record<string, JobHandler>;
+
+const DEFAULT_HANDLERS: HandlerMap = {
+  generate_recipe_raster_image: (payload) => {
+    if (!isGenerateRecipeRasterImageJob(payload)) {
+      throw new Error(`Invalid payload for generate_recipe_raster_image`);
+    }
+    return handleGenerateRecipeRasterImageJob(payload);
+  },
+  generate_recipe_vector_image: (payload) => {
+    if (!isGenerateRecipeVectorImageJob(payload)) {
+      throw new Error(`Invalid payload for generate_recipe_vector_image`);
+    }
+    return handleGenerateRecipeVectorImageJob(payload);
+  },
+};
+
+export async function processJobsWithHandlers(
+  store: JobStore,
+  handlers: HandlerMap,
+): Promise<void> {
+  const processedThisRun = new Set<string>();
+
+  while (true) {
+    const job: JobRecord | null = await store.claimNextPendingJob(
+      processedThisRun,
+    );
+    if (!job) break;
+
+    processedThisRun.add(job.id);
+
+    const handler = handlers[job.type];
+    try {
+      if (!handler) throw new Error(`Unknown job type: ${job.type}`);
+      await handler(job.payload);
+      await store.markJobDone(job.id);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(
+        `[cron-dispatcher] Job ${job.id} (${job.type}) failed: ${message}`,
+      );
+      await store.markJobFailed(job.id, message);
+    }
+  }
+}
+
+async function processPendingJobs(): Promise<void> {
+  const store = await getJobStore();
+  await processJobsWithHandlers(store, DEFAULT_HANDLERS);
+}
+
+export function startCronDispatcher(): void {
+  console.log(
+    "[cron-dispatcher] Registering cron job for background processing",
+  );
+  Deno.cron("Process background jobs", "* * * * *", async () => {
+    console.log("[cron-dispatcher] Processing pending jobs");
+    try {
+      await processPendingJobs();
+    } catch (error) {
+      console.error(
+        "[cron-dispatcher] Unexpected error processing jobs:",
+        error,
+      );
+    }
+    console.log("[cron-dispatcher] Done processing pending jobs");
+  });
 }

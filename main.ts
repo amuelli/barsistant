@@ -8,7 +8,7 @@ if (
 
 import { App, staticFiles } from "fresh";
 import { runMigrationsOnStartup } from "🛠️/db/migration-runner.ts";
-import { startQueueHandler } from "🛠️/db/queue-handler.ts";
+import { startCronDispatcher } from "🛠️/db/queue-handler.ts";
 import { State } from "🛠️/define.ts";
 
 export const app = new App<State>()
@@ -19,5 +19,5 @@ export const app = new App<State>()
 
 // Run database migrations before starting the application
 await runMigrationsOnStartup();
-// Start the application and queue handler
-await startQueueHandler();
+// Register cron job for background job processing
+startCronDispatcher();

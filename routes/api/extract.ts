@@ -1,5 +1,3 @@
-/// <reference lib="deno.unstable" />
-
 // Extraction API endpoint for handling recipe extraction requests
 import {
   extractRecipeFromContent,
