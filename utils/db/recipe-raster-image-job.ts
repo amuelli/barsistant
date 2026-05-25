@@ -67,14 +67,18 @@ export async function handleGenerateRecipeRasterImageJob(
         aiImageUrl,
       );
 
-      // Extract color palette from the image
-      const colorPalette = await extractColorPalette(aiImageBuffer);
+      // Extract color palette — node-vibrant uses jimp which blocks the event
+      // loop synchronously and hangs indefinitely on Deno Deploy, so skip it there.
+      const isDenoDeployment = !!Deno.env.get("DENO_DEPLOYMENT_ID");
+      const colorPalette = isDenoDeployment
+        ? undefined
+        : await extractColorPalette(aiImageBuffer);
       if (colorPalette) {
         console.log(
           `[recipe-raster-image-job] Color palette extracted:`,
           colorPalette,
         );
-      } else {
+      } else if (!isDenoDeployment) {
         console.warn(
           `[recipe-raster-image-job] Failed to extract color palette`,
         );
