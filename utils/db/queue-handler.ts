@@ -11,6 +11,7 @@ import {
   isGenerateRecipeVectorImageJob,
 } from "./recipe-vector-image-job.ts";
 import { getJobStore, type JobRecord, type JobStore } from "./job-store.ts";
+import { getKv } from "./db.ts";
 
 export type QueueJob =
   | GenerateRecipeRasterImageJob
@@ -80,6 +81,16 @@ export function startCronDispatcher(): void {
   Deno.cron("Process background jobs", "* * * * *", async () => {
     console.log("[cron-dispatcher] Processing pending jobs");
     try {
+      // Diagnostic: log KV key count by prefix to verify database context
+      const kv = await getKv();
+      let jobCount = 0;
+      let recipeCount = 0;
+      for await (const _ of kv.list({ prefix: ["job_queue"] })) jobCount++;
+      for await (const _ of kv.list({ prefix: ["user_recipe"] })) recipeCount++;
+      console.log(
+        `[cron-dispatcher] KV context: ${jobCount} job(s), ${recipeCount} recipe(s)`,
+      );
+
       await processPendingJobs();
     } catch (error) {
       console.error(
