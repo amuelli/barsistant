@@ -25,8 +25,18 @@ export async function extractColorPalette(
     // Convert Uint8Array to Buffer for node-vibrant
     const buffer = Buffer.from(imageBuffer);
 
-    // Process the image with node-vibrant
-    const palette = await Vibrant.from(buffer).getPalette();
+    // Process the image with node-vibrant.
+    // node-vibrant can hang indefinitely on some runtimes (e.g. Deno Deploy), so
+    // we race against a 10-second timeout and treat it as a non-fatal failure.
+    const palette = await Promise.race([
+      Vibrant.from(buffer).getPalette(),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("color extraction timed out after 10s")),
+          10_000,
+        )
+      ),
+    ]);
 
     // Map the vibrant palette to our ColorPalette type
     const colorPalette: ColorPalette = {
