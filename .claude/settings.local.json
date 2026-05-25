@@ -9,16 +9,21 @@
       "Bash(deno test:*)",
       "Bash(find:*)",
       "Bash(git add:*)",
+      "Bash(git checkout:*)",
       "Bash(git rm:*)",
       "Bash(grep:*)",
       "Bash(mv:*)",
       "WebFetch(domain:daisyui.com)",
+      "WebFetch(domain:docs.anthropic.com)",
       "WebFetch(domain:fresh.deno.dev)",
-      "mcp__github__*",
-      "WebFetch(domain:docs.anthropic.com)"
+      "mcp__github__create_issue",
+      "mcp__github__get_issue",
+      "Bash(git commit:*)"
     ],
     "deny": []
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["github"]
+  "enabledMcpjsonServers": [
+    "github"
+  ]
 }

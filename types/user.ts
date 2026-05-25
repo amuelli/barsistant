@@ -23,7 +23,7 @@ export interface User {
  */
 export interface UserPreferences {
   theme: "light" | "dark" | "system";
-  preferredMeasurementUnit: "metric" | "imperial" | "both";
+  preferredMeasurementUnit: "oz" | "ml";
 }
 
 /**

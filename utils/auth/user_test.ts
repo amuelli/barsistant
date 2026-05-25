@@ -31,7 +31,7 @@ Deno.test("createDefaultUserPreferences", async (t) => {
     const preferences = createDefaultUserPreferences();
 
     assertEquals(preferences.theme, "system");
-    assertEquals(preferences.preferredMeasurementUnit, "imperial");
+    assertEquals(preferences.preferredMeasurementUnit, "oz");
   });
 });
 

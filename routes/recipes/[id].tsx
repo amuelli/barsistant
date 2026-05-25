@@ -5,6 +5,10 @@ import RecipePrivacyToggle from "🏝️/RecipePrivacyToggle.tsx";
 import { checkAdminFromUser } from "🛠️/auth/admin.ts";
 import { recipeModel } from "🛠️/db/recipe-model.ts";
 import { define } from "🛠️/define.ts";
+import {
+  displayIngredientsForUser,
+  formatMeasurement,
+} from "🛠️/recipe-display.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -46,6 +50,12 @@ export default define.page<typeof handler>(
   ({ data, state }) => {
     const { recipe, isFavorited, isOwner, user } = data;
     const isAdmin = checkAdminFromUser(state.user);
+
+    // Convert ingredients based on user preferences
+    const displayIngredients = displayIngredientsForUser(
+      recipe.ingredients,
+      user,
+    );
     return (
       <div class="container mx-auto p-3 md:p-4 pb-8 md:pb-12">
         {/* Hero Image Section with Gradient Background */}
@@ -137,13 +147,13 @@ export default define.page<typeof handler>(
                 Ingredients
               </h2>
               <ul class="space-y-3">
-                {recipe.ingredients.map((ingredient) => (
+                {displayIngredients.map((ingredient) => (
                   <li
-                    key={ingredient.ingredientId}
+                    key={ingredient.name}
                     class="flex items-start gap-3 hover:bg-base-200 p-3 rounded-md transition-colors"
                   >
                     <div class="text-left font-bold text-primary w-20 min-w-20 shrink-0 pt-1">
-                      {ingredient.quantity} {ingredient.unit}
+                      {formatMeasurement(ingredient.quantity, ingredient.unit)}
                     </div>
                     <div class="flex-1">
                       <div class="flex flex-wrap items-center">

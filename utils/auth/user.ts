@@ -2,6 +2,14 @@ import { User, UserPreferences } from "../../types/user.ts";
 import { kv, type UserEmailKey, type UserKey } from "../db/db.ts";
 
 /**
+ * Legacy user preference type for migration purposes
+ */
+type LegacyUserPreferences = {
+  theme: "light" | "dark" | "system";
+  preferredMeasurementUnit: "metric" | "imperial" | "both" | "oz" | "ml";
+};
+
+/**
  * Generate a unique user ID
  */
 export function generateUserId(): string {
@@ -14,12 +22,53 @@ export function generateUserId(): string {
 export function createDefaultUserPreferences(): UserPreferences {
   return {
     theme: "system",
-    preferredMeasurementUnit: "imperial",
+    preferredMeasurementUnit: "oz", // Default to oz (equivalent to previous "imperial")
+  };
+}
+
+/**
+ * Migrate legacy user preferences to new format
+ *
+ * Converts old "metric"/"imperial"/"both" preferences to new "oz"/"ml" format:
+ * - "imperial" → "oz"
+ * - "metric" → "ml"
+ * - "both" → "oz" (default to oz for backward compatibility)
+ * - "oz"/"ml" → unchanged (already migrated)
+ */
+export function migrateLegacyPreferences(
+  legacyPrefs: LegacyUserPreferences,
+): UserPreferences {
+  let preferredMeasurementUnit: "oz" | "ml";
+
+  switch (legacyPrefs.preferredMeasurementUnit) {
+    case "imperial":
+      preferredMeasurementUnit = "oz";
+      break;
+    case "metric":
+      preferredMeasurementUnit = "ml";
+      break;
+    case "both":
+      preferredMeasurementUnit = "oz"; // Default to oz for backward compatibility
+      break;
+    case "oz":
+    case "ml":
+      preferredMeasurementUnit = legacyPrefs.preferredMeasurementUnit;
+      break;
+    default:
+      preferredMeasurementUnit = "oz"; // Fallback default
+      break;
+  }
+
+  return {
+    theme: legacyPrefs.theme,
+    preferredMeasurementUnit,
   };
 }
 
 /**
  * Find a user by email address
+ *
+ * Automatically migrates legacy preferences if needed
  */
 export async function findUserByEmail(email: string): Promise<User | null> {
   const userEmailKey: UserEmailKey = ["user_emails", email];
@@ -30,19 +79,46 @@ export async function findUserByEmail(email: string): Promise<User | null> {
   }
 
   const userId = result.value;
-  const userKey: UserKey = ["users", userId];
-  const userResult = await kv.get<User>(userKey);
-
-  return userResult.value || null;
+  // Use findUserById which handles migration automatically
+  return await findUserById(userId);
 }
 
 /**
  * Find a user by ID
+ *
+ * Automatically migrates legacy preferences if needed
  */
 export async function findUserById(userId: string): Promise<User | null> {
   const userKey: UserKey = ["users", userId];
   const result = await kv.get<User>(userKey);
-  return result.value || null;
+
+  if (!result.value) {
+    return null;
+  }
+
+  const user = result.value;
+
+  // Check if user has legacy preferences that need migration
+  const legacyPrefs = user.preferences as unknown as LegacyUserPreferences;
+  if (
+    legacyPrefs.preferredMeasurementUnit === "metric" ||
+    legacyPrefs.preferredMeasurementUnit === "imperial" ||
+    legacyPrefs.preferredMeasurementUnit === "both"
+  ) {
+    // Migrate preferences
+    const migratedPrefs = migrateLegacyPreferences(legacyPrefs);
+    user.preferences = migratedPrefs;
+    user.updatedAt = new Date().toISOString();
+
+    // Save the migrated user back to the database
+    await kv.set(userKey, user);
+
+    console.log(
+      `Migrated preferences for user ${userId}: ${legacyPrefs.preferredMeasurementUnit} → ${migratedPrefs.preferredMeasurementUnit}`,
+    );
+  }
+
+  return user;
 }
 
 /**
