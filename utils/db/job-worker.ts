@@ -66,8 +66,3 @@ export async function drainJobs(options?: DrainOptions): Promise<void> {
     }
   }
 }
-
-// Auto-drain when loaded as the Worker entry point
-if (import.meta.main) {
-  await drainJobs();
-}

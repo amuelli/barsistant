@@ -78,5 +78,9 @@
   },
   "types": ["vite/client"],
   "unstable": ["kv"],
-  "nodeModulesDir": "auto"
+  "nodeModulesDir": "auto",
+  "deploy": {
+    "org": "amuelli",
+    "app": "barsistant"
+  }
 }
