@@ -18,6 +18,7 @@ export interface JobRecord {
 }
 
 const DEFAULT_MAX_RETRIES = 3;
+const STALE_PROCESSING_MS = 5 * 60 * 1000; // 5 minutes
 
 export async function createJob(
   type: string,
@@ -48,15 +49,60 @@ export async function claimNextPendingJob(
   for await (
     const entry of resolvedKv.list<JobRecord>({ prefix: ["job_queue"] })
   ) {
-    if (entry.value.status !== "pending") continue;
+    const job = entry.value;
+
+    if (job.status === "processing") {
+      const ageMs = Date.now() - new Date(job.updatedAt).getTime();
+      if (ageMs < STALE_PROCESSING_MS) continue;
+
+      // Job has been stuck in processing longer than the threshold — reclaim it
+      const newRetries = job.retries + 1;
+      if (newRetries >= job.maxRetries) {
+        await resolvedKv.atomic()
+          .check(entry)
+          .set(["job_queue", job.id], {
+            ...job,
+            status: "failed",
+            retries: newRetries,
+            error: `stale: stuck in processing for ${
+              Math.round(ageMs / 60000)
+            } minutes`,
+            updatedAt: new Date().toISOString(),
+          })
+          .commit();
+        continue;
+      }
+
+      const reclaimed: JobRecord = {
+        ...job,
+        status: "processing",
+        retries: newRetries,
+        error: undefined,
+        updatedAt: new Date().toISOString(),
+      };
+      const result = await resolvedKv.atomic()
+        .check(entry)
+        .set(["job_queue", job.id], reclaimed)
+        .commit();
+      if (result.ok) {
+        console.warn(
+          `[job-store] Reclaimed stale job ${job.id} (retry ${newRetries}/${job.maxRetries})`,
+        );
+        return reclaimed;
+      }
+      continue;
+    }
+
+    if (job.status !== "pending") continue;
+
     const updated: JobRecord = {
-      ...entry.value,
+      ...job,
       status: "processing",
       updatedAt: new Date().toISOString(),
     };
     const result = await resolvedKv.atomic()
       .check(entry)
-      .set(["job_queue", entry.value.id], updated)
+      .set(["job_queue", job.id], updated)
       .commit();
     if (result.ok) {
       return updated;

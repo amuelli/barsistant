@@ -22,6 +22,19 @@ export interface DrainOptions {
   kv?: Deno.Kv;
 }
 
+const HANDLER_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
+
+class HandlerTimeoutError extends Error {
+  constructor(jobId: string) {
+    super(
+      `Job ${jobId} handler timed out after ${
+        HANDLER_TIMEOUT_MS / 1000
+      }s — leaving in processing for stale recovery`,
+    );
+    this.name = "HandlerTimeoutError";
+  }
+}
+
 const defaultHandlers: Record<string, JobHandler> = {
   generate_recipe_raster_image: async (payload) => {
     if (!isGenerateRecipeRasterImageJob(payload)) {
@@ -56,13 +69,26 @@ export async function drainJobs(options?: DrainOptions): Promise<void> {
     }
 
     try {
-      await handler(job.payload);
+      await Promise.race([
+        handler(job.payload),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new HandlerTimeoutError(job.id)),
+            HANDLER_TIMEOUT_MS,
+          )
+        ),
+      ]);
       await markJobDone(job.id, kv);
       console.log(`[job-worker] Job ${job.id} completed`);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      console.error(`[job-worker] Job ${job.id} failed: ${errorMessage}`);
-      await markJobFailed(job.id, errorMessage, kv);
+      if (err instanceof HandlerTimeoutError) {
+        // Leave in "processing" — stale recovery will retry after STALE_PROCESSING_MS
+        console.error(`[job-worker] ${err.message}`);
+      } else {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        console.error(`[job-worker] Job ${job.id} failed: ${errorMessage}`);
+        await markJobFailed(job.id, errorMessage, kv);
+      }
     }
   }
 }

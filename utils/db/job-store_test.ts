@@ -111,3 +111,48 @@ Deno.test("markJobFailed at maxRetries sets status to failed", async () => {
     kv.close();
   }
 });
+
+Deno.test("claimNextPendingJob reclaims a stale processing job", async () => {
+  const kv = await Deno.openKv(":memory:");
+  try {
+    const jobId = await createJob("stale_test", {}, { kv });
+
+    // Simulate a job stuck in processing with an old updatedAt timestamp
+    await kv.set(["job_queue", jobId], {
+      ...(await kv.get<JobRecord>(["job_queue", jobId])).value,
+      status: "processing",
+      updatedAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(), // 10 minutes ago
+    });
+
+    const claimed = await claimNextPendingJob(kv);
+    assertExists(claimed);
+    assertEquals(claimed.id, jobId);
+    assertEquals(claimed.status, "processing");
+    assertEquals(claimed.retries, 1);
+  } finally {
+    kv.close();
+  }
+});
+
+Deno.test("claimNextPendingJob marks stale job as failed when retries exhausted", async () => {
+  const kv = await Deno.openKv(":memory:");
+  try {
+    const jobId = await createJob("stale_exhaust", {}, { kv, maxRetries: 1 });
+
+    // Simulate a job stuck in processing with retries already at maxRetries - 1
+    await kv.set(["job_queue", jobId], {
+      ...(await kv.get<JobRecord>(["job_queue", jobId])).value,
+      status: "processing",
+      retries: 0, // newRetries will be 1, which equals maxRetries=1 → failed
+      updatedAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+    });
+
+    const result = await claimNextPendingJob(kv);
+    assertEquals(result, null); // Exhausted — marked failed, not claimed
+
+    const entry = await kv.get<JobRecord>(["job_queue", jobId]);
+    assertEquals(entry.value?.status, "failed");
+  } finally {
+    kv.close();
+  }
+});

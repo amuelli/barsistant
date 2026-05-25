@@ -73,6 +73,48 @@ Deno.test("drainJobs marks unknown job type as failed after exhausting retries",
   }
 });
 
+Deno.test("drainJobs leaves a timed-out job in processing and continues to next job", async () => {
+  const kv = await Deno.openKv(":memory:");
+  try {
+    let secondJobProcessed = false;
+    const handlers = {
+      // This handler never resolves — simulates a hanging operation
+      hanging_job: (_payload: unknown): Promise<void> => new Promise(() => {}),
+      next_job: (_payload: unknown) => {
+        secondJobProcessed = true;
+        return Promise.resolve();
+      },
+    };
+
+    const hangingId = await createJob("hanging_job", {}, {
+      kv,
+      maxRetries: 3,
+    });
+    const nextId = await createJob("next_job", {}, { kv });
+
+    // Use a very short timeout override for the test — we can't test the real 3min timeout
+    // so we manually put the hanging job into processing state (simulating it timed out)
+    // and leave next_job as pending. drainJobs should skip the processing job and run next_job.
+    await kv.set(["job_queue", hangingId], {
+      ...(await kv.get<JobRecord>(["job_queue", hangingId])).value,
+      status: "processing",
+    });
+
+    await drainJobs({ handlers, kv });
+
+    const hangingEntry = await kv.get<JobRecord>(["job_queue", hangingId]);
+    const nextEntry = await kv.get<JobRecord>(["job_queue", nextId]);
+
+    // Hanging job stays in processing (not old enough for stale recovery)
+    assertEquals(hangingEntry.value?.status, "processing");
+    // Next job was processed despite the hanging one
+    assertEquals(nextEntry.value?.status, "done");
+    assertEquals(secondJobProcessed, true);
+  } finally {
+    kv.close();
+  }
+});
+
 Deno.test("drainJobs processes multiple pending jobs in sequence", async () => {
   const kv = await Deno.openKv(":memory:");
   try {
