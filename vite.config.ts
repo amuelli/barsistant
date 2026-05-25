@@ -8,16 +8,44 @@ export default defineConfig({
     // Polyfill Node.js global for packages that expect it
     global: "globalThis",
   },
+  ssr: {
+    // ssr.external in Vite 7 uses Array.includes() — regexes are silently ignored.
+    // Must use explicit string package names (regexes only work in build.rollupOptions.external).
+    external: [
+      "node-vibrant",
+      "@vibrant/color",
+      "@vibrant/core",
+      "@vibrant/generator-default",
+      "@vibrant/generator",
+      "@vibrant/image-browser",
+      "@vibrant/image-node",
+      "@vibrant/image",
+      "@vibrant/quantizer-mmcq",
+      "@vibrant/quantizer",
+      "@vibrant/types",
+      "@vibrant/worker",
+      "@jimp/bmp",
+      "@jimp/core",
+      "@jimp/custom",
+      "@jimp/gif",
+      "@jimp/jpeg",
+      "@jimp/plugin-resize",
+      "@jimp/png",
+      "@jimp/tiff",
+      "@jimp/types",
+      "@jimp/utils",
+      "pngjs",
+    ],
+  },
   build: {
     rollupOptions: {
-      // Externalize packages with CommonJS/ESM issues in Deno
       external: [
         /^@vercel\/oidc/,
         /^@ai-sdk\/gateway/,
         /^node-vibrant/,
         /^@vibrant\//,
+        /^@jimp\//,
         /^pngjs/,
-        /^sharp/,
       ],
       output: {
         manualChunks(id) {
